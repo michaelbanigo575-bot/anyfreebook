@@ -1,0 +1,22 @@
+{
+  "name": "ANYFREEBOOK — Free Books for Every Profession",
+  "short_name": "ANYFREEBOOK",
+  "description": "The world's largest free book aggregator. 247,000+ free books, audiobooks, comics, and magazines.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["books", "education", "entertainment"],
+  "screenshots": [],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Search Books", "url": "/search", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Trending", "url": "/trending", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Audiobooks", "url": "/audiobooks", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

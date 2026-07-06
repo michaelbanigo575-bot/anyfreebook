@@ -370,7 +370,7 @@ const BOOKS: Book[] = [
   makeBook('Born a Crime', 'Trevor Noah', 6, { rating: 4.8, ratingCount: 11000, viewCount: 195000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Trevor Noah', duration: 32400, publishYear: 2016 }),
   makeBook('12 Rules for Life', 'Jordan Peterson', 10, { rating: 4.4, ratingCount: 9200, viewCount: 168000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Jordan Peterson', duration: 54000, publishYear: 2018 }),
   makeBook('Outliers', 'Malcolm Gladwell', 3, { rating: 4.4, ratingCount: 10000, viewCount: 182000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Malcolm Gladwell', duration: 25200, publishYear: 2008 }),
-  makeBook('The Midnight Library', 'Matt Haig', 6, { rating: 4.3, ratingCount: 9800, viewCount: 172000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Carey Mulligan', duration: 25200, publishYear: 2020, contentType: 'AUDIOBOOK' }),
+  makeBook('The Midnight Library', 'Matt Haig', 6, { rating: 4.3, ratingCount: 9800, viewCount: 172000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Carey Mulligan', duration: 25200, publishYear: 2020 }),
   makeBook('Project Hail Mary', 'Andy Weir', 5, { rating: 4.8, ratingCount: 12000, viewCount: 215000, likeCount: 22000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Ray Porter', duration: 57600, publishYear: 2021 }),
 ];
 

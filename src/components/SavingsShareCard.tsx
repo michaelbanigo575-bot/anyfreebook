@@ -61,7 +61,7 @@ export function SavingsShareCard({ bookTitle, bookAuthor, retailPrice, onClose }
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-8 text-center text-white">
           <p className="text-sm font-medium opacity-90 mb-1">🎉 You just saved</p>
           <p className="text-5xl font-bold font-mono">${price}</p>
-          <p className="text-sm opacity-80 mt-2">on "{bookTitle}"</p>
+          <p className="text-sm opacity-80 mt-2">on &ldquo;{bookTitle}&rdquo;</p>
         </div>
 
         {/* Stats */}
@@ -127,7 +127,7 @@ export function SavingsBadge() {
   return (
     <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800">
       <span className="text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-        💰 You've saved ${savings.total} on {savings.books} books!
+        💰 You&apos;ve saved ${savings.total} on {savings.books} books!
       </span>
     </div>
   );

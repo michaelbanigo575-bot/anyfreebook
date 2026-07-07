@@ -98,7 +98,10 @@ function apiKeyParam(): string {
 export async function searchGoogleBooks(query: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
   const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) return { books: [], total: 0 };
+  if (!res.ok) {
+    console.error(`[googlebooks] request failed: ${res.status} ${res.statusText}, hasKey=${!!process.env.GOOGLE_BOOKS_API_KEY}`);
+    return { books: [], total: 0 };
+  }
   const data: GoogleBooksResponse = await res.json();
 
   return {

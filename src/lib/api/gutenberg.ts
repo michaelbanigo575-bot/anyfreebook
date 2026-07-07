@@ -73,14 +73,22 @@ function gutenbergToBook(g: GutenbergBook): Book {
 
 export async function searchGutenberg(query: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?search=${encodeURIComponent(query)}&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: GutenbergResponse = await res.json();
+  try {
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) {
+      console.error(`[gutenberg] request failed: ${res.status} ${res.statusText}`);
+      return { books: [], total: 0 };
+    }
+    const data: GutenbergResponse = await res.json();
 
-  return {
-    books: data.results.map(gutenbergToBook),
-    total: data.count,
-  };
+    return {
+      books: data.results.map(gutenbergToBook),
+      total: data.count,
+    };
+  } catch (err) {
+    console.error(`[gutenberg] fetch threw:`, err);
+    return { books: [], total: 0 };
+  }
 }
 
 export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; total: number }> {

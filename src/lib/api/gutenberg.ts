@@ -1,5 +1,11 @@
 import type { Book } from '../data';
 
+// gutendex.com blocks requests with no/generic User-Agent (common anti-bot behavior
+// against datacenter IPs like Vercel's), so we send a normal browser-like one.
+const GUTENDEX_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+};
+
 interface GutenbergBook {
   id: number;
   title: string;
@@ -74,7 +80,7 @@ function gutenbergToBook(g: GutenbergBook): Book {
 export async function searchGutenberg(query: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?search=${encodeURIComponent(query)}&page=${page}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 } });
+    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
     if (!res.ok) {
       console.error(`[gutenberg] request failed: ${res.status} ${res.statusText}`);
       return { books: [], total: 0 };
@@ -93,8 +99,11 @@ export async function searchGutenberg(query: string, page = 1): Promise<{ books:
 
 export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?sort=popular&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) return { books: [], total: 0 };
+  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+  if (!res.ok) {
+    console.error(`[gutenberg] popular request failed: ${res.status} ${res.statusText}`);
+    return { books: [], total: 0 };
+  }
   const data: GutenbergResponse = await res.json();
 
   return {
@@ -105,8 +114,11 @@ export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; to
 
 export async function getGutenbergByTopic(topic: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?topic=${encodeURIComponent(topic)}&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
-  if (!res.ok) return { books: [], total: 0 };
+  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+  if (!res.ok) {
+    console.error(`[gutenberg] topic request failed: ${res.status} ${res.statusText}`);
+    return { books: [], total: 0 };
+  }
   const data: GutenbergResponse = await res.json();
 
   return {

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from './AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 interface Challenge {
   id: string;
@@ -18,48 +20,65 @@ const CHALLENGES: Challenge[] = [
   { id: 'scholar', title: 'Scholar', description: 'Read 25 books this year', target: 25, icon: '🎓' },
   { id: 'bibliophile', title: 'Bibliophile', description: 'Read 50 books', target: 50, icon: '📖' },
   { id: 'legend', title: 'Library Legend', description: 'Read 100 books', target: 100, icon: '👑' },
-  { id: 'tech5', title: 'Tech Specialist', description: 'Read 5 technology books', target: 5, icon: '💻', category: 'Technology' },
-  { id: 'sci5', title: 'Science Mind', description: 'Read 5 science books', target: 5, icon: '🔬', category: 'Sciences' },
-  { id: 'biz5', title: 'Business Pro', description: 'Read 5 business books', target: 5, icon: '📊', category: 'Business' },
-  { id: 'arts5', title: 'Arts Lover', description: 'Read 5 arts & humanities books', target: 5, icon: '🎨', category: 'Arts & Humanities' },
+  { id: 'liked10', title: 'Curator', description: 'Like 10 books you enjoyed', target: 10, icon: '❤️' },
+  { id: 'wishlist5', title: 'Planner', description: 'Wishlist 5 books to read next', target: 5, icon: '📌' },
+  { id: 'faves5', title: 'Collector', description: 'Favorite 5 all-time greats', target: 5, icon: '⭐' },
+  { id: 'allround', title: 'All-Rounder', description: 'Read, like, wishlist and favorite at least one book each', target: 4, icon: '🏆' },
 ];
 
-interface ChallengeProgress {
-  booksRead: number;
-  categoryBooks: Record<string, number>;
-  completedChallenges: string[];
-  streak: number;
-  lastReadDate: string | null;
+interface Counts {
+  read: number;
+  liked: number;
+  wishlisted: number;
+  favorited: number;
+}
+
+function getChallengeProgress(c: Challenge, counts: Counts): number {
+  switch (c.id) {
+    case 'liked10': return counts.liked;
+    case 'wishlist5': return counts.wishlisted;
+    case 'faves5': return counts.favorited;
+    case 'allround':
+      return [counts.read, counts.liked, counts.wishlisted, counts.favorited].filter(n => n > 0).length;
+    default: return counts.read;
+  }
 }
 
 export function ReadingChallenge() {
-  const [progress, setProgress] = useState<ChallengeProgress>({
-    booksRead: 0,
-    categoryBooks: {},
-    completedChallenges: [],
-    streak: 0,
-    lastReadDate: null,
-  });
+  const { user, loading } = useAuth();
+  const supabase = createClient();
+  const [counts, setCounts] = useState<Counts>({ read: 0, liked: 0, wishlisted: 0, favorited: 0 });
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('afb_reading_challenge');
-    if (saved) setProgress(JSON.parse(saved));
-  }, []);
-
-  const getProgress = (challenge: Challenge): number => {
-    if (challenge.category) {
-      return progress.categoryBooks[challenge.category] || 0;
+    if (user) {
+      supabase
+        .from('book_interactions')
+        .select('action')
+        .eq('user_id', user.id)
+        .then(({ data }) => {
+          const rows = data || [];
+          setCounts({
+            read: rows.filter(r => r.action === 'read').length,
+            liked: rows.filter(r => r.action === 'liked').length,
+            wishlisted: rows.filter(r => r.action === 'wishlisted').length,
+            favorited: rows.filter(r => r.action === 'favorited').length,
+          });
+        });
+    } else {
+      // Guest fallback: approximate from the legacy localStorage tracker
+      const saved = localStorage.getItem('afb_reading_challenge');
+      if (saved) {
+        try {
+          const p = JSON.parse(saved);
+          setCounts(c => ({ ...c, read: p.booksRead || 0 }));
+        } catch {}
+      }
     }
-    return progress.booksRead;
-  };
+  }, [user, supabase]);
 
-  const isCompleted = (challenge: Challenge): boolean => {
-    return progress.completedChallenges.includes(challenge.id);
-  };
-
+  const completedCount = CHALLENGES.filter(c => getChallengeProgress(c, counts) >= c.target).length;
   const visibleChallenges = showAll ? CHALLENGES : CHALLENGES.slice(0, 6);
-  const completedCount = progress.completedChallenges.length;
 
   return (
     <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
@@ -77,21 +96,22 @@ export function ReadingChallenge() {
           </div>
         </div>
 
-        {/* Streak */}
-        {progress.streak > 0 && (
-          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <span className="text-lg">🔥</span>
-            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
-              {progress.streak} day reading streak!
+        {!loading && !user && (
+          <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[var(--primary-light)] border border-[var(--primary)]/20">
+            <span className="text-xs text-[var(--text-secondary)]">
+              Sign in so your progress counts on every device
             </span>
+            <a href="/login" className="text-xs font-semibold text-[var(--primary)] whitespace-nowrap hover:underline">
+              Sign in →
+            </a>
           </div>
         )}
       </div>
 
       <div className="divide-y divide-[var(--border-subtle)]">
         {visibleChallenges.map(challenge => {
-          const current = getProgress(challenge);
-          const completed = isCompleted(challenge);
+          const current = getChallengeProgress(challenge, counts);
+          const completed = current >= challenge.target;
           const pct = Math.min((current / challenge.target) * 100, 100);
 
           return (

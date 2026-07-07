@@ -1,49 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-function generateReferralCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'AFB-';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
-}
-
-interface ReferralData {
-  code: string;
-  referrals: number;
-  totalSavingsShared: number;
-  tier: 'reader' | 'advocate' | 'ambassador' | 'champion';
-  joinedAt: string;
-}
+import { useAuth } from './AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 const TIERS = {
   reader: { label: 'Reader', min: 0, color: 'text-gray-600', bg: 'bg-gray-100', next: 'advocate', nextAt: 5 },
   advocate: { label: 'Book Advocate', min: 5, color: 'text-blue-600', bg: 'bg-blue-100', next: 'ambassador', nextAt: 25 },
   ambassador: { label: 'Ambassador', min: 25, color: 'text-purple-600', bg: 'bg-purple-100', next: 'champion', nextAt: 100 },
   champion: { label: 'Champion', min: 100, color: 'text-amber-600', bg: 'bg-amber-100', next: null, nextAt: null },
-};
+} as const;
+
+function tierForCount(referrals: number): keyof typeof TIERS {
+  if (referrals >= 100) return 'champion';
+  if (referrals >= 25) return 'ambassador';
+  if (referrals >= 5) return 'advocate';
+  return 'reader';
+}
 
 export function ReferralSystem() {
-  const [data, setData] = useState<ReferralData | null>(null);
+  const { user, profile, loading } = useAuth();
+  const supabase = createClient();
+  const [referralCount, setReferralCount] = useState(0);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    let saved = localStorage.getItem('afb_referral');
-    if (saved) {
-      setData(JSON.parse(saved));
-    } else {
-      const newData: ReferralData = {
-        code: generateReferralCode(),
-        referrals: 0,
-        totalSavingsShared: 0,
-        tier: 'reader',
-        joinedAt: new Date().toISOString(),
-      };
-      localStorage.setItem('afb_referral', JSON.stringify(newData));
-      setData(newData);
-    }
-
+    // Remember who referred a visitor so signup can credit them later
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     if (ref && !localStorage.getItem('afb_referred_by')) {
@@ -51,12 +33,47 @@ export function ReferralSystem() {
     }
   }, []);
 
-  if (!data) return null;
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('referrals')
+      .select('id', { count: 'exact', head: true })
+      .eq('referrer_id', user.id)
+      .then(({ count }) => setReferralCount(count || 0));
+  }, [user, supabase]);
 
-  const tier = TIERS[data.tier];
+  if (loading) return null;
+
+  // Signed out: referrals can't be tracked without an account, so invite sign-up
+  if (!user || !profile?.referral_code) {
+    return (
+      <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
+        <div className="bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] px-6 py-5 text-white">
+          <h3 className="text-lg font-bold">Spread the word, earn rewards</h3>
+          <p className="text-sm opacity-90 mt-1">Share free books with friends and level up</p>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-4xl mb-3">🎁</p>
+          <p className="text-sm font-semibold text-[var(--text)]">Sign in to get your referral link</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1 mb-4">
+            Every friend who joins with your link counts toward your tier — tracked on your account, on every device.
+          </p>
+          <a
+            href="/login"
+            className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-lg transition-all"
+          >
+            Sign in / Create account
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  const tierKey = tierForCount(referralCount);
+  const tier = TIERS[tierKey];
   const nextTier = tier.next ? TIERS[tier.next as keyof typeof TIERS] : null;
-  const progress = nextTier ? (data.referrals / (tier.nextAt || 1)) * 100 : 100;
-  const referralUrl = `https://anyfreebook.com?ref=${data.code}`;
+  const progress = nextTier && tier.nextAt ? (referralCount / tier.nextAt) * 100 : 100;
+  const referralUrl = `https://anyfreebook.com/login?ref=${profile.referral_code}`;
 
   const copyCode = async () => {
     await navigator.clipboard.writeText(referralUrl);
@@ -65,12 +82,12 @@ export function ReferralSystem() {
   };
 
   const shareWhatsApp = () => {
-    const msg = `Hey! I found this amazing site with 5M+ free books — textbooks, novels, everything. I've already saved $${data.totalSavingsShared || '50'}+ on books. Check it out:`;
+    const msg = `Hey! I found this amazing site with 5M+ free books — textbooks, novels, everything, all legal and free. Check it out:`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg + '\n' + referralUrl)}`, '_blank');
   };
 
   const shareTwitter = () => {
-    const msg = `I've read ${data.referrals > 0 ? data.referrals + '+ free books' : 'free books'} on @anyfreebook — 5M+ titles from Open Library, Gutenberg & Google Books. No sign-up, no catch.`;
+    const msg = `I read free books on ANYFREEBOOK — 5M+ titles from Open Library, Gutenberg, Internet Archive & more. No catch.`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(referralUrl)}`, '_blank');
   };
 
@@ -91,7 +108,7 @@ export function ReferralSystem() {
           {nextTier && (
             <div className="flex-1">
               <div className="flex justify-between text-xs text-[var(--text-muted)] mb-1">
-                <span>{data.referrals} referrals</span>
+                <span>{referralCount} referrals</span>
                 <span>{tier.nextAt} for {nextTier.label}</span>
               </div>
               <div className="h-2 rounded-full bg-[var(--bg-secondary)]">
@@ -129,12 +146,12 @@ export function ReferralSystem() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[var(--border-subtle)]">
           <div className="text-center">
-            <p className="text-xl font-bold text-[var(--text)]">{data.referrals}</p>
+            <p className="text-xl font-bold text-[var(--text)]">{referralCount}</p>
             <p className="text-[10px] text-[var(--text-muted)]">Referrals</p>
           </div>
           <div className="text-center">
-            <p className="text-xl font-bold text-emerald-600">${data.totalSavingsShared}</p>
-            <p className="text-[10px] text-[var(--text-muted)]">Savings shared</p>
+            <p className="text-xl font-bold text-emerald-600">{profile.referral_code}</p>
+            <p className="text-[10px] text-[var(--text-muted)]">Your code</p>
           </div>
           <div className="text-center">
             <p className="text-xl font-bold text-[var(--text)]">{tier.label}</p>

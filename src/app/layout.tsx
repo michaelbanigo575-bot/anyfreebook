@@ -8,6 +8,7 @@ import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { ReadingReminderProvider } from '@/components/ReadingReminderProvider';
 import { AuthProvider } from '@/components/AuthProvider';
 import { BackButton } from '@/components/BackButton';
+import { Analytics } from '@vercel/analytics/react';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
 
 export const metadata: Metadata = {
@@ -93,6 +94,7 @@ export default function RootLayout({
             </AudioProvider>
           </ThemeProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );

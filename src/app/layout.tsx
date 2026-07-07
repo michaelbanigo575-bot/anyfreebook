@@ -8,6 +8,7 @@ import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { ReadingReminderProvider } from '@/components/ReadingReminderProvider';
 import { AuthProvider } from '@/components/AuthProvider';
 import { BackButton } from '@/components/BackButton';
+import { PublicOnly } from '@/components/PublicChrome';
 import { Analytics } from '@vercel/analytics/react';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
 
@@ -84,13 +85,13 @@ export default function RootLayout({
             <AudioProvider>
               <Navbar />
               <main className="flex-1">
-                <BackButton />
+                <PublicOnly><BackButton /></PublicOnly>
                 {children}
               </main>
-              <AudioPlayerBar />
-              <PWAInstallPrompt />
-              <ReadingReminderProvider />
-              <Footer />
+              <PublicOnly><AudioPlayerBar /></PublicOnly>
+              <PublicOnly><PWAInstallPrompt /></PublicOnly>
+              <PublicOnly><ReadingReminderProvider /></PublicOnly>
+              <PublicOnly><Footer /></PublicOnly>
             </AudioProvider>
           </ThemeProvider>
         </AuthProvider>

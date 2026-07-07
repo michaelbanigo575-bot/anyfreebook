@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { SearchBar } from './SearchBar';
 import { useAuth } from './AuthProvider';
 
 export function Navbar() {
+  const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -28,6 +30,8 @@ export function Navbar() {
     setIsDark(next);
     document.documentElement.classList.toggle('dark', next);
   };
+
+  if (pathname?.startsWith('/admin')) return null;
 
   const navLinks = [
     { label: 'Home', href: '/' },

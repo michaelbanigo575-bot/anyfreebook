@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 interface Interactions {
   liked: Set<string>;
@@ -8,7 +10,9 @@ interface Interactions {
   favorited: Set<string>;
 }
 
-function loadInteractions(): Interactions {
+const ACTION_MAP = { liked: 'liked', wishlisted: 'wishlisted', favorited: 'favorited' } as const;
+
+function loadLocalInteractions(): Interactions {
   if (typeof window === 'undefined') return { liked: new Set(), wishlisted: new Set(), favorited: new Set() };
   try {
     const data = JSON.parse(localStorage.getItem('anyfreebook-interactions') || '{}');
@@ -22,7 +26,7 @@ function loadInteractions(): Interactions {
   }
 }
 
-function saveInteractions(i: Interactions) {
+function saveLocalInteractions(i: Interactions) {
   localStorage.setItem('anyfreebook-interactions', JSON.stringify({
     liked: Array.from(i.liked),
     wishlisted: Array.from(i.wishlisted),
@@ -30,32 +34,72 @@ function saveInteractions(i: Interactions) {
   }));
 }
 
-export function BookInteractionButtons({ bookId, likeCount }: { bookId: string; likeCount: number }) {
+interface BookInteractionButtonsProps {
+  bookId: string;
+  likeCount: number;
+  bookTitle?: string;
+  bookAuthor?: string;
+  bookSlug?: string;
+}
+
+export function BookInteractionButtons({ bookId, likeCount, bookTitle, bookAuthor, bookSlug }: BookInteractionButtonsProps) {
+  const { user } = useAuth();
+  const supabase = createClient();
   const [interactions, setInteractions] = useState<Interactions>({ liked: new Set(), wishlisted: new Set(), favorited: new Set() });
   const [animating, setAnimating] = useState<string | null>(null);
 
   useEffect(() => {
-    setInteractions(loadInteractions());
-  }, []);
+    if (!user) {
+      setInteractions(loadLocalInteractions());
+      return;
+    }
+    supabase
+      .from('book_interactions')
+      .select('action')
+      .eq('user_id', user.id)
+      .eq('book_id', bookId)
+      .then(({ data }) => {
+        const actions = new Set((data || []).map(r => r.action));
+        setInteractions({
+          liked: new Set(actions.has('liked') ? [bookId] : []),
+          wishlisted: new Set(actions.has('wishlisted') ? [bookId] : []),
+          favorited: new Set(actions.has('favorited') ? [bookId] : []),
+        });
+      });
+  }, [user, bookId, supabase]);
 
-  const toggle = (type: 'liked' | 'wishlisted' | 'favorited') => {
+  const toggle = useCallback(async (type: keyof Interactions) => {
+    const action = ACTION_MAP[type];
+    const isActive = interactions[type].has(bookId);
+
+    if (!isActive) {
+      setAnimating(type);
+      setTimeout(() => setAnimating(null), 600);
+    }
+
     setInteractions(prev => {
-      const next = {
-        liked: new Set(prev.liked),
-        wishlisted: new Set(prev.wishlisted),
-        favorited: new Set(prev.favorited),
-      };
-      if (next[type].has(bookId)) {
-        next[type].delete(bookId);
-      } else {
-        next[type].add(bookId);
-        setAnimating(type);
-        setTimeout(() => setAnimating(null), 600);
-      }
-      saveInteractions(next);
+      const next = { liked: new Set(prev.liked), wishlisted: new Set(prev.wishlisted), favorited: new Set(prev.favorited) };
+      if (next[type].has(bookId)) next[type].delete(bookId); else next[type].add(bookId);
+      if (!user) saveLocalInteractions(next);
       return next;
     });
-  };
+
+    if (user) {
+      if (isActive) {
+        await supabase.from('book_interactions').delete()
+          .eq('user_id', user.id).eq('book_id', bookId).eq('action', action);
+      } else {
+        await supabase.from('book_interactions').insert({
+          user_id: user.id,
+          book_id: bookId,
+          book_title: bookTitle,
+          book_author: bookAuthor,
+          book_slug: bookSlug,
+          action,
+        });
+      }
+    }
+  }, [interactions, bookId, user, supabase, bookTitle, bookAuthor, bookSlug]);
 
   const isLiked = interactions.liked.has(bookId);
   const isWishlisted = interactions.wishlisted.has(bookId);

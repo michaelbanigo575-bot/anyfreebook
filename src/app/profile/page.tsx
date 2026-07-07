@@ -1,60 +1,114 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookGrid } from '@/components/BookGrid';
-import { getAllBooks, type Book } from '@/lib/data';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 type Tab = 'wishlist' | 'favorites' | 'history' | 'stats';
 
-interface Interactions {
-  liked: string[];
-  wishlisted: string[];
-  favorited: string[];
+interface StoredInteraction {
+  book_id: string;
+  book_title: string | null;
+  book_author: string | null;
+  book_slug: string | null;
+  action: string;
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { user, profile, loading, signOut } = useAuth();
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<Tab>('wishlist');
-  const [interactions, setInteractions] = useState<Interactions>({ liked: [], wishlisted: [], favorited: [] });
-  const allBooks = getAllBooks();
+  const [interactions, setInteractions] = useState<StoredInteraction[]>([]);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    try {
-      const data = JSON.parse(localStorage.getItem('anyfreebook-interactions') || '{}');
-      setInteractions({
-        liked: data.liked || [],
-        wishlisted: data.wishlisted || [],
-        favorited: data.favorited || [],
-      });
-    } catch {}
-  }, []);
+    if (!loading && !user) router.push('/login');
+  }, [loading, user, router]);
 
-  const wishlistBooks = allBooks.filter(b => interactions.wishlisted.includes(b.id));
-  const favBooks = allBooks.filter(b => interactions.favorited.includes(b.id));
-  const likedBooks = allBooks.filter(b => interactions.liked.includes(b.id));
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('book_interactions')
+      .select('book_id, book_title, book_author, book_slug, action')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setInteractions(data || []));
+  }, [user, supabase]);
+
+  if (loading || !user) {
+    return (
+      <div className="content-wrapper py-20 text-center text-[var(--text-muted)]">
+        Loading...
+      </div>
+    );
+  }
+
+  const wishlisted = interactions.filter(i => i.action === 'wishlisted');
+  const favorited = interactions.filter(i => i.action === 'favorited');
+  const liked = interactions.filter(i => i.action === 'liked');
 
   const tabs: { id: Tab; label: string; icon: string; count: number }[] = [
-    { id: 'wishlist', label: 'Wishlist', icon: '📚', count: wishlistBooks.length },
-    { id: 'favorites', label: 'Favorites', icon: '⭐', count: favBooks.length },
-    { id: 'history', label: 'History', icon: '❤️', count: likedBooks.length },
+    { id: 'wishlist', label: 'Wishlist', icon: '📚', count: wishlisted.length },
+    { id: 'favorites', label: 'Favorites', icon: '⭐', count: favorited.length },
+    { id: 'history', label: 'Liked', icon: '❤️', count: liked.length },
     { id: 'stats', label: 'Stats', icon: '📊', count: 0 },
   ];
 
-  const currentBooks = activeTab === 'wishlist' ? wishlistBooks : activeTab === 'favorites' ? favBooks : likedBooks;
+  const currentBooks = activeTab === 'wishlist' ? wishlisted : activeTab === 'favorites' ? favorited : liked;
+
+  const referralLink = profile?.referral_code
+    ? `https://anyfreebook.com/login?ref=${profile.referral_code}`
+    : null;
+
+  const copyReferralLink = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const displayName = profile?.display_name || user.email?.split('@')[0] || 'Reader';
 
   return (
     <div className="content-wrapper py-8">
       {/* Profile header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-          R
+      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+            {displayName[0].toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-xl font-display font-bold text-[var(--text)]">{displayName}</h1>
+            <p className="text-sm text-[var(--text-muted)]">
+              {liked.length} liked &middot; {wishlisted.length} wishlisted &middot; {favorited.length} favorites
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-display font-bold text-[var(--text)]">Reader</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {interactions.liked.length} liked &middot; {interactions.wishlisted.length} wishlisted &middot; {interactions.favorited.length} favorites
-          </p>
-        </div>
+        <button
+          onClick={() => signOut()}
+          className="px-4 py-2 rounded-lg border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors"
+        >
+          Sign out
+        </button>
       </div>
+
+      {/* Referral card */}
+      {referralLink && (
+        <div className="mb-8 p-4 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)]/10 to-[var(--gradient-end)]/10 border border-[var(--primary)]/20 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-[var(--text)]">🎁 Invite friends, earn rewards</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Your referral link: <code className="text-[var(--primary)]">{referralLink}</code></p>
+          </div>
+          <button
+            onClick={copyReferralLink}
+            className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-md transition-all flex-shrink-0"
+          >
+            {copied ? '✓ Copied!' : 'Copy Link'}
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-[var(--border-subtle)]">
@@ -81,10 +135,10 @@ export default function ProfilePage() {
       {activeTab === 'stats' ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Books read', value: '0', icon: '📖' },
-            { label: 'Pages read', value: '0', icon: '📄' },
-            { label: 'Hours listened', value: '0', icon: '🎧' },
-            { label: 'Day streak', value: '0', icon: '🔥' },
+            { label: 'Books read', value: String(liked.length), icon: '📖' },
+            { label: 'Wishlisted', value: String(wishlisted.length), icon: '📚' },
+            { label: 'Favorites', value: String(favorited.length), icon: '⭐' },
+            { label: 'Member since', value: profile?.created_at ? new Date(profile.created_at).getFullYear().toString() : '—', icon: '🗓️' },
           ].map(stat => (
             <div key={stat.label} className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] text-center">
               <span className="text-2xl block mb-1">{stat.icon}</span>
@@ -94,7 +148,18 @@ export default function ProfilePage() {
           ))}
         </div>
       ) : currentBooks.length > 0 ? (
-        <BookGrid books={currentBooks} layout="grid" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {currentBooks.map(item => (
+            <a
+              key={item.book_id}
+              href={item.book_slug ? `/book/${item.book_slug}` : '#'}
+              className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-colors"
+            >
+              <p className="text-sm font-semibold text-[var(--text)] line-clamp-2">{item.book_title || 'Untitled'}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">{item.book_author}</p>
+            </a>
+          ))}
+        </div>
       ) : (
         <div className="text-center py-20">
           <p className="text-5xl mb-4">{tabs.find(t => t.id === activeTab)?.icon}</p>

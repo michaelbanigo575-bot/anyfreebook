@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SearchBar } from './SearchBar';
+import { useAuth } from './AuthProvider';
 
 export function Navbar() {
+  const { user, profile, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
@@ -94,6 +96,26 @@ export function Navbar() {
                   </svg>
                 )}
               </button>
+              {user ? (
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {(profile?.display_name || user.email || '?')[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-[var(--text)] max-w-[100px] truncate">
+                    {profile?.display_name || user.email}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-md transition-all"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -134,6 +156,31 @@ export function Navbar() {
               >
                 {isDark ? 'Light mode' : 'Dark mode'}
               </button>
+              {user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    {profile?.display_name || user.email}
+                  </Link>
+                  <button
+                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
+                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] rounded-lg text-center"
+                >
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
         )}

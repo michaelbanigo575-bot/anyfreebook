@@ -1,59 +1,85 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import type { Book } from '@/lib/data';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { createClient } from '@/lib/supabase/client';
 
 interface UserCollection {
   id: string;
   title: string;
-  description: string;
-  books: string[];
-  isPublic: boolean;
-  createdAt: string;
-  shareCount: number;
+  slug: string;
+  description: string | null;
+  is_public: boolean;
+  created_at: string;
+  bookCount: number;
+}
+
+function slugify(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 60);
 }
 
 export default function MyCollectionsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const supabase = createClient();
   const [collections, setCollections] = useState<UserCollection[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('afb_user_collections');
-    if (saved) setCollections(JSON.parse(saved));
-  }, []);
+  const loadCollections = useCallback(async () => {
+    if (!user) { setLoading(false); return; }
+    setLoading(true);
+    const { data } = await supabase
+      .from('collections')
+      .select('id, title, slug, description, is_public, created_at, collection_books(count)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
 
-  const save = (cols: UserCollection[]) => {
-    setCollections(cols);
-    localStorage.setItem('afb_user_collections', JSON.stringify(cols));
-  };
+    setCollections((data || []).map((c: any) => ({
+      id: c.id,
+      title: c.title,
+      slug: c.slug,
+      description: c.description,
+      is_public: c.is_public,
+      created_at: c.created_at,
+      bookCount: c.collection_books?.[0]?.count || 0,
+    })));
+    setLoading(false);
+  }, [user, supabase]);
 
-  const createCollection = () => {
-    if (!newTitle.trim()) return;
-    const col: UserCollection = {
-      id: `uc-${Date.now()}`,
+  useEffect(() => { loadCollections(); }, [loadCollections]);
+
+  const createCollection = async () => {
+    if (!newTitle.trim() || !user) return;
+    const baseSlug = slugify(newTitle);
+    const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+
+    const { error } = await supabase.from('collections').insert({
+      user_id: user.id,
       title: newTitle,
-      description: newDesc,
-      books: [],
-      isPublic: true,
-      createdAt: new Date().toISOString(),
-      shareCount: 0,
-    };
-    save([col, ...collections]);
-    setNewTitle('');
-    setNewDesc('');
-    setShowCreate(false);
+      slug,
+      description: newDesc || null,
+      is_public: true,
+    });
+
+    if (!error) {
+      setNewTitle('');
+      setNewDesc('');
+      setShowCreate(false);
+      loadCollections();
+    }
   };
 
-  const deleteCollection = (id: string) => {
-    save(collections.filter(c => c.id !== id));
+  const deleteCollection = async (id: string) => {
+    await supabase.from('collections').delete().eq('id', id);
+    setCollections(prev => prev.filter(c => c.id !== id));
   };
 
   const shareCollection = async (col: UserCollection) => {
-    const url = `${window.location.origin}/my-collections?shared=${col.id}`;
-    const text = `Check out my reading list "${col.title}" on ANYFREEBOOK — ${col.books.length} free books! 📚`;
+    const url = `${window.location.origin}/list/${col.slug}`;
+    const text = `Check out my reading list "${col.title}" on ANYFREEBOOK — ${col.bookCount} free books! 📚`;
     if (navigator.share) {
       try { await navigator.share({ title: col.title, text, url }); } catch {}
     } else {
@@ -64,10 +90,25 @@ export default function MyCollectionsPage() {
   };
 
   const shareWhatsApp = (col: UserCollection) => {
-    const url = `${window.location.origin}/my-collections?shared=${col.id}`;
-    const text = `Check out my reading list "${col.title}" on ANYFREEBOOK — ${col.books.length} free books! 📚`;
+    const url = `${window.location.origin}/list/${col.slug}`;
+    const text = `Check out my reading list "${col.title}" on ANYFREEBOOK — ${col.bookCount} free books! 📚`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`, '_blank');
   };
+
+  if (!authLoading && !user) {
+    return (
+      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+        <p className="text-5xl mb-4">📋</p>
+        <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to create reading lists</h1>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
+          Reading lists sync across your devices and can be shared with anyone via a link.
+        </p>
+        <a href="/login" className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
+          Sign In
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="content-wrapper py-8 max-w-4xl mx-auto">
@@ -88,7 +129,6 @@ export default function MyCollectionsPage() {
         </button>
       </div>
 
-      {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] p-6">
@@ -124,13 +164,14 @@ export default function MyCollectionsPage() {
         </div>
       )}
 
-      {/* Collections list */}
-      {collections.length === 0 ? (
+      {loading ? (
+        <p className="text-center py-20 text-[var(--text-muted)]">Loading...</p>
+      ) : collections.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-5xl mb-4">📋</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No reading lists yet</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">
-            Create a list and add books from search results or book pages
+            Create a list, then add books to it from the list page
           </p>
           <button
             onClick={() => setShowCreate(true)}
@@ -145,10 +186,10 @@ export default function MyCollectionsPage() {
             <div key={col.id} className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:shadow-lg transition-shadow overflow-hidden">
               <div className="p-6">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                  <a href={`/list/${col.slug}`} className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-[var(--text)]">{col.title}</h3>
-                      {col.isPublic && (
+                      <h3 className="text-lg font-bold text-[var(--text)] hover:text-[var(--primary)] transition-colors">{col.title}</h3>
+                      {col.is_public && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold">PUBLIC</span>
                       )}
                     </div>
@@ -156,11 +197,10 @@ export default function MyCollectionsPage() {
                       <p className="text-sm text-[var(--text-muted)] mt-1">{col.description}</p>
                     )}
                     <div className="flex items-center gap-4 mt-2 text-xs text-[var(--text-muted)]">
-                      <span>📚 {col.books.length} books</span>
-                      <span>📤 {col.shareCount} shares</span>
-                      <span>Created {new Date(col.createdAt).toLocaleDateString()}</span>
+                      <span>📚 {col.bookCount} books</span>
+                      <span>Created {new Date(col.created_at).toLocaleDateString()}</span>
                     </div>
-                  </div>
+                  </a>
                 </div>
               </div>
               <div className="border-t border-[var(--border-subtle)] px-6 py-3 flex items-center gap-2 bg-[var(--bg-secondary)]">
@@ -189,7 +229,6 @@ export default function MyCollectionsPage() {
         </div>
       )}
 
-      {/* Suggested collections */}
       <div className="mt-12">
         <h2 className="text-lg font-bold text-[var(--text)] mb-4">📖 Suggested Reading Lists</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

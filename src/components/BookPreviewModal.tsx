@@ -8,29 +8,28 @@ import type { Book } from '@/lib/data';
  * Returns null when the source has no embeddable reader (we then show a fallback).
  */
 export function getPreviewEmbedUrl(book: Book): string | null {
-  const { id, sourceType, downloadLinks } = book;
+  const { sourceUrl, downloadLinks } = book;
+  const allUrls = [sourceUrl, ...(downloadLinks?.map(l => l.url) || [])].filter((u): u is string => !!u);
 
-  if (sourceType === 'archive' && id.startsWith('ia-')) {
-    return `https://archive.org/embed/${id.slice(3)}`;
+  // Internet Archive — works regardless of where the link came from (live API or resolved lookup)
+  const archiveUrl = allUrls.find(u => u.includes('archive.org/details/'));
+  if (archiveUrl) {
+    const identifier = archiveUrl.split('archive.org/details/')[1]?.split(/[/?#]/)[0];
+    if (identifier) return `https://archive.org/embed/${identifier}`;
   }
 
-  if (sourceType === 'openlibrary') {
-    // Open Library books that are readable link to an Internet Archive copy
-    const iaLink = downloadLinks?.find(l => l.url.includes('archive.org/details/'));
-    if (iaLink) {
-      const identifier = iaLink.url.split('archive.org/details/')[1]?.split(/[/?#]/)[0];
-      if (identifier) return `https://archive.org/embed/${identifier}`;
-    }
-    return null;
+  // Google Books
+  const gbUrl = allUrls.find(u => u.includes('books.google.com/books'));
+  if (gbUrl) {
+    const match = gbUrl.match(/[?&]id=([^&]+)/);
+    if (match) return `https://books.google.com/books?id=${match[1]}&printsec=frontcover&output=embed`;
   }
 
-  if (sourceType === 'googlebooks' && id.startsWith('gb-')) {
-    return `https://books.google.com/books?id=${id.slice(3)}&printsec=frontcover&output=embed`;
-  }
-
-  if (sourceType === 'gutenberg' && id.startsWith('pg-')) {
-    const pgId = id.slice(3);
-    return `https://www.gutenberg.org/cache/epub/${pgId}/pg${pgId}-images.html`;
+  // Project Gutenberg — prefer the HTML reading version if we can derive an ebook id
+  const gutenbergUrl = allUrls.find(u => u.includes('gutenberg.org'));
+  if (gutenbergUrl) {
+    const match = gutenbergUrl.match(/gutenberg\.org\/(?:ebooks|cache\/epub)\/(\d+)/);
+    if (match) return `https://www.gutenberg.org/cache/epub/${match[1]}/pg${match[1]}-images.html`;
   }
 
   return null;

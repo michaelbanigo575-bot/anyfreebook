@@ -6,6 +6,8 @@ import { AudioProvider, AudioPlayerBar } from '@/components/AudioPlayer';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import { ReadingReminderProvider } from '@/components/ReadingReminderProvider';
+import { AuthProvider } from '@/components/AuthProvider';
+import { BackButton } from '@/components/BackButton';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
 
 export const metadata: Metadata = {
@@ -69,16 +71,21 @@ export default function RootLayout({
         ))}
       </head>
       <body className="min-h-screen flex flex-col antialiased">
-        <ThemeProvider>
-          <AudioProvider>
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <AudioPlayerBar />
-            <PWAInstallPrompt />
-            <ReadingReminderProvider />
-            <Footer />
-          </AudioProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AudioProvider>
+              <Navbar />
+              <main className="flex-1">
+                <BackButton />
+                {children}
+              </main>
+              <AudioPlayerBar />
+              <PWAInstallPrompt />
+              <ReadingReminderProvider />
+              <Footer />
+            </AudioProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

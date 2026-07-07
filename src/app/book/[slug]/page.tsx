@@ -5,8 +5,10 @@ import { BookGrid } from '@/components/BookGrid';
 import { SectionHeader } from '@/components/SectionHeader';
 import { getBookBySlug, getBooksByCategory, formatCount, getAllBooks } from '@/lib/data';
 import { BookInteractionButtons } from '@/components/BookInteractions';
+import { BookReadActions } from '@/components/BookReadActions';
 import { bookSchema, breadcrumbSchema } from '@/lib/schema';
 import { BookDetailClient } from '@/components/BookDetailClient';
+import { resolveBookSource } from '@/lib/api/resolveSource';
 
 export async function generateStaticParams() {
   return getAllBooks().map(book => ({ slug: book.slug }));
@@ -28,9 +30,17 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function BookPage({ params }: { params: { slug: string } }) {
-  const book = getBookBySlug(params.slug);
-  if (!book) notFound();
+export default async function BookPage({ params }: { params: { slug: string } }) {
+  const localBook = getBookBySlug(params.slug);
+  if (!localBook) notFound();
+
+  let book = localBook;
+  if (!book.sourceUrl && (!book.downloadLinks || book.downloadLinks.length === 0)) {
+    const resolved = await resolveBookSource(book.title, book.author);
+    if (resolved) {
+      book = { ...book, sourceUrl: resolved.sourceUrl, sourceType: resolved.sourceType, downloadLinks: resolved.downloadLinks };
+    }
+  }
 
   const relatedBooks = getBooksByCategory(book.category.slug)
     .filter(b => b.id !== book.id)
@@ -119,7 +129,13 @@ export default function BookPage({ params }: { params: { slug: string } }) {
 
             {/* Interactions */}
             <div className="mt-4">
-              <BookInteractionButtons bookId={book.id} likeCount={book.likeCount} />
+              <BookInteractionButtons
+                bookId={book.id}
+                likeCount={book.likeCount}
+                bookTitle={book.title}
+                bookAuthor={book.author}
+                bookSlug={book.slug}
+              />
             </div>
 
             {/* Description */}
@@ -127,26 +143,8 @@ export default function BookPage({ params }: { params: { slug: string } }) {
               <p className="text-[var(--text-secondary)] leading-relaxed">{book.description}</p>
             </div>
 
-            {/* Formats */}
-            <div className="mt-6">
-              <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Available formats</h3>
-              <div className="flex flex-wrap gap-2">
-                {book.formats.map(format => (
-                  <button
-                    key={format}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-                      bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)]
-                      text-white shadow-md hover:shadow-lg hover:-translate-y-0.5
-                      transition-all duration-300"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
-                    </svg>
-                    Download {format}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Read / Download */}
+            <BookReadActions book={book} formats={book.formats} />
 
             {/* Price tag + share + savings */}
             <BookDetailClient bookTitle={book.title} bookAuthor={book.author} />

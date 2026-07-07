@@ -7,6 +7,7 @@ import {
   requestReminderPermission,
   type StudyPlan,
 } from '@/components/ReadingReminderProvider';
+import { useAuth } from '@/components/AuthProvider';
 
 const DAYS = [
   { id: 0, label: 'Sun' },
@@ -29,21 +30,19 @@ const DEFAULT_PLAN: StudyPlan = {
   reminderTime: '19:00',
   reminderDays: [1, 3, 5],
   focusCategory: '',
-  booksInPlan: [],
-  createdAt: new Date().toISOString(),
   lastNotifiedDate: null,
 };
 
 export default function StudyPlanPage() {
+  const { user } = useAuth();
   const [plan, setPlan] = useState<StudyPlan>(DEFAULT_PLAN);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const existing = getStudyPlan();
-    if (existing) setPlan(existing);
+    getStudyPlan(user?.id).then(existing => { if (existing) setPlan(existing); });
     if (typeof Notification !== 'undefined') setPermission(Notification.permission);
-  }, []);
+  }, [user]);
 
   const toggleDay = (day: number) => {
     setPlan(p => ({
@@ -65,17 +64,17 @@ export default function StudyPlanPage() {
     }
   };
 
-  const handleSave = () => {
-    const updated = { ...plan, enabled: true, createdAt: plan.createdAt || new Date().toISOString() };
-    saveStudyPlan(updated);
+  const handleSave = async () => {
+    const updated = { ...plan, enabled: true };
+    await saveStudyPlan(updated, user?.id);
     setPlan(updated);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleDisable = () => {
+  const handleDisable = async () => {
     const updated = { ...plan, enabled: false };
-    saveStudyPlan(updated);
+    await saveStudyPlan(updated, user?.id);
     setPlan(updated);
   };
 
@@ -232,7 +231,10 @@ export default function StudyPlanPage() {
           <li>• Enable browser notifications so ANYFREEBOOK can alert you — like an alarm</li>
           <li>• Keep a tab open in the background; the reminder fires automatically at the scheduled time</li>
           <li>• Click the notification to jump straight back to your study plan</li>
-          <li>• Pause anytime — your plan is saved locally in this browser</li>
+          <li>• Pause anytime — your plan is saved {user ? 'to your account and syncs across devices' : 'locally in this browser'}</li>
+          {!user && (
+            <li>• <a href="/login" className="text-[var(--primary)] hover:underline">Sign in</a> to sync this plan across all your devices</li>
+          )}
         </ul>
       </div>
 

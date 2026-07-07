@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { BookCover } from '@/components/BookCover';
 import { BookPreviewModal } from '@/components/BookPreviewModal';
 import type { Book } from '@/lib/data';
@@ -44,18 +44,52 @@ function SearchResults() {
   const [searchInput, setSearchInput] = useState(query);
   const [activeSource, setActiveSource] = useState('all');
   const [previewBook, setPreviewBook] = useState<Book | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const doSearch = useCallback(async (q: string, source = 'all') => {
     if (!q.trim()) { setResults([]); setTotal(0); setSources({}); return; }
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setResults([]);
+    setTotal(0);
+    setSources({});
     setLoading(true);
+
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&source=${source}`);
-      const data = await res.json();
-      setResults(data.books || []);
-      setTotal(data.total || 0);
-      setSources(data.sources || {});
-    } catch { setResults([]); }
-    setLoading(false);
+      const res = await fetch(`/api/search-stream?q=${encodeURIComponent(q)}&source=${source}`, {
+        signal: controller.signal,
+      });
+      if (!res.body) { setLoading(false); return; }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const msg = JSON.parse(line);
+          if (msg.type === 'source') {
+            setResults(prev => [...prev, ...msg.books]);
+            setSources(prev => ({ ...prev, [msg.label]: msg.total }));
+            setTotal(prev => prev + (msg.total || 0));
+          }
+        }
+      }
+      setLoading(false);
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -119,12 +153,14 @@ function SearchResults() {
           </div>
 
           <p className="text-sm text-[var(--text-muted)] mb-4">
-            {loading ? 'Searching across sources...' : `${total.toLocaleString()}+ results for "${query}"`}
+            {loading
+              ? `Finding results... ${results.length > 0 ? `(${results.length.toLocaleString()} so far)` : ''}`
+              : `${total.toLocaleString()}+ results for "${query}"`}
           </p>
         </>
       )}
 
-      {loading && (
+      {loading && results.length === 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="animate-pulse rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
@@ -141,7 +177,7 @@ function SearchResults() {
         </div>
       )}
 
-      {!loading && results.length > 0 && (
+      {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {results.map((book) => (
             <div

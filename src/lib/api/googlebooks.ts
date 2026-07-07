@@ -90,8 +90,13 @@ function googleToBook(v: GoogleVolume): Book {
   };
 }
 
+function apiKeyParam(): string {
+  const key = process.env.GOOGLE_BOOKS_API_KEY;
+  return key ? `&key=${key}` : '';
+}
+
 export async function searchGoogleBooks(query: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
-  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance`;
+  const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
   const res = await fetch(url, { next: { revalidate: 3600 } });
   if (!res.ok) return { books: [], total: 0 };
   const data: GoogleBooksResponse = await res.json();
@@ -103,7 +108,7 @@ export async function searchGoogleBooks(query: string, startIndex = 0, maxResult
 }
 
 export async function getGoogleBooksBySubject(subject: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
-  const url = `https://www.googleapis.com/books/v1/volumes?q=subject:${encodeURIComponent(subject)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance`;
+  const url = `https://www.googleapis.com/books/v1/volumes?q=subject:${encodeURIComponent(subject)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
   const res = await fetch(url, { next: { revalidate: 3600 } });
   if (!res.ok) return { books: [], total: 0 };
   const data: GoogleBooksResponse = await res.json();

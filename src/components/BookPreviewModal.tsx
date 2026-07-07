@@ -18,12 +18,8 @@ export function getPreviewEmbedUrl(book: Book): string | null {
     if (identifier) return `https://archive.org/embed/${identifier}`;
   }
 
-  // Google Books
-  const gbUrl = allUrls.find(u => u.includes('books.google.com/books'));
-  if (gbUrl) {
-    const match = gbUrl.match(/[?&]id=([^&]+)/);
-    if (match) return `https://books.google.com/books?id=${match[1]}&printsec=frontcover&output=embed`;
-  }
+  // Note: Google Books deliberately blocks iframe embedding (X-Frame-Options: SAMEORIGIN),
+  // so we don't attempt to embed it — those results fall through to the "read at source" panel below.
 
   // Project Gutenberg — prefer the HTML reading version if we can derive an ebook id
   const gutenbergUrl = allUrls.find(u => u.includes('gutenberg.org'));
@@ -107,12 +103,18 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4">
             <p className="text-5xl">📖</p>
             <p className="text-lg font-semibold text-[var(--text)]">
-              In-page preview isn&apos;t available for this source
+              {book.sourceType === 'googlebooks'
+                ? "Google Books doesn't allow in-page previews"
+                : book.sourceType === 'pubmed' || book.sourceType === 'doaj'
+                ? 'This is a research article, not a book'
+                : "No full-text copy found for this title"}
             </p>
             <p className="text-sm text-[var(--text-muted)] max-w-md">
-              {book.sourceType === 'pubmed' || book.sourceType === 'doaj'
+              {book.sourceType === 'googlebooks'
+                ? 'Google blocks embedding of its preview pages on other sites — this is a restriction on their end, not ours. You can still read it on Google Books directly.'
+                : book.sourceType === 'pubmed' || book.sourceType === 'doaj'
                 ? 'Research articles open directly on the publisher\'s site with the full text free to read.'
-                : 'You can read this book for free at its original source.'}
+                : 'This source only has catalog information, not a scanned or digital copy available to preview. You can still view its details at the source.'}
             </p>
             {externalUrl && (
               <a

@@ -9,6 +9,7 @@ import { BookReadActions } from '@/components/BookReadActions';
 import { bookSchema, breadcrumbSchema } from '@/lib/schema';
 import { BookDetailClient } from '@/components/BookDetailClient';
 import { resolveBookSource } from '@/lib/api/resolveSource';
+import { AdUnit } from '@/components/AdUnit';
 
 export async function generateStaticParams() {
   return getAllBooks().map(book => ({ slug: book.slug }));
@@ -141,6 +142,10 @@ export default async function BookPage({ params }: { params: { slug: string } })
             {/* Description */}
             <div className="mt-6 p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)]">
               <p className="text-[var(--text-secondary)] leading-relaxed">{book.description}</p>
+            </div>
+
+            <div className="mt-6 flex justify-center">
+              <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOOK} />
             </div>
 
             {/* Read / Download */}

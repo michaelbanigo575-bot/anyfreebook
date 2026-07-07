@@ -1,9 +1,10 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Suspense, useState, useEffect, useCallback, useRef } from 'react';
+import { Fragment, Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { BookCover } from '@/components/BookCover';
 import { BookPreviewModal } from '@/components/BookPreviewModal';
+import { AdUnit } from '@/components/AdUnit';
 import type { Book } from '@/lib/data';
 
 function SourceBadge({ source }: { source?: string }) {
@@ -179,9 +180,14 @@ function SearchResults() {
 
       {results.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {results.map((book) => (
+          {results.map((book, i) => (
+            <Fragment key={book.id}>
+              {i > 0 && i % 8 === 0 && (
+                <div className="col-span-full flex justify-center py-2">
+                  <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SEARCH} />
+                </div>
+              )}
             <div
-              key={book.id}
               className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--border)] hover:shadow-lg transition-all duration-300 overflow-hidden"
             >
               <div className="p-4">
@@ -280,6 +286,7 @@ function SearchResults() {
                 )}
               </div>
             </div>
+            </Fragment>
           ))}
         </div>
       )}

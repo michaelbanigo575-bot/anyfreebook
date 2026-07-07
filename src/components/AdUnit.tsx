@@ -35,11 +35,11 @@ export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
       className={`flex items-center justify-center mx-auto overflow-hidden rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] ${className}`}
       style={{ maxWidth: width, minHeight: height }}
     >
-      {slot ? (
+      {slot && process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
         <ins
           className="adsbygoogle"
           style={{ display: 'block', width, height }}
-          data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+          data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}
           data-ad-slot={slot}
           data-ad-format="auto"
           data-full-width-responsive="true"

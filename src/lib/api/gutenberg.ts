@@ -77,13 +77,68 @@ function gutenbergToBook(g: GutenbergBook): Book {
   };
 }
 
+/**
+ * Fallback backend: search the Project Gutenberg collection mirrored on Internet Archive.
+ * gutendex.com blocks datacenter IPs (403 from Vercel), but archive.org does not.
+ * IA identifiers in this collection embed the PG ebook number (e.g. "aloverscomplaint01137gut" → 1137),
+ * letting us link to the real gutenberg.org page so the in-page preview still works.
+ */
+async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ books: Book[]; total: number }> {
+  const q = query === '*' ? 'collection:gutenberg' : `${query} AND collection:gutenberg`;
+  const sort = query === '*' ? '&sort[]=downloads+desc' : '';
+  const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&rows=32&page=${page}${sort}&output=json`;
+  const res = await fetch(url, { next: { revalidate: 3600 } });
+  if (!res.ok) {
+    console.error(`[gutenberg] archive fallback failed: ${res.status} ${res.statusText}`);
+    return { books: [], total: 0 };
+  }
+  const data = await res.json();
+  const docs: { identifier: string; title?: string; creator?: string | string[]; year?: string; downloads?: number; subject?: string | string[] }[] = data.response?.docs || [];
+
+  const books: Book[] = docs.filter(d => d.title).map(d => {
+    const pgMatch = d.identifier.match(/(\d+)gut$/);
+    const pgId = pgMatch ? parseInt(pgMatch[1], 10) : null;
+    const gutenbergUrl = pgId ? `https://www.gutenberg.org/ebooks/${pgId}` : `https://archive.org/details/${d.identifier}`;
+    const title = d.title!;
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80);
+    const author = Array.isArray(d.creator) ? d.creator.join(', ') : (d.creator || 'Unknown');
+    const subjects = Array.isArray(d.subject) ? d.subject : d.subject ? [d.subject] : [];
+
+    return {
+      id: pgId ? `pg-${pgId}` : `ia-${d.identifier}`,
+      title: title.length > 120 ? title.slice(0, 117) + '...' : title,
+      author,
+      slug: pgId ? `${slug}-pg-${pgId}` : `${slug}-ia-${d.identifier}`.slice(0, 100),
+      coverUrl: `https://archive.org/services/img/${d.identifier}`,
+      description: `Free public domain book from Project Gutenberg. ${subjects.slice(0, 3).join(', ')}`,
+      rating: +(3.5 + Math.random() * 1.3).toFixed(1),
+      ratingCount: Math.floor((d.downloads || 1000) / 100),
+      contentType: 'BOOK' as const,
+      formats: ['HTML', 'EPUB', 'TXT'],
+      viewCount: d.downloads || Math.floor(1000 + Math.random() * 20000),
+      likeCount: Math.floor((d.downloads || 1000) / 20),
+      publishYear: d.year ? parseInt(d.year) : undefined,
+      language: 'en',
+      category: mapCategory(subjects, []),
+      sourceUrl: gutenbergUrl,
+      sourceType: 'gutenberg' as const,
+      downloadLinks: [
+        { label: 'Read on Project Gutenberg', url: gutenbergUrl, source: 'Project Gutenberg' },
+        { label: 'Read on Internet Archive', url: `https://archive.org/details/${d.identifier}`, source: 'Internet Archive' },
+      ],
+    };
+  });
+
+  return { books, total: data.response?.numFound || books.length };
+}
+
 export async function searchGutenberg(query: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?search=${encodeURIComponent(query)}&page=${page}`;
   try {
     const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
     if (!res.ok) {
-      console.error(`[gutenberg] request failed: ${res.status} ${res.statusText}`);
-      return { books: [], total: 0 };
+      console.error(`[gutenberg] gutendex failed (${res.status}), using archive.org fallback`);
+      return searchGutenbergViaArchive(query, page);
     }
     const data: GutenbergResponse = await res.json();
 
@@ -92,24 +147,29 @@ export async function searchGutenberg(query: string, page = 1): Promise<{ books:
       total: data.count,
     };
   } catch (err) {
-    console.error(`[gutenberg] fetch threw:`, err);
-    return { books: [], total: 0 };
+    console.error(`[gutenberg] gutendex threw, using archive.org fallback:`, err);
+    return searchGutenbergViaArchive(query, page);
   }
 }
 
 export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?sort=popular&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
-  if (!res.ok) {
-    console.error(`[gutenberg] popular request failed: ${res.status} ${res.statusText}`);
-    return { books: [], total: 0 };
-  }
-  const data: GutenbergResponse = await res.json();
+  try {
+    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+    if (!res.ok) {
+      console.error(`[gutenberg] popular failed (${res.status}), using archive.org fallback`);
+      return searchGutenbergViaArchive('*', page);
+    }
+    const data: GutenbergResponse = await res.json();
 
-  return {
-    books: data.results.map(gutenbergToBook),
-    total: data.count,
-  };
+    return {
+      books: data.results.map(gutenbergToBook),
+      total: data.count,
+    };
+  } catch (err) {
+    console.error(`[gutenberg] popular threw, using archive.org fallback:`, err);
+    return searchGutenbergViaArchive('*', page);
+  }
 }
 
 export async function getGutenbergByTopic(topic: string, page = 1): Promise<{ books: Book[]; total: number }> {

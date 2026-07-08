@@ -24,7 +24,7 @@ export async function getPublicationBySlug(slug: string): Promise<{ pub: Publica
     if (!pub) return null;
     const { data: author } = await sb
       .from('profiles')
-      .select('id, display_name, creator_handle, creator_bio, creator_tier, avatar_url, creator_joined_at')
+      .select('id, display_name, creator_handle, creator_bio, creator_tier, avatar_url, creator_joined_at, follower_count')
       .eq('id', pub.author_id)
       .single();
     return { pub: pub as Publication, author: (author as CreatorProfile) || null as never };
@@ -38,7 +38,7 @@ export async function getAuthorByHandle(handle: string): Promise<{ author: Creat
     const sb = createClient();
     const { data: author } = await sb
       .from('profiles')
-      .select('id, display_name, creator_handle, creator_bio, creator_tier, avatar_url, creator_joined_at')
+      .select('id, display_name, creator_handle, creator_bio, creator_tier, avatar_url, creator_joined_at, follower_count')
       .eq('creator_handle', handle)
       .single();
     if (!author) return null;
@@ -82,10 +82,14 @@ export async function getCreatorDashboard(authorId: string): Promise<{
   totalReads: number;
   totalReadSeconds: number;
   verifiedReadsThisMonth: number;
+  totalLikes: number;
+  followerCount: number;
 }> {
   const sb = createServiceClient();
   const { data: pubs } = await sb.from('publications').select('*').eq('author_id', authorId).order('created_at', { ascending: false });
   const list = (pubs as Publication[]) || [];
+
+  const { data: prof } = await sb.from('profiles').select('follower_count').eq('id', authorId).single();
 
   const pubIds = list.map(p => p.id);
   let verifiedReadsThisMonth = 0;
@@ -107,5 +111,7 @@ export async function getCreatorDashboard(authorId: string): Promise<{
     totalReads: list.reduce((a, p) => a + (p.read_count || 0), 0),
     totalReadSeconds: list.reduce((a, p) => a + (p.total_read_seconds || 0), 0),
     verifiedReadsThisMonth,
+    totalLikes: list.reduce((a, p) => a + (p.like_count || 0), 0),
+    followerCount: prof?.follower_count || 0,
   };
 }

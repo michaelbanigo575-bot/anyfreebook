@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAuthorByHandle } from '@/lib/creators/server';
 import { tierForReads } from '@/lib/creators/types';
+import { FollowButton } from '@/components/FollowButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,9 +39,13 @@ export default async function AuthorPage({ params }: { params: { handle: string 
           <p className="text-sm text-[var(--text-muted)]">@{author.creator_handle}</p>
           {author.creator_bio && <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-lg">{author.creator_bio}</p>}
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-3 text-xs text-[var(--text-muted)]">
+            <span><strong className="text-[var(--text)]">{fmt(author.follower_count || 0)}</strong> followers</span>
             <span><strong className="text-[var(--text)]">{pubs.length}</strong> works</span>
             <span><strong className="text-[var(--text)]">{fmt(totalReads)}</strong> total reads</span>
           </div>
+        </div>
+        <div className="flex-shrink-0">
+          <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} />
         </div>
       </div>
 

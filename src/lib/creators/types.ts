@@ -15,6 +15,8 @@ export interface Publication {
   read_count: number;
   total_read_seconds: number;
   like_count: number;
+  save_count?: number;
+  comment_count?: number;
   created_at: string;
   published_at: string | null;
   updated_at: string;
@@ -28,6 +30,7 @@ export interface CreatorProfile {
   creator_tier: string;
   avatar_url: string | null;
   creator_joined_at: string | null;
+  follower_count?: number;
 }
 
 export interface ProgramConfig {

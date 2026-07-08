@@ -11,7 +11,7 @@ interface Props {
   handle: string | null;
   displayName: string | null;
   pubs: Publication[];
-  stats: { totalViews: number; totalReads: number; totalReadSeconds: number };
+  stats: { totalViews: number; totalReads: number; totalReadSeconds: number; totalLikes: number; followerCount: number };
   earnings: EarningsEstimate;
   tier: CreatorTier;
   config: ProgramConfig;
@@ -87,7 +87,9 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatTile label="Followers" value={stats.followerCount.toLocaleString()} />
+        <StatTile label="Total likes" value={stats.totalLikes.toLocaleString()} />
         <StatTile label="Total views" value={stats.totalViews.toLocaleString()} />
         <StatTile label="Verified reads" value={stats.totalReads.toLocaleString()} />
         <StatTile label="Hours read" value={hoursRead} />

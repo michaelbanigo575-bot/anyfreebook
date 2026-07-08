@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { getPublicationBySlug } from '@/lib/creators/server';
 import { PublicationContent } from '@/components/PublicationContent';
 import { ReadTracker } from '@/components/ReadTracker';
-import { BookCover } from '@/components/BookCover';
 import { AdUnit } from '@/components/AdUnit';
+import { PublicationInteractions } from '@/components/PublicationInteractions';
+import { CommentsSection } from '@/components/CommentsSection';
+import { FollowButton } from '@/components/FollowButton';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,23 +71,32 @@ export default async function ReadPublicationPage({ params }: { params: { slug: 
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold">
             {(author?.display_name || 'A').slice(0, 1).toUpperCase()}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {author?.creator_handle ? (
               <Link href={`/author/${author.creator_handle}`} className="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">{author.display_name || 'Author'}</Link>
             ) : (
               <span className="text-sm font-semibold text-[var(--text)]">{author?.display_name || 'Author'}</span>
             )}
             <div className="text-[11px] text-[var(--text-muted)]">
-              {fmt(pub.view_count)} views · {fmt(pub.read_count)} reads
-              {pub.published_at && ` · ${new Date(pub.published_at).toLocaleDateString()}`}
+              {fmt(author?.follower_count || 0)} followers · {fmt(pub.view_count)} views · {fmt(pub.read_count)} reads
             </div>
           </div>
+          {author && <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} size="sm" />}
         </div>
       </header>
 
       {pub.cover_url && (
-        <img src={pub.cover_url} alt={pub.title} className="w-full rounded-2xl mb-8 max-h-[420px] object-cover" />
+        <img src={pub.cover_url} alt={pub.title} className="w-full rounded-2xl mb-6 max-h-[420px] object-cover" />
       )}
+
+      <PublicationInteractions
+        publicationId={pub.id}
+        authorId={pub.author_id}
+        initialLikes={pub.like_count}
+        initialSaves={pub.save_count || 0}
+        commentCount={pub.comment_count || 0}
+        title={pub.title}
+      />
 
       {pub.body && <PublicationContent body={pub.body} />}
 
@@ -111,14 +123,16 @@ export default async function ReadPublicationPage({ params }: { params: { slug: 
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-[var(--text)]">{author.display_name || 'Author'}</div>
-              {author.creator_bio && <p className="text-sm text-[var(--text-muted)] mt-0.5 line-clamp-2">{author.creator_bio}</p>}
+              <div className="text-[11px] text-[var(--text-muted)]">{fmt(author.follower_count || 0)} followers</div>
+              {author.creator_bio && <p className="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{author.creator_bio}</p>}
             </div>
-            {author.creator_handle && (
-              <Link href={`/author/${author.creator_handle}`} className="px-4 py-2 rounded-xl bg-[var(--primary)] text-white text-sm font-semibold whitespace-nowrap">View profile</Link>
-            )}
+            <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} />
           </div>
         </div>
       )}
+
+      {/* Comments */}
+      <CommentsSection publicationId={pub.id} />
 
       {/* CTA */}
       <div className="mt-8 text-center">

@@ -38,7 +38,7 @@ export default async function CreatorDashboardPage() {
       handle={profile.creator_handle}
       displayName={profile.display_name}
       pubs={dash.pubs}
-      stats={{ totalViews: dash.totalViews, totalReads: dash.totalReads, totalReadSeconds: dash.totalReadSeconds }}
+      stats={{ totalViews: dash.totalViews, totalReads: dash.totalReads, totalReadSeconds: dash.totalReadSeconds, totalLikes: dash.totalLikes, followerCount: dash.followerCount }}
       earnings={earnings}
       tier={tier}
       config={config}

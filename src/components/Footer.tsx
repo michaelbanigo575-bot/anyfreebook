@@ -9,7 +9,7 @@ export function Footer() {
         { label: 'Trending', href: '/trending' },
         { label: 'New Arrivals', href: '/new' },
         { label: 'Audiobooks', href: '/audiobooks' },
-        { label: 'Collections', href: '/collections' },
+        { label: 'Published by Authors', href: '/creators/discover' },
       ],
     },
     {
@@ -35,9 +35,9 @@ export function Footer() {
     {
       title: 'Resources',
       links: [
+        { label: 'Publish & Earn (Creators)', href: '/creators' },
         { label: 'Study Plan & Reminders', href: '/study-plan' },
         { label: 'Free Textbook Alternatives', href: '/free-textbook-alternatives' },
-        { label: 'For Universities', href: '/universities' },
         { label: 'Rewards & Referrals', href: '/rewards' },
       ],
     },

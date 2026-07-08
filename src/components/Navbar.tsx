@@ -38,6 +38,7 @@ export function Navbar() {
     { label: 'Explore', href: '/explore' },
     { label: 'Trending', href: '/trending' },
     { label: 'Audiobooks', href: '/audiobooks' },
+    { label: 'Publish & Earn', href: '/creators' },
     { label: 'Study Plan', href: '/study-plan' },
     { label: 'Rewards', href: '/rewards' },
   ];

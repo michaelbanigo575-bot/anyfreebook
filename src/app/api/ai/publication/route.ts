@@ -11,7 +11,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
  */
 
 const DAILY_CAP_PER_CREATOR = 20;
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-flash-latest';
 
 interface QuizQuestion {
   question: string;

@@ -9,6 +9,7 @@ export async function getProgramConfig(): Promise<ProgramConfig> {
       pool_percentage: Number(data.pool_percentage),
       platform_percentage: Number(data.platform_percentage),
       monthly_read_threshold: data.monthly_read_threshold,
+      monthly_follower_threshold: data.monthly_follower_threshold ?? DEFAULT_CONFIG.monthly_follower_threshold,
       min_payout_usd: Number(data.min_payout_usd),
       estimated_rpm_usd: Number(data.estimated_rpm_usd),
     } : DEFAULT_CONFIG;
@@ -30,6 +31,28 @@ export async function getPublicationBySlug(slug: string): Promise<{ pub: Publica
     return { pub: pub as Publication, author: (author as CreatorProfile) || null as never };
   } catch {
     return null;
+  }
+}
+
+export interface PublicChapter {
+  id: string;
+  title: string;
+  position: number;
+  body: string | null;
+}
+
+export async function getPublishedChapters(publicationId: string): Promise<PublicChapter[]> {
+  try {
+    const sb = createClient();
+    const { data } = await sb
+      .from('chapters')
+      .select('id, title, position, body')
+      .eq('publication_id', publicationId)
+      .eq('status', 'published')
+      .order('position');
+    return (data as PublicChapter[]) || [];
+  } catch {
+    return [];
   }
 }
 

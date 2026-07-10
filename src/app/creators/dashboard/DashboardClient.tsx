@@ -105,20 +105,39 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
             </div>
           </div>
 
-          {/* Qualification meter */}
-          <div className="relative mt-6">
-            <div className="flex justify-between text-[11px] text-white/60 mb-1.5">
-              <span className={earnings.qualified ? 'text-emerald-300 font-semibold' : ''}>
-                {earnings.qualified ? '✓ Qualified for payout this month' : `${fmt(earnings.readsToThreshold)} more verified reads to qualify`}
-              </span>
-              <span className="font-mono">{fmt(config.monthly_read_threshold)}/mo</span>
+          {/* Qualification meters — both reads AND followers must clear the bar */}
+          <div className="relative mt-6 space-y-4">
+            <div>
+              <div className="flex justify-between text-[11px] text-white/60 mb-1.5">
+                <span className={earnings.readsToThreshold === 0 ? 'text-emerald-300 font-semibold' : ''}>
+                  {earnings.readsToThreshold === 0 ? '✓ Verified reads target met' : `${fmt(earnings.readsToThreshold)} more verified reads needed`}
+                </span>
+                <span className="font-mono">{fmt(stats.totalReads)} / {fmt(config.monthly_read_threshold)}</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${earnings.readsToThreshold === 0 ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-violet-400 to-fuchsia-400'}`}
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
             </div>
-            <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700 ${earnings.qualified ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-violet-400 to-fuchsia-400'}`}
-                style={{ width: `${progressPct}%` }}
-              />
+            <div>
+              <div className="flex justify-between text-[11px] text-white/60 mb-1.5">
+                <span className={earnings.followersToThreshold === 0 ? 'text-emerald-300 font-semibold' : ''}>
+                  {earnings.followersToThreshold === 0 ? '✓ Follower target met' : `${fmt(earnings.followersToThreshold)} more followers needed`}
+                </span>
+                <span className="font-mono">{fmt(stats.followerCount)} / {fmt(config.monthly_follower_threshold)}</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${earnings.followersToThreshold === 0 ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-fuchsia-400 to-pink-400'}`}
+                  style={{ width: `${Math.min(100, (stats.followerCount / config.monthly_follower_threshold) * 100)}%` }}
+                />
+              </div>
             </div>
+            {earnings.qualified && (
+              <p className="text-xs text-emerald-300 font-semibold">✓ Fully qualified for payout this month — min. ${config.min_payout_usd} to cash out</p>
+            )}
           </div>
         </section>
 
@@ -179,6 +198,9 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
                   <div className="flex items-center gap-1.5 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
                     <Link href={`/creators/publications/${p.id}/edit`} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/15 hover:bg-white/10 transition-colors">
                       Edit
+                    </Link>
+                    <Link href={`/creators/publications/${p.id}/chapters`} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/15 hover:bg-white/10 transition-colors">
+                      Chapters
                     </Link>
                     <button onClick={() => toggleStatus(p)} disabled={busy === p.id} className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/15 hover:bg-white/10 transition-colors disabled:opacity-40">
                       {busy === p.id ? '…' : p.status === 'published' ? 'Unpublish' : 'Publish'}

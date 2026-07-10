@@ -8,6 +8,8 @@ export interface Publication {
   cover_url: string | null;
   category: string;
   content_type: 'article' | 'book' | 'poetry' | 'guide' | 'story';
+  publication_type?: PublicationType;
+  originality_status?: OriginalityStatus;
   body: string | null;
   external_url: string | null;
   status: 'draft' | 'published' | 'removed';
@@ -21,6 +23,20 @@ export interface Publication {
   published_at: string | null;
   updated_at: string;
 }
+
+export type PublicationType = 'lecture_note' | 'article' | 'journal' | 'licensed_publication' | 'authored_work' | 'poetry' | 'story' | 'guide';
+export type OriginalityStatus = 'unchecked' | 'checked_clear' | 'flagged' | 'author_confirmed_licensed';
+
+export const PUBLICATION_TYPES: { id: PublicationType; label: string; hint: string }[] = [
+  { id: 'authored_work', label: 'Authored Work', hint: 'Original writing you created yourself' },
+  { id: 'lecture_note', label: 'Lecture Note', hint: 'Teaching material for a course or class' },
+  { id: 'article', label: 'Article', hint: 'Short-form original writing' },
+  { id: 'journal', label: 'Journal / Research', hint: 'Academic or research writing' },
+  { id: 'licensed_publication', label: 'Licensed Publication', hint: "You hold the rights to publish this — you'll confirm licensing" },
+  { id: 'poetry', label: 'Poetry', hint: 'Original poems' },
+  { id: 'story', label: 'Story / Fiction', hint: 'Original fiction' },
+  { id: 'guide', label: 'Guide / How-to', hint: 'Instructional writing' },
+];
 
 export interface CreatorProfile {
   id: string;
@@ -37,6 +53,7 @@ export interface ProgramConfig {
   pool_percentage: number;
   platform_percentage: number;
   monthly_read_threshold: number;
+  monthly_follower_threshold: number;
   min_payout_usd: number;
   estimated_rpm_usd: number;
 }
@@ -44,8 +61,9 @@ export interface ProgramConfig {
 export const DEFAULT_CONFIG: ProgramConfig = {
   pool_percentage: 40,
   platform_percentage: 60,
-  monthly_read_threshold: 500,
-  min_payout_usd: 25,
+  monthly_read_threshold: 50000,
+  monthly_follower_threshold: 2000,
+  min_payout_usd: 100,
   estimated_rpm_usd: 1.2,
 };
 

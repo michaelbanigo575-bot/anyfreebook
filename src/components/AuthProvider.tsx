@@ -14,6 +14,8 @@ export interface Profile {
   is_premium: boolean;
   premium_until: string | null;
   favorite_category: string | null;
+  is_creator: boolean;
+  creator_handle: string | null;
   created_at: string;
 }
 

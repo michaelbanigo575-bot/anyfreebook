@@ -32,6 +32,8 @@ function mapCategory(subjects: { term: string }[] | undefined): { name: string; 
   if (s.includes('math')) return { name: 'Mathematics', slug: 'free-mathematics-books' };
   if (s.includes('psycholog')) return { name: 'Psychology', slug: 'free-psychology-books' };
   if (s.includes('education')) return { name: 'Education', slug: 'free-education-books' };
+  if (s.includes('religio') || s.includes('spiritual') || s.includes('theolog')) return { name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books' };
+  if (s.includes('politic')) return { name: 'Political Magazines', slug: 'free-political-magazines' };
   return { name: 'Arts & Humanities', slug: 'free-arts-books' };
 }
 

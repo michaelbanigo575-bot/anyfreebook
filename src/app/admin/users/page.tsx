@@ -1,11 +1,11 @@
-import { getUserMetrics, getRecentSignups } from '@/lib/admin/metrics';
+import { getUserMetrics, getRecentSignups, getViewMetrics } from '@/lib/admin/metrics';
 import { Panel, Stat, Sparkline, relTime } from '../ui';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function UsersPage() {
-  const [metrics, signups] = await Promise.all([getUserMetrics(), getRecentSignups(30)]);
+  const [metrics, signups, views] = await Promise.all([getUserMetrics(), getRecentSignups(30), getViewMetrics()]);
 
   return (
     <div className="space-y-6">
@@ -14,6 +14,12 @@ export default async function UsersPage() {
         <Stat label="This week" value={metrics.newThisWeek.toLocaleString()} tone={metrics.newThisWeek > 0 ? 'good' : 'warn'} />
         <Stat label="Interactions" value={metrics.totalInteractions.toLocaleString()} sub={Object.entries(metrics.interactionsByType).map(([k, v]) => `${k}: ${v}`).join(' · ') || 'none yet'} />
         <Stat label="Premium" value={metrics.premiumUsers.toLocaleString()} tone={metrics.premiumUsers > 0 ? 'good' : 'default'} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Stat label="Content views today" value={views.today.toLocaleString()} tone="good" />
+        <Stat label="Views this week" value={views.last7Days.toLocaleString()} />
+        <Stat label="Views this month" value={views.last30Days.toLocaleString()} />
       </div>
 
       <Panel title="Signup trend — last 30 days">

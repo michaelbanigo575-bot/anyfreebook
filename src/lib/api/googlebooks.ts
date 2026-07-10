@@ -43,6 +43,9 @@ function mapCategory(categories: string[] | undefined): { name: string; slug: st
   if (c.includes('fiction') || c.includes('literary') || c.includes('philosophy') || c.includes('history') || c.includes('art') || c.includes('poetry')) return { name: 'Arts & Humanities', slug: 'free-arts-books' };
   if (c.includes('psych')) return { name: 'Psychology', slug: 'free-psychology-books' };
   if (c.includes('education')) return { name: 'Education', slug: 'free-education-books' };
+  if (c.includes('religio') || c.includes('spiritual') || c.includes('theolog') || c.includes('bible') || c.includes('devotional')) return { name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books' };
+  if (c.includes('self-help') || c.includes('self help') || c.includes('motivat') || c.includes('inspirat')) return { name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books' };
+  if (c.includes('politic')) return { name: 'Political Magazines', slug: 'free-political-magazines' };
   return { name: 'Arts & Humanities', slug: 'free-arts-books' };
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-import type { Publication } from './types';
+import type { Publication, PublicationType, OriginalityStatus } from './types';
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 70);
@@ -35,6 +35,8 @@ export async function createPublication(input: {
   description?: string;
   category?: string;
   contentType?: Publication['content_type'];
+  publicationType?: PublicationType;
+  originalityStatus?: OriginalityStatus;
   body?: string;
   coverUrl?: string;
   externalUrl?: string;
@@ -55,6 +57,8 @@ export async function createPublication(input: {
     description: input.description || null,
     category: input.category || 'General',
     content_type: input.contentType || 'article',
+    publication_type: input.publicationType || 'authored_work',
+    originality_status: input.originalityStatus || 'unchecked',
     body: input.body || null,
     cover_url: input.coverUrl || null,
     external_url: input.externalUrl || null,
@@ -69,7 +73,7 @@ export async function createPublication(input: {
 export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean }): Promise<{ error: string | null }> {
   const sb = createClient();
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'body', 'cover_url', 'external_url'] as const) {
+  for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'publication_type', 'originality_status', 'body', 'cover_url', 'external_url'] as const) {
     if (patch[k] !== undefined) update[k] = patch[k];
   }
   if (patch.publish !== undefined) {
@@ -84,6 +88,81 @@ export async function deletePublication(id: string): Promise<{ error: string | n
   const sb = createClient();
   const { error } = await sb.from('publications').delete().eq('id', id);
   return { error: error?.message ?? null };
+}
+
+export interface Chapter {
+  id: string;
+  publication_id: string;
+  title: string;
+  position: number;
+  body: string | null;
+  status: 'draft' | 'published';
+  published_at: string | null;
+}
+
+export async function listChapters(publicationId: string): Promise<Chapter[]> {
+  const sb = createClient();
+  const { data } = await sb.from('chapters').select('*').eq('publication_id', publicationId).order('position');
+  return (data as Chapter[]) || [];
+}
+
+export async function createChapter(publicationId: string, title: string, body: string, publish: boolean): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { data: existing } = await sb.from('chapters').select('position').eq('publication_id', publicationId).order('position', { ascending: false }).limit(1);
+  const position = ((existing?.[0]?.position as number) || 0) + 1;
+  const { error } = await sb.from('chapters').insert({
+    publication_id: publicationId,
+    title: title.trim(),
+    body,
+    position,
+    status: publish ? 'published' : 'draft',
+    published_at: publish ? new Date().toISOString() : null,
+  });
+  return { error: error?.message ?? null };
+}
+
+export async function updateChapter(id: string, patch: Partial<Pick<Chapter, 'title' | 'body' | 'status' | 'position'>>): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { error } = await sb.from('chapters').update(patch).eq('id', id);
+  return { error: error?.message ?? null };
+}
+
+export async function deleteChapter(id: string): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { error } = await sb.from('chapters').delete().eq('id', id);
+  return { error: error?.message ?? null };
+}
+
+const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // matches the bucket's 20MB limit
+
+/** Upload a PDF/EPUB/Word/audio file to the author's folder in Supabase Storage. Returns a public URL. */
+export async function uploadPublicationFile(file: File): Promise<{ error: string | null; url?: string }> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { error: 'Not signed in' };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: 'File is too large (max 20 MB).' };
+
+  const allowed = [
+    'application/pdf',
+    'application/epub+zip',
+    'audio/mpeg',
+    'audio/mp4',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ];
+  if (!allowed.includes(file.type)) return { error: 'Only PDF, EPUB, Word (.doc/.docx) or MP3/M4A files are allowed.' };
+
+  const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').slice(-80);
+  const path = `${user.id}/${Date.now()}-${safeName}`;
+
+  const { error } = await sb.storage.from('publications').upload(path, file, {
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (error) return { error: error.message };
+
+  const { data } = sb.storage.from('publications').getPublicUrl(path);
+  return { error: null, url: data.publicUrl };
 }
 
 /** Stable-ish per-browser key for anonymous read de-duplication. */

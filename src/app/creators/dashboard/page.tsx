@@ -30,7 +30,7 @@ export default async function CreatorDashboardPage() {
   }
 
   const dash = await getCreatorDashboard(user.id);
-  const earnings = estimateEarnings(dash.verifiedReadsThisMonth, dash.totalReads, config);
+  const earnings = estimateEarnings(dash.verifiedReadsThisMonth, dash.totalReads, dash.followerCount, config);
   const tier = tierForReads(dash.totalReads);
 
   return (

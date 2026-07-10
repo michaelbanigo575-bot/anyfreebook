@@ -58,6 +58,9 @@ function mapCategory(subjects: string[] | undefined): { name: string; slug: stri
   if (s.includes('nurs') || s.includes('pharmac')) return { name: 'Nursing', slug: 'free-nursing-books' };
   if (s.includes('architect') || s.includes('design') || s.includes('urban')) return { name: 'Architecture', slug: 'free-architecture-books' };
   if (s.includes('maritime') || s.includes('naval') || s.includes('marine') || s.includes('ship')) return { name: 'Maritime', slug: 'free-maritime-books' };
+  if (s.includes('religio') || s.includes('spiritual') || s.includes('theolog') || s.includes('bible') || s.includes('quran') || s.includes('christian') || s.includes('islam') || s.includes('buddhis') || s.includes('hindu')) return { name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books' };
+  if (s.includes('motivat') || s.includes('inspirat') || s.includes('self-help') || s.includes('self help') || s.includes('personal development')) return { name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books' };
+  if (s.includes('politic') && (s.includes('magazine') || s.includes('periodical') || s.includes('current affairs'))) return { name: 'Political Magazines', slug: 'free-political-magazines' };
   return { name: 'Arts & Humanities', slug: 'free-arts-books' };
 }
 

@@ -1,6 +1,6 @@
 import { checkAllRoutes } from '@/lib/admin/siteHealth';
 import { checkAllSources } from '@/lib/admin/sources';
-import { getUserMetrics, getRecentSignups } from '@/lib/admin/metrics';
+import { getUserMetrics, getRecentSignups, getViewMetrics } from '@/lib/admin/metrics';
 import { getGitHubSummary } from '@/lib/admin/github';
 import { getVercelSummary } from '@/lib/admin/vercel';
 import { getIntegrations } from '@/lib/admin/integrations';
@@ -10,13 +10,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function AdminOverview() {
-  const [routes, sources, metrics, github, vercel, signups] = await Promise.all([
+  const [routes, sources, metrics, github, vercel, signups, views] = await Promise.all([
     checkAllRoutes(),
     checkAllSources(),
     getUserMetrics(),
     getGitHubSummary(),
     getVercelSummary(),
     getRecentSignups(5),
+    getViewMetrics(),
   ]);
 
   const integrations = getIntegrations(vercel.connected, github.connected);
@@ -94,6 +95,24 @@ export default async function AdminOverview() {
           </div>
         </Panel>
       </div>
+
+      {/* Content views — daily / weekly / monthly */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stat label="Views today" value={views.today.toLocaleString()} tone="good" />
+        <Stat label="Views yesterday" value={views.yesterday.toLocaleString()} />
+        <Stat label="Views — 7 days" value={views.last7Days.toLocaleString()} />
+        <Stat label="Views — 30 days" value={views.last30Days.toLocaleString()} sub={views.connected ? undefined : 'view_events table not found — run migration 005'} tone={views.connected ? 'default' : 'warn'} />
+      </div>
+
+      <Panel title="Content views trend — last 30 days">
+        <div className="p-5">
+          <Sparkline values={views.dailySeries.map(d => d.count)} height={90} color="#34d399" />
+          <div className="mt-2 flex justify-between text-[10px] text-slate-500 font-mono">
+            <span>{views.dailySeries[0]?.day.slice(5) || '—'}</span>
+            <span>{views.dailySeries[views.dailySeries.length - 1]?.day.slice(5) || '—'}</span>
+          </div>
+        </div>
+      </Panel>
 
       {/* User growth + interactions */}
       <div className="grid lg:grid-cols-3 gap-6">

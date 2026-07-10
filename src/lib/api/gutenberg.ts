@@ -34,6 +34,8 @@ function mapCategory(subjects: string[], bookshelves: string[]): { name: string;
   if (all.includes('business') || all.includes('economics')) return { name: 'Business', slug: 'free-business-books' };
   if (all.includes('education')) return { name: 'Education', slug: 'free-education-books' };
   if (all.includes('psychology')) return { name: 'Psychology', slug: 'free-psychology-books' };
+  if (all.includes('religio') || all.includes('spiritual') || all.includes('theolog') || all.includes('bible') || all.includes('christian') || all.includes('sermon')) return { name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books' };
+  if (all.includes('conduct of life') || all.includes('self-help') || all.includes('success')) return { name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books' };
   return { name: 'Arts & Humanities', slug: 'free-arts-books' };
 }
 

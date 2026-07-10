@@ -1,14 +1,15 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getPublicationBySlug } from '@/lib/creators/server';
+import { getPublicationBySlug, getPublishedChapters } from '@/lib/creators/server';
 import { PublicationContent } from '@/components/PublicationContent';
 import { ReadTracker } from '@/components/ReadTracker';
-import { AdUnit } from '@/components/AdUnit';
+import { ReaderFooterAd } from '@/components/ReaderFooterAd';
 import { PublicationInteractions } from '@/components/PublicationInteractions';
 import { CommentsSection } from '@/components/CommentsSection';
 import { FollowButton } from '@/components/FollowButton';
-import { createClient } from '@/lib/supabase/server';
+import { ReaderSurface } from '@/components/ReaderSurface';
+import { AiStudyAids } from '@/components/AiStudyAids';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,10 +31,15 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 function fmt(n: number) { return n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n); }
 
-export default async function ReadPublicationPage({ params }: { params: { slug: string } }) {
+export default async function ReadPublicationPage({ params, searchParams }: { params: { slug: string }; searchParams: { ch?: string } }) {
   const data = await getPublicationBySlug(params.slug);
   if (!data) notFound();
   const { pub, author } = data;
+
+  const chapters = await getPublishedChapters(pub.id);
+  const chParam = parseInt(searchParams.ch || '', 10);
+  const activeIdx = chapters.length > 0 && chParam >= 1 && chParam <= chapters.length ? chParam - 1 : null;
+  const activeChapter = activeIdx !== null ? chapters[activeIdx] : null;
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -98,21 +104,105 @@ export default async function ReadPublicationPage({ params }: { params: { slug: 
         title={pub.title}
       />
 
-      {pub.body && <PublicationContent body={pub.body} />}
-
-      {pub.external_url && (
-        <div className="mt-8 p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] text-center">
-          <p className="text-sm text-[var(--text-secondary)] mb-3">This work is also available as a downloadable file.</p>
-          <a href={pub.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
-            Open / Download
-          </a>
+      {/* Chapters TOC */}
+      {chapters.length > 0 && (
+        <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
+          <div className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
+            {chapters.length} chapter{chapters.length !== 1 ? 's' : ''}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/read/${pub.slug}`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeChapter === null ? 'bg-[var(--primary)] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+            >
+              Overview
+            </Link>
+            {chapters.map((c, i) => (
+              <Link
+                key={c.id}
+                href={`/read/${pub.slug}?ch=${i + 1}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${activeIdx === i ? 'bg-[var(--primary)] text-white' : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'}`}
+              >
+                {i + 1}. {c.title.length > 24 ? c.title.slice(0, 22) + '…' : c.title}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Ad on creator content — this is the revenue the pool shares from */}
-      <div className="mt-10 flex justify-center">
-        <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOOK} />
-      </div>
+      {/* Reading surface with comfort settings */}
+      <ReaderSurface>
+        {activeChapter ? (
+          <>
+            <h2 className="text-2xl font-display font-bold text-[var(--text)] mb-6">
+              Chapter {activeIdx! + 1}: {activeChapter.title}
+            </h2>
+            {activeChapter.body && <PublicationContent body={activeChapter.body} />}
+          </>
+        ) : (
+          pub.body && <PublicationContent body={pub.body} />
+        )}
+      </ReaderSurface>
+
+      {/* Chapter prev/next */}
+      {chapters.length > 0 && (
+        <div className="mt-8 flex items-center justify-between gap-3">
+          {activeChapter && activeIdx! > 0 ? (
+            <Link href={`/read/${pub.slug}?ch=${activeIdx!}`} className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">
+              ← Ch. {activeIdx!}
+            </Link>
+          ) : activeChapter ? (
+            <Link href={`/read/${pub.slug}`} className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">
+              ← Overview
+            </Link>
+          ) : <span />}
+          {activeIdx === null && chapters.length > 0 ? (
+            <Link href={`/read/${pub.slug}?ch=1`} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-lg transition-all">
+              Start reading — Chapter 1 →
+            </Link>
+          ) : activeIdx !== null && activeIdx < chapters.length - 1 ? (
+            <Link href={`/read/${pub.slug}?ch=${activeIdx + 2}`} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-lg transition-all">
+              Next: Ch. {activeIdx + 2} →
+            </Link>
+          ) : <span />}
+        </div>
+      )}
+
+      {/* Attached file: inline PDF viewer or download card */}
+      {pub.external_url && (
+        <div className="mt-8">
+          {pub.external_url.toLowerCase().includes('.pdf') ? (
+            <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)]">
+              <iframe
+                src={pub.external_url}
+                title={`${pub.title} (PDF)`}
+                className="w-full bg-white"
+                style={{ height: '75vh' }}
+              />
+              <div className="p-3 bg-[var(--surface)] text-center">
+                <a href={pub.external_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[var(--primary)] hover:underline">
+                  Open full screen / download PDF →
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] text-center">
+              <p className="text-sm text-[var(--text-secondary)] mb-3">This work is also available as a downloadable file.</p>
+              <a href={pub.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
+                Open / Download
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* AI study aids */}
+      <AiStudyAids slug={pub.slug} title={pub.title} />
+
+      {/* Subtle footer ad — this is the revenue the pool shares from. Only
+          appears after genuine reading time + scroll, dismissible, never
+          inline in the text. */}
+      <ReaderFooterAd slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOOK} />
 
       {/* Author card */}
       {author && (

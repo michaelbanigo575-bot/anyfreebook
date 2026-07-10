@@ -1,11 +1,33 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BookGrid } from '@/components/BookGrid';
-import { getCategory, getBooksByCategory, getAllCategories } from '@/lib/data';
+import { getCategory, getBooksByCategory, getAllCategories, type Book } from '@/lib/data';
 import { faqSchema, breadcrumbSchema } from '@/lib/schema';
+import { searchOpenLibrary } from '@/lib/api/openlibrary';
+import { searchArchive } from '@/lib/api/archive';
+import { searchGoogleBooks } from '@/lib/api/googlebooks';
+
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   return getAllCategories().map(cat => ({ slug: cat.slug }));
+}
+
+async function fetchLiveCategoryBooks(categoryName: string): Promise<Book[]> {
+  try {
+    const [ol, archive, gb] = await Promise.allSettled([
+      searchOpenLibrary(categoryName, 10, 1),
+      searchArchive(categoryName, 1, 10),
+      searchGoogleBooks(categoryName, 0, 10),
+    ]);
+    return [
+      ...(ol.status === 'fulfilled' ? ol.value.books : []),
+      ...(archive.status === 'fulfilled' ? archive.value.books : []),
+      ...(gb.status === 'fulfilled' ? gb.value.books : []),
+    ];
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -22,11 +44,21 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage({ params }: { params: { slug: string } }) {
   const category = getCategory(params.slug);
   if (!category) notFound();
 
-  const books = getBooksByCategory(params.slug);
+  const curated = getBooksByCategory(params.slug);
+  const live = await fetchLiveCategoryBooks(category.name);
+
+  // De-dupe by normalized title so curated + live results don't repeat
+  const seen = new Set(curated.map(b => b.title.toLowerCase().trim()));
+  const merged = [...curated];
+  for (const b of live) {
+    const key = b.title.toLowerCase().trim();
+    if (!seen.has(key)) { seen.add(key); merged.push(b); }
+  }
+  const books = merged;
 
   const schemas = [
     faqSchema(category.name, category.bookCount),

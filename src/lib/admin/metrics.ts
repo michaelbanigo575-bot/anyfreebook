@@ -87,6 +87,55 @@ export async function getUserMetrics(): Promise<UserMetrics> {
   }
 }
 
+export interface ViewMetrics {
+  today: number;
+  yesterday: number;
+  last7Days: number;
+  last30Days: number;
+  dailySeries: { day: string; count: number }[];
+  connected: boolean;
+}
+
+export async function getViewMetrics(): Promise<ViewMetrics> {
+  try {
+    const sb = createServiceClient();
+    const now = Date.now();
+    const todayStr = new Date(now).toISOString().slice(0, 10);
+    const yesterdayStr = new Date(now - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    const [todayCount, yesterdayCount, weekCount, monthRows] = await Promise.all([
+      sb.from('view_events').select('id', { count: 'exact', head: true }).eq('day', todayStr),
+      sb.from('view_events').select('id', { count: 'exact', head: true }).eq('day', yesterdayStr),
+      sb.from('view_events').select('id', { count: 'exact', head: true }).gte('day', sevenDaysAgo),
+      sb.from('view_events').select('day').gte('day', thirtyDaysAgo).limit(50000),
+    ]);
+
+    const buckets: Record<string, number> = {};
+    for (let i = 29; i >= 0; i--) {
+      const key = new Date(now - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      buckets[key] = 0;
+    }
+    for (const row of (monthRows.data || [])) {
+      const day = (row as { day: string }).day;
+      if (day in buckets) buckets[day]++;
+    }
+    const dailySeries = Object.entries(buckets).map(([day, count]) => ({ day, count }));
+
+    return {
+      today: todayCount.count || 0,
+      yesterday: yesterdayCount.count || 0,
+      last7Days: weekCount.count || 0,
+      last30Days: dailySeries.reduce((a, d) => a + d.count, 0),
+      dailySeries,
+      connected: true,
+    };
+  } catch {
+    return { today: 0, yesterday: 0, last7Days: 0, last30Days: 0, dailySeries: [], connected: false };
+  }
+}
+
 export async function getRecentSignups(limit = 15): Promise<RecentSignup[]> {
   try {
     const sb = createServiceClient();

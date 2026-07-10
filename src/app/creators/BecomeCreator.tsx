@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { becomeCreator } from '@/lib/creators/client';
 
-export function BecomeCreator({ config }: { config: { pool_percentage: number; monthly_read_threshold: number; min_payout_usd: number } }) {
+export function BecomeCreator({ config }: { config: { pool_percentage: number; monthly_read_threshold: number; monthly_follower_threshold: number; min_payout_usd: number } }) {
   const router = useRouter();
   const { user, profile, refreshProfile } = useAuth();
   const [handle, setHandle] = useState('');
@@ -90,7 +90,7 @@ export function BecomeCreator({ config }: { config: { pool_percentage: number; m
           {saving ? 'Creating your author account…' : 'Create author account — free'}
         </button>
         <p className="text-[11px] text-[var(--text-muted)] text-center">
-          By joining you agree to the Creator Program terms. Payouts begin once you pass {config.monthly_read_threshold.toLocaleString()} verified reads/month and reach the ${config.min_payout_usd} minimum.
+          By joining you agree to the Creator Program terms. Payouts begin once you pass {config.monthly_read_threshold.toLocaleString()} verified reads/month, {config.monthly_follower_threshold.toLocaleString()} followers, and reach the ${config.min_payout_usd} minimum.
         </p>
       </div>
     </div>

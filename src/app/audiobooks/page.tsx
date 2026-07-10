@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { BookGrid } from '@/components/BookGrid';
 import { getAudiobooks } from '@/lib/data';
+import { searchLibrivox } from '@/lib/api/librivox';
+import { searchArchiveAudio } from '@/lib/api/archive';
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: 'Free Audiobooks — 45,000+ Free Audiobook Downloads',
@@ -12,8 +16,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AudiobooksPage() {
-  const audiobooks = getAudiobooks();
+export default async function AudiobooksPage() {
+  const curated = getAudiobooks();
+
+  const [librivox, iaAudio] = await Promise.allSettled([
+    searchLibrivox('popular', 15),
+    searchArchiveAudio('audiobook OR lecture OR podcast', 1, 15),
+  ]);
+
+  const live = [
+    ...(librivox.status === 'fulfilled' ? librivox.value.books : []),
+    ...(iaAudio.status === 'fulfilled' ? iaAudio.value.books : []),
+  ];
+
+  const seen = new Set(curated.map(b => b.title.toLowerCase().trim()));
+  const audiobooks = [...curated];
+  for (const b of live) {
+    const key = b.title.toLowerCase().trim();
+    if (!seen.has(key)) { seen.add(key); audiobooks.push(b); }
+  }
 
   return (
     <div className="content-wrapper py-8">

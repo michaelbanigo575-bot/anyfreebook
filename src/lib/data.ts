@@ -69,6 +69,9 @@ const CATEGORIES: Category[] = [
   { id: '13', name: 'Architecture', slug: 'free-architecture-books', description: 'Building design, urban planning, and interior design', bookCount: 6700, icon: '🏛️', gradient: 'from-amber-500/20 to-orange-500/20' },
   { id: '14', name: 'Nursing', slug: 'free-nursing-books', description: 'Clinical nursing, pharmacology, and patient care', bookCount: 11200, icon: '💊', gradient: 'from-rose-500/20 to-pink-500/20' },
   { id: '15', name: 'Mathematics', slug: 'free-mathematics-books', description: 'Calculus, algebra, statistics, and discrete math', bookCount: 14500, icon: '🔢', gradient: 'from-cyan-500/20 to-blue-500/20' },
+  { id: '16', name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books', description: 'Scripture, theology, world religions, and spiritual growth', bookCount: 21000, icon: '🕊️', gradient: 'from-sky-500/20 to-indigo-500/20' },
+  { id: '17', name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books', description: 'Personal growth, self-improvement, and motivational classics', bookCount: 9600, icon: '✨', gradient: 'from-amber-500/20 to-yellow-500/20' },
+  { id: '18', name: 'Political Magazines', slug: 'free-political-magazines', description: 'Political commentary, current affairs, and news magazines', bookCount: 5200, icon: '🗞️', gradient: 'from-red-500/20 to-slate-500/20' },
 ];
 
 let _id = 0;

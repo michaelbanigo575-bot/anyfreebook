@@ -38,6 +38,7 @@ export function Footer() {
         { label: 'Publish & Earn (Creators)', href: '/creators' },
         { label: 'Study Plan & Reminders', href: '/study-plan' },
         { label: 'Free Textbook Alternatives', href: '/free-textbook-alternatives' },
+        { label: 'WAEC & JAMB Resources', href: '/waec-jamb' },
         { label: 'Rewards & Referrals', href: '/rewards' },
       ],
     },

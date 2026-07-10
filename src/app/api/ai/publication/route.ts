@@ -10,8 +10,12 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
  * draining the shared pool.
  */
 
+export const maxDuration = 60; // allow slow generations (Vercel default is 10s)
+
 const DAILY_CAP_PER_CREATOR = 20;
-const MODEL = 'gemini-flash-latest';
+// Lite first: it's fast (~3s) and reliably under free-tier capacity.
+// The full flash model 503s under load and can take 20s+ when thinking.
+const MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest'];
 
 interface QuizQuestion {
   question: string;
@@ -37,9 +41,9 @@ TEXT:
 ${clipped}`;
 }
 
-async function callGemini(prompt: string, apiKey: string): Promise<unknown> {
+async function callModel(model: string, prompt: string, apiKey: string): Promise<{ content: unknown; model: string }> {
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,7 +51,7 @@ async function callGemini(prompt: string, apiKey: string): Promise<unknown> {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(25000),
     }
   );
   if (!res.ok) {
@@ -57,7 +61,21 @@ async function callGemini(prompt: string, apiKey: string): Promise<unknown> {
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('Empty Gemini response');
-  return JSON.parse(text);
+  return { content: JSON.parse(text), model };
+}
+
+/** Try each model in order — the "latest" full model 503s under load, so lite goes first. */
+async function callGemini(prompt: string, apiKey: string): Promise<{ content: unknown; model: string }> {
+  let lastError: unknown;
+  for (const model of MODELS) {
+    try {
+      return await callModel(model, prompt, apiKey);
+    } catch (err) {
+      lastError = err;
+      console.error(`[ai] ${model} failed:`, err instanceof Error ? err.message.slice(0, 150) : err);
+    }
+  }
+  throw lastError;
 }
 
 export async function POST(request: NextRequest) {
@@ -130,7 +148,7 @@ export async function POST(request: NextRequest) {
 
   // 6. Generate + cache
   try {
-    const content = await callGemini(prompts(kind, pub.title, fullText), apiKey);
+    const { content, model } = await callGemini(prompts(kind, pub.title, fullText), apiKey);
 
     // Light validation
     if (kind === 'quiz') {
@@ -145,7 +163,7 @@ export async function POST(request: NextRequest) {
       author_id: pub.author_id,
       kind,
       content,
-      model: MODEL,
+      model,
     });
 
     return NextResponse.json({ content, cached: false });

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import {
   joinAttendance, sendClassroomMessage, listClassroomMessages, subscribeClassroom,
-  setClassroomStatus, saveRecordingUrl, trackPresence, bumpPeakAttendance,
+  setClassroomStatus, saveRecordingUrl, trackPresence, bumpPeakAttendance, setClassroomMaterial,
   type ClassroomMessage,
 } from '@/lib/classrooms/client';
+import { uploadPublicationFile } from '@/lib/creators/client';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
 import { getSessionKey } from '@/lib/creators/client';
 
@@ -27,6 +28,8 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [busy, setBusy] = useState(false);
   const [joined, setJoined] = useState(false);   // user explicitly entered the video room
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [materialDraft, setMaterialDraft] = useState('');
+  const [materialBusy, setMaterialBusy] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isHost = user?.id === room.host_id;
@@ -96,6 +99,35 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
     await saveRecordingUrl(room.id, recordingDraft.trim());
     setRoom(r => ({ ...r, recording_url: recordingDraft.trim() }));
     setBusy(false);
+  };
+
+  const shareMaterialFile = async (f: File | null) => {
+    if (!f) return;
+    setMaterialBusy(true);
+    const { error, url } = await uploadPublicationFile(f);
+    if (error || !url) { setMaterialBusy(false); alert(error || 'Upload failed — try again.'); return; }
+    const { error: setErr } = await setClassroomMaterial(room.id, url, f.name);
+    setMaterialBusy(false);
+    if (setErr) { alert(setErr); return; }
+    setRoom(r => ({ ...r, material_url: url, material_title: f.name }));
+  };
+
+  const shareMaterialLink = async () => {
+    const url = materialDraft.trim();
+    if (!url) return;
+    setMaterialBusy(true);
+    const { error } = await setClassroomMaterial(room.id, url, null);
+    setMaterialBusy(false);
+    if (error) { alert(error); return; }
+    setRoom(r => ({ ...r, material_url: url, material_title: null }));
+    setMaterialDraft('');
+  };
+
+  const clearMaterial = async () => {
+    setMaterialBusy(true);
+    await setClassroomMaterial(room.id, null, null);
+    setMaterialBusy(false);
+    setRoom(r => ({ ...r, material_url: null, material_title: null }));
   };
 
   const shareLink = typeof window !== 'undefined'
@@ -261,6 +293,58 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
                   <button onClick={attachRecording} disabled={busy} className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold disabled:opacity-60">
                     Attach
                   </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Shared class material — synced live to everyone via the classroom subscription */}
+          {room.status !== 'ended' && (room.material_url || isHost) && (
+            <div className="mt-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] overflow-hidden">
+              <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-[var(--border-subtle)]">
+                <p className="text-xs font-bold text-[var(--text)] truncate">
+                  📄 {room.material_url ? (room.material_title || 'Class material') : 'Show a document to the class'}
+                </p>
+                {isHost && room.material_url && (
+                  <button onClick={clearMaterial} disabled={materialBusy} className="text-[11px] font-semibold text-red-500 hover:underline flex-shrink-0 disabled:opacity-60">
+                    Stop showing
+                  </button>
+                )}
+              </div>
+
+              {room.material_url ? (
+                /\.(png|jpe?g|gif|webp)(\?|$)/i.test(room.material_url) ? (
+                  <img src={room.material_url} alt={room.material_title || 'Class material'} className="w-full max-h-[70vh] object-contain bg-[var(--bg-secondary)]" />
+                ) : (
+                  <iframe
+                    src={/\.pdf(\?|$)/i.test(room.material_url)
+                      ? room.material_url
+                      : `https://docs.google.com/gview?url=${encodeURIComponent(room.material_url)}&embedded=true`}
+                    title={room.material_title || 'Class material'}
+                    className="w-full"
+                    style={{ height: '60vh', minHeight: 360 }}
+                  />
+                )
+              ) : isHost && (
+                <div className="p-4 space-y-2">
+                  <p className="text-[11px] text-[var(--text-muted)]">
+                    Upload a PDF, image or slides — it appears instantly on every student&apos;s screen (works great on phones, no screen share needed).
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <label className={`px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold cursor-pointer ${materialBusy ? 'opacity-60 pointer-events-none' : 'hover:shadow-md'}`}>
+                      {materialBusy ? 'Uploading…' : '⬆ Upload document'}
+                      <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.doc,.docx,.ppt,.pptx" className="hidden" onChange={e => shareMaterialFile(e.target.files?.[0] || null)} />
+                    </label>
+                    <input
+                      value={materialDraft}
+                      onChange={e => setMaterialDraft(e.target.value)}
+                      placeholder="…or paste a link (PDF, Google Slides, Drive)"
+                      className="flex-1 min-w-[180px] px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-xs text-[var(--text)] outline-none focus:border-[var(--primary)]"
+                    />
+                    <button onClick={shareMaterialLink} disabled={materialBusy || !materialDraft.trim()} className="px-4 py-2 rounded-lg border-2 border-[var(--primary)] text-[var(--primary)] text-xs font-semibold disabled:opacity-50">
+                      Show it
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

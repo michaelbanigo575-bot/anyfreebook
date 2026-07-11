@@ -19,6 +19,8 @@ export interface Classroom {
   ended_at: string | null;
   recording_url: string | null;
   peak_attendance: number;
+  material_url: string | null;
+  material_title: string | null;
   created_at: string;
 }
 
@@ -158,6 +160,15 @@ export function trackPresence(classroomId: string, sessionKey: string, onCount: 
       if (status === 'SUBSCRIBED') channel.track({ joined_at: Date.now() });
     });
   return () => { sb.removeChannel(channel); };
+}
+
+/** Host shares (or clears) a document for the whole class — propagates live via the classroom subscription. */
+export async function setClassroomMaterial(classroomId: string, url: string | null, title: string | null): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { error } = await sb.from('classrooms')
+    .update({ material_url: url, material_title: title })
+    .eq('id', classroomId);
+  return { error: error?.message ?? null };
 }
 
 /** Persist the concurrent-viewers high-water mark (only succeeds for the host, by RLS design). */

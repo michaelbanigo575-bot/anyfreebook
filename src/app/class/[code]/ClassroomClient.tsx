@@ -25,6 +25,7 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [countdown, setCountdown] = useState('');
   const [recordingDraft, setRecordingDraft] = useState('');
   const [busy, setBusy] = useState(false);
+  const [joined, setJoined] = useState(false);   // user explicitly entered the video room
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isHost = user?.id === room.host_id;
@@ -76,7 +77,14 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
     if (error) setDraft(body);
   };
 
-  const startClass = async () => { setBusy(true); await setClassroomStatus(room.id, 'live'); setRoom(r => ({ ...r, status: 'live' })); setBusy(false); };
+  const startClass = async () => {
+    setBusy(true);
+    const { error } = await setClassroomStatus(room.id, 'live');
+    setBusy(false);
+    if (error) { alert(`Could not start the class: ${error}`); return; }
+    setRoom(r => ({ ...r, status: 'live' }));
+    setJoined(true); // host goes straight into the room
+  };
   const endClass = async () => {
     if (!confirm('End this class for everyone?')) return;
     setBusy(true); await setClassroomStatus(room.id, 'ended'); setRoom(r => ({ ...r, status: 'ended' })); setBusy(false);
@@ -154,15 +162,33 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
         {/* Main area: video / countdown / replay */}
         <div className="lg:col-span-2">
           {room.status === 'live' && (
-            <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-black">
-              <iframe
-                src={jitsiUrl}
-                title={room.title}
-                className="w-full"
-                style={{ height: '65vh', minHeight: 420 }}
-                allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-              />
-            </div>
+            joined ? (
+              <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-black">
+                <iframe
+                  src={jitsiUrl}
+                  title={room.title}
+                  className="w-full"
+                  style={{ height: '65vh', minHeight: 420 }}
+                  allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+                />
+              </div>
+            ) : (
+              <div className="rounded-2xl border-2 border-red-500/40 bg-[var(--surface)] flex flex-col items-center justify-center text-center p-10" style={{ minHeight: 380 }}>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold uppercase mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live now
+                </span>
+                <p className="text-5xl mb-4">🎓</p>
+                <p className="font-bold text-lg text-[var(--text)]">The class is in session</p>
+                <p className="text-sm text-[var(--text-muted)] mt-1 mb-6">👥 {watching > 0 ? `${watching} watching now` : 'Be the first in the room'}</p>
+                <button
+                  onClick={() => setJoined(true)}
+                  className="px-8 py-3.5 rounded-xl bg-red-500 text-white text-base font-bold hover:bg-red-600 hover:shadow-lg transition-all"
+                >
+                  ▶ Join classroom
+                </button>
+                <p className="text-[11px] text-[var(--text-muted)] mt-4">Your browser will ask for camera & microphone access — you can join with both off.</p>
+              </div>
+            )
           )}
 
           {room.status === 'scheduled' && (
@@ -170,11 +196,26 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
               <p className="text-5xl mb-4">⏳</p>
               <p className="text-sm text-[var(--text-muted)]">Class starts in</p>
               <p className="text-4xl font-bold font-mono text-[var(--text)] mt-1">{countdown}</p>
-              <p className="text-xs text-[var(--text-muted)] mt-4 max-w-sm">
-                {isHost
-                  ? 'When you\'re ready, hit "Start class" above — the live video room opens for everyone on this page.'
-                  : 'Keep this page open — the video appears automatically when the host starts. Say hi in the chat meanwhile!'}
-              </p>
+              {isHost ? (
+                <>
+                  <button
+                    onClick={startClass}
+                    disabled={busy}
+                    className="mt-6 px-8 py-3.5 rounded-xl bg-red-500 text-white text-base font-bold hover:bg-red-600 hover:shadow-lg transition-all disabled:opacity-60"
+                  >
+                    {busy ? 'Starting…' : '● Start class now'}
+                  </button>
+                  <p className="text-xs text-[var(--text-muted)] mt-3 max-w-sm">
+                    You can start early — everyone on this page joins the moment you do.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)] mt-4 max-w-sm">
+                  {user
+                    ? 'Keep this page open — a "Join classroom" button appears the moment the host starts. Say hi in the chat meanwhile!'
+                    : 'A "Join classroom" button appears here the moment the host starts. Hosting this class yourself? Sign in to see your Start button.'}
+                </p>
+              )}
               {room.description && <p className="text-sm text-[var(--text-secondary)] mt-5 max-w-md">{room.description}</p>}
             </div>
           )}

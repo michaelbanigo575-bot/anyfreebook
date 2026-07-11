@@ -104,6 +104,32 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* NEW ON ANYFREEBOOK — feature showcase */}
+      <section className="content-wrapper py-10">
+        <SectionHeader title="New on ANYFREEBOOK" icon="🚀" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: '🎓', title: 'Live Classrooms', desc: 'Join free live classes from authors — video, screen share & chat', href: '/classrooms', badge: 'NEW' },
+            { icon: '🤖', title: 'AI Study Aids', desc: 'Instant AI summaries & quizzes on every publication', href: '/creators/discover', badge: 'NEW' },
+            { icon: '💸', title: 'Publish & Earn', desc: 'Publish your books & notes free — earn from every verified read', href: '/creators', badge: null },
+            { icon: '📰', title: 'The Feed', desc: 'New books, live classes & updates from authors you read', href: '/feed', badge: 'NEW' },
+            { icon: '📖', title: 'Serialized Books', desc: 'Follow stories chapter by chapter as authors release them', href: '/creators/discover', badge: 'NEW' },
+            { icon: '🎧', title: 'Free Audiobooks', desc: 'Thousands of audiobooks from LibriVox & Internet Archive', href: '/audiobooks', badge: null },
+            { icon: '📝', title: 'WAEC & JAMB Prep', desc: 'Curated official exam-prep resources for Nigerian students', href: '/waec-jamb', badge: 'NEW' },
+            { icon: '🌙', title: 'Reader Comfort', desc: 'Fonts, sepia & dark themes, text size — reading your way', href: '/creators/discover', badge: 'NEW' },
+          ].map(f => (
+            <a key={f.title} href={f.href} className="relative rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4 hover:border-[var(--primary)] hover:shadow-md hover:-translate-y-0.5 transition-all">
+              {f.badge && (
+                <span className="absolute top-3 right-3 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-[8px] font-bold">{f.badge}</span>
+              )}
+              <span className="text-2xl">{f.icon}</span>
+              <h3 className="text-sm font-bold text-[var(--text)] mt-2">{f.title}</h3>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">{f.desc}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+
       {/* TRENDING — Live from APIs */}
       <section className="content-wrapper py-10">
         <SectionHeader title="Trending now — Live" icon="🔥" action={{ label: 'Search more', href: '/search' }} />

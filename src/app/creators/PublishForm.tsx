@@ -36,6 +36,7 @@ export function PublishForm({ existing }: { existing?: Publication }) {
   const [checkingOriginality, setCheckingOriginality] = useState(false);
   const [originalityStatus, setOriginalityStatus] = useState<OriginalityStatus>(existing?.originality_status || 'unchecked');
   const [originalityMatches, setOriginalityMatches] = useState<OriginalityMatch[]>([]);
+  const [originalitySeverity, setOriginalitySeverity] = useState<'none' | 'title' | 'text'>('none');
   const [confirmLicensed, setConfirmLicensed] = useState(false);
 
   const runOriginalityCheck = async () => {
@@ -46,10 +47,11 @@ export function PublishForm({ existing }: { existing?: Publication }) {
       const res = await fetch('/api/ai/originality', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, body }),
       });
       const data = await res.json();
       setOriginalityStatus(data.status);
+      setOriginalitySeverity(data.severity || 'none');
       setOriginalityMatches(data.matches || []);
     } catch {
       setError('Could not run the originality check — try again.');
@@ -72,6 +74,8 @@ export function PublishForm({ existing }: { existing?: Publication }) {
 
   const needsLicenseConfirmation = publicationType === 'licensed_publication';
   const originalityBlocked = (originalityStatus === 'flagged' || needsLicenseConfirmation) && !confirmLicensed;
+  // Verbatim text found in a published book: hard-block unless declared as a licensed publication
+  const textMatchHardBlock = originalitySeverity === 'text' && publicationType !== 'licensed_publication';
 
   const submit = async (publish: boolean) => {
     setError(null);
@@ -79,6 +83,10 @@ export function PublishForm({ existing }: { existing?: Publication }) {
     if (!body.trim() && !externalUrl.trim()) { setError('Add some content, or link to an external file.'); return; }
     if (publish && originalityStatus === 'unchecked') {
       setError('Run the originality check before publishing (or save as a draft).');
+      return;
+    }
+    if (publish && textMatchHardBlock) {
+      setError('Exact passages from this text were found in an already-published book. Publishing is blocked. If you legitimately hold the rights, set the publication type to "Licensed publication" and confirm your rights below.');
       return;
     }
     if (publish && originalityBlocked) {
@@ -229,9 +237,15 @@ export function PublishForm({ existing }: { existing?: Publication }) {
 
         {originalityStatus === 'flagged' && (
           <div className="space-y-2">
-            <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
-              ⚠ A work with a similar title already exists in a major catalog:
-            </p>
+            {originalitySeverity === 'text' ? (
+              <p className="text-xs text-red-600 dark:text-red-400 font-bold">
+                ⛔ Exact passages from this text were found in an already-published book. Publishing is blocked unless this is a licensed publication and you confirm your rights:
+              </p>
+            ) : (
+              <p className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                ⚠ A work with a similar title already exists in a major catalog:
+              </p>
+            )}
             <ul className="space-y-1">
               {originalityMatches.map((m, i) => (
                 <li key={i} className="text-[11px] text-[var(--text-muted)]">

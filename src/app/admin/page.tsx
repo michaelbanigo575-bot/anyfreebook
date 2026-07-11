@@ -98,13 +98,13 @@ export default async function AdminOverview() {
 
       {/* Content views — daily / weekly / monthly */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Views today" value={views.today.toLocaleString()} tone="good" />
-        <Stat label="Views yesterday" value={views.yesterday.toLocaleString()} />
-        <Stat label="Views — 7 days" value={views.last7Days.toLocaleString()} />
-        <Stat label="Views — 30 days" value={views.last30Days.toLocaleString()} sub={views.connected ? undefined : 'view_events table not found — run migration 005'} tone={views.connected ? 'default' : 'warn'} />
+        <Stat label="Reads today" value={views.today.toLocaleString()} tone="good" />
+        <Stat label="Reads yesterday" value={views.yesterday.toLocaleString()} />
+        <Stat label="Reads — 7 days" value={views.last7Days.toLocaleString()} />
+        <Stat label="Reads — 30 days" value={views.last30Days.toLocaleString()} sub={views.connected ? undefined : 'view_events table not found — run migration 005'} tone={views.connected ? 'default' : 'warn'} />
       </div>
 
-      <Panel title="Content views trend — last 30 days">
+      <Panel title="Content reads trend — last 30 days">
         <div className="p-5">
           <Sparkline values={views.dailySeries.map(d => d.count)} height={90} color="#34d399" />
           <div className="mt-2 flex justify-between text-[10px] text-slate-500 font-mono">

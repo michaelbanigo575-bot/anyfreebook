@@ -46,7 +46,7 @@ export default async function DiscoverPage() {
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--primary-light)] text-[var(--primary)] uppercase">{p.content_type}</span>
                 <h3 className="text-sm font-semibold text-[var(--text)] group-hover:text-[var(--primary)] mt-1.5 line-clamp-2">{p.title}</h3>
                 <p className="text-[11px] text-[var(--text-muted)] mt-1">by {p.authorName}</p>
-                <div className="text-[10px] text-[var(--text-muted)] mt-1">{fmt(p.view_count)} views · {fmt(p.read_count)} reads</div>
+                <div className="text-[10px] text-[var(--text-muted)] mt-1">{fmt(p.view_count)} reads · {fmt(p.read_count)} verified</div>
               </div>
             </Link>
           ))}

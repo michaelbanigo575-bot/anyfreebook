@@ -84,7 +84,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
               <span className="text-sm font-semibold text-[var(--text)]">{author?.display_name || 'Author'}</span>
             )}
             <div className="text-[11px] text-[var(--text-muted)]">
-              {fmt(author?.follower_count || 0)} followers · {fmt(pub.view_count)} views · {fmt(pub.read_count)} reads
+              {fmt(author?.follower_count || 0)} readers · {fmt(pub.view_count)} reads · {fmt(pub.read_count)} verified reads
             </div>
           </div>
           {author && <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} size="sm" />}
@@ -213,7 +213,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-[var(--text)]">{author.display_name || 'Author'}</div>
-              <div className="text-[11px] text-[var(--text-muted)]">{fmt(author.follower_count || 0)} followers</div>
+              <div className="text-[11px] text-[var(--text-muted)]">{fmt(author.follower_count || 0)} readers</div>
               {author.creator_bio && <p className="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{author.creator_bio}</p>}
             </div>
             <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} />

@@ -39,7 +39,7 @@ export default async function AuthorPage({ params }: { params: { handle: string 
           <p className="text-sm text-[var(--text-muted)]">@{author.creator_handle}</p>
           {author.creator_bio && <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-lg">{author.creator_bio}</p>}
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-3 text-xs text-[var(--text-muted)]">
-            <span><strong className="text-[var(--text)]">{fmt(author.follower_count || 0)}</strong> followers</span>
+            <span><strong className="text-[var(--text)]">{fmt(author.follower_count || 0)}</strong> readers</span>
             <span><strong className="text-[var(--text)]">{pubs.length}</strong> works</span>
             <span><strong className="text-[var(--text)]">{fmt(totalReads)}</strong> total reads</span>
           </div>
@@ -61,7 +61,7 @@ export default async function AuthorPage({ params }: { params: { handle: string 
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--primary-light)] text-[var(--primary)] uppercase">{p.content_type}</span>
                 <h3 className="font-semibold text-[var(--text)] group-hover:text-[var(--primary)] mt-1.5 line-clamp-2">{p.title}</h3>
                 {p.description && <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-2">{p.description}</p>}
-                <div className="text-[11px] text-[var(--text-muted)] mt-2">{fmt(p.view_count)} views · {fmt(p.read_count)} reads</div>
+                <div className="text-[11px] text-[var(--text-muted)] mt-2">{fmt(p.view_count)} reads · {fmt(p.read_count)} verified</div>
               </div>
             </Link>
           ))}

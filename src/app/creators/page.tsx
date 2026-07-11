@@ -17,7 +17,7 @@ export default async function CreatorProgramPage() {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [
-      { '@type': 'Question', name: 'How do I get paid?', acceptedAnswer: { '@type': 'Answer', text: `You earn a share of the ${config.pool_percentage}% creator revenue pool based on how much verified reading your work generates. Payouts begin once you pass ${config.monthly_read_threshold} verified reads and ${config.monthly_follower_threshold} followers per month, and reach the $${config.min_payout_usd} minimum.` } },
+      { '@type': 'Question', name: 'How do I get paid?', acceptedAnswer: { '@type': 'Answer', text: `You earn a share of the ${config.pool_percentage}% creator revenue pool based on how much verified reading your work generates. Payouts begin once you pass ${config.monthly_read_threshold} verified reads and ${config.monthly_follower_threshold} readers per month, and reach the $${config.min_payout_usd} minimum.` } },
       { '@type': 'Question', name: 'Does it cost anything to publish?', acceptedAnswer: { '@type': 'Answer', text: 'No. Publishing on ANYFREEBOOK is completely free. You keep the rights to your work.' } },
       { '@type': 'Question', name: 'What can I publish?', acceptedAnswer: { '@type': 'Answer', text: 'Original books, stories, guides, articles and poetry that you own the rights to.' } },
     ],
@@ -81,7 +81,7 @@ export default async function CreatorProgramPage() {
             { n: '1', title: 'Publish', desc: 'Post your book, story or guide in minutes. It goes live to millions of readers.' },
             { n: '2', title: 'Get read', desc: 'Readers discover and read your work. We count genuine, verified reads — not empty clicks.' },
             { n: '3', title: 'Earn your share', desc: `${config.pool_percentage}% of the ad revenue your content generates goes into the creator pool, split by how much people read your work.` },
-            { n: '4', title: 'Cash out', desc: `Once you pass ${config.monthly_read_threshold.toLocaleString()} verified reads, ${config.monthly_follower_threshold.toLocaleString()} followers and reach $${config.min_payout_usd}, request a payout.` },
+            { n: '4', title: 'Cash out', desc: `Once you pass ${config.monthly_read_threshold.toLocaleString()} verified reads, ${config.monthly_follower_threshold.toLocaleString()} readers and reach $${config.min_payout_usd}, request a payout.` },
           ].map(s => (
             <div key={s.n} className="text-center">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-bold text-lg flex items-center justify-center mx-auto mb-3">{s.n}</div>

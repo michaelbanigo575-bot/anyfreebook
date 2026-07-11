@@ -17,9 +17,9 @@ export default async function UsersPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Stat label="Content views today" value={views.today.toLocaleString()} tone="good" />
-        <Stat label="Views this week" value={views.last7Days.toLocaleString()} />
-        <Stat label="Views this month" value={views.last30Days.toLocaleString()} />
+        <Stat label="Content reads today" value={views.today.toLocaleString()} tone="good" />
+        <Stat label="Reads this week" value={views.last7Days.toLocaleString()} />
+        <Stat label="Reads this month" value={views.last30Days.toLocaleString()} />
       </div>
 
       <Panel title="Signup trend — last 30 days">

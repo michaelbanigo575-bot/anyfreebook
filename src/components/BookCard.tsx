@@ -100,7 +100,7 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
                 ))}
               </div>
               <div className="flex items-center gap-3 mt-1.5 text-[11px] text-[var(--text-muted)]">
-                <span>{formatCount(book.viewCount)} views</span>
+                <span>{formatCount(book.viewCount)} reads</span>
                 <span>{formatCount(book.likeCount)} likes</span>
               </div>
             </div>

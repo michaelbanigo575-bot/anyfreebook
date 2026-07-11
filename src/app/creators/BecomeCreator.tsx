@@ -90,7 +90,7 @@ export function BecomeCreator({ config }: { config: { pool_percentage: number; m
           {saving ? 'Creating your author account…' : 'Create author account — free'}
         </button>
         <p className="text-[11px] text-[var(--text-muted)] text-center">
-          By joining you agree to the Creator Program terms. Payouts begin once you pass {config.monthly_read_threshold.toLocaleString()} verified reads/month, {config.monthly_follower_threshold.toLocaleString()} followers, and reach the ${config.min_payout_usd} minimum.
+          By joining you agree to the Creator Program terms. Payouts begin once you pass {config.monthly_read_threshold.toLocaleString()} verified reads/month, {config.monthly_follower_threshold.toLocaleString()} readers, and reach the ${config.min_payout_usd} minimum.
         </p>
       </div>
     </div>

@@ -130,7 +130,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
             <div>
               <div className="flex justify-between text-[11px] text-white/60 mb-1.5">
                 <span className={earnings.followersToThreshold === 0 ? 'text-emerald-300 font-semibold' : ''}>
-                  {earnings.followersToThreshold === 0 ? '✓ Follower target met' : `${fmt(earnings.followersToThreshold)} more followers needed`}
+                  {earnings.followersToThreshold === 0 ? '✓ Readers target met' : `${fmt(earnings.followersToThreshold)} more readers needed`}
                 </span>
                 <span className="font-mono">{fmt(stats.followerCount)} / {fmt(config.monthly_follower_threshold)}</span>
               </div>
@@ -149,9 +149,9 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
 
         {/* Stats grid */}
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Stat label="Followers" value={fmt(stats.followerCount)} accent="text-fuchsia-300" />
+          <Stat label="Readers" value={fmt(stats.followerCount)} accent="text-fuchsia-300" />
           <Stat label="Likes" value={fmt(stats.totalLikes)} accent="text-rose-300" />
-          <Stat label="Views" value={fmt(stats.totalViews)} accent="text-sky-300" />
+          <Stat label="Reads" value={fmt(stats.totalViews)} accent="text-sky-300" />
           <Stat label="Verified reads" value={fmt(stats.totalReads)} accent="text-emerald-300" />
           <Stat label="Hours read" value={hoursRead} accent="text-amber-300" />
           <Stat label="Published" value={String(published.length)} accent="text-violet-300" />
@@ -168,7 +168,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
             <div className="text-center py-16 rounded-3xl border border-white/10 bg-white/[0.03]">
               <p className="text-5xl mb-3">✨</p>
               <p className="font-semibold text-white/90">Your studio is ready</p>
-              <p className="text-sm text-white/50 mt-1 mb-5">Publish your first work and start building readers, followers and earnings.</p>
+              <p className="text-sm text-white/50 mt-1 mb-5">Publish your first work and start building readers and earnings.</p>
               <Link href="/creators/new" className="inline-flex px-6 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-sm font-bold hover:shadow-[0_0_30px_rgba(167,139,250,0.4)] transition-all">
                 Write your first publication
               </Link>
@@ -238,7 +238,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <div className="font-bold">Grow faster</div>
             <p className="text-xs text-white/50 mt-1 leading-relaxed">
-              Share your author page after every new work — followers get your publications in their feed, and every verified read moves you up the payout meter.
+              Share your author page after every new work — your readers get your publications in their feed, and every verified read moves you up the payout meter.
             </p>
             {handle && (
               <button

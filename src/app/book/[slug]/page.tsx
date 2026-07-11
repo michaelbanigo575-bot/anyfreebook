@@ -121,7 +121,7 @@ export default async function BookPage({ params }: { params: { slug: string } })
 
             {/* Stats bar */}
             <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-[var(--text-muted)]">
-              <span>{formatCount(book.viewCount)} views</span>
+              <span>{formatCount(book.viewCount)} reads</span>
               <span>{formatCount(book.likeCount)} likes</span>
               {book.pageCount && <span>{book.pageCount} pages</span>}
               {book.publishYear && <span>Published {book.publishYear}</span>}

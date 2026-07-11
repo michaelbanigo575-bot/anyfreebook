@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getPublicationBySlug, getPublishedChapters } from '@/lib/creators/server';
+import { getLiveClassForAuthor } from '@/lib/classrooms/server';
 import { PublicationContent } from '@/components/PublicationContent';
 import { ReadTracker } from '@/components/ReadTracker';
 import { ReaderFooterAd } from '@/components/ReaderFooterAd';
@@ -37,6 +38,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
   const { pub, author } = data;
 
   const chapters = await getPublishedChapters(pub.id);
+  const liveClass = author ? await getLiveClassForAuthor(author.id) : null;
   const chParam = parseInt(searchParams.ch || '', 10);
   const activeIdx = chapters.length > 0 && chParam >= 1 && chParam <= chapters.length ? chParam - 1 : null;
   const activeChapter = activeIdx !== null ? chapters[activeIdx] : null;
@@ -86,6 +88,11 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
             <div className="text-[11px] text-[var(--text-muted)]">
               {fmt(author?.follower_count || 0)} readers · {fmt(pub.view_count)} reads · {fmt(pub.read_count)} verified reads
             </div>
+            {liveClass && (
+              <Link href={`/class/${liveClass.room_code}`} className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE — teaching now →
+              </Link>
+            )}
           </div>
           {author && <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} size="sm" />}
         </div>

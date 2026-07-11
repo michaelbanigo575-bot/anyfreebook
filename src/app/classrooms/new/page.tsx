@@ -56,6 +56,29 @@ export default function NewClassroomPage() {
     const scheduledAt = new Date(when);
     if (isNaN(scheduledAt.getTime())) { setError('That date looks invalid.'); return; }
 
+    // Warn about overlapping classes the host already scheduled
+    if (user) {
+      const windowStart = new Date(scheduledAt.getTime() - 2 * 60 * 60 * 1000).toISOString();
+      const windowEnd = new Date(scheduledAt.getTime() + duration * 60 * 1000).toISOString();
+      const { data: clash } = await createClient()
+        .from('classrooms')
+        .select('title, scheduled_at, duration_min')
+        .eq('host_id', user.id)
+        .neq('status', 'ended')
+        .gte('scheduled_at', windowStart)
+        .lte('scheduled_at', windowEnd)
+        .limit(3);
+      const overlapping = (clash || []).find(c => {
+        const start = new Date(c.scheduled_at).getTime();
+        const end = start + (c.duration_min || 60) * 60000;
+        return start < scheduledAt.getTime() + duration * 60000 && end > scheduledAt.getTime();
+      });
+      if (overlapping) {
+        const ok = confirm(`⚠️ You already have "${overlapping.title}" scheduled at ${new Date(overlapping.scheduled_at).toLocaleString()} — it overlaps with this class.\n\nSchedule anyway?`);
+        if (!ok) return;
+      }
+    }
+
     setSaving(true);
     const { error, roomCode, inviteToken } = await createClassroom({
       title, description, scheduledAt: scheduledAt.toISOString(),

@@ -38,6 +38,24 @@ export async function getUpcomingClassrooms(limit = 20): Promise<ClassroomWithHo
   }
 }
 
+/** The author's currently-live PUBLIC class, if any — for LIVE badges on their pages. */
+export async function getLiveClassForAuthor(authorId: string): Promise<{ room_code: string; title: string } | null> {
+  try {
+    const sb = createClient();
+    const { data } = await sb
+      .from('classrooms')
+      .select('room_code, title')
+      .eq('host_id', authorId)
+      .eq('visibility', 'public')
+      .eq('status', 'live')
+      .limit(1)
+      .maybeSingle();
+    return data || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getPastClassrooms(limit = 12): Promise<ClassroomWithHost[]> {
   try {
     const sb = createClient();

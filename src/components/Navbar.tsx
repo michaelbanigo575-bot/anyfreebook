@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SearchBar } from './SearchBar';
 import { useAuth } from './AuthProvider';
+import { NotificationsBell } from './NotificationsBell';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -103,6 +104,7 @@ export function Navbar() {
                   </svg>
                 )}
               </button>
+              <NotificationsBell />
               {user ? (
                 <Link
                   href="/profile"

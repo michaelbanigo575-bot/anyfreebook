@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getUnifiedFeed } from '@/lib/creators/feedServer';
+import { FeedPubActions } from '@/components/FeedPubActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -135,14 +136,13 @@ export default async function FeedPage() {
                   {pub.cover_url && (
                     <img src={pub.cover_url} alt={pub.title} className="w-full mt-3 max-h-80 object-cover" />
                   )}
-                  <div className="px-4 py-3 mt-2 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                      <span>❤️ {pub.like_count}</span>
-                      <span>💬 {pub.comment_count}</span>
-                      <span>📖 {pub.view_count} reads</span>
-                    </div>
-                    <Link href={`/read/${pub.slug}`} className="text-xs font-bold text-[var(--primary)] hover:underline">Read free →</Link>
-                  </div>
+                  <FeedPubActions
+                    publicationId={pub.id}
+                    slug={pub.slug}
+                    initialLikes={pub.like_count}
+                    commentCount={pub.comment_count}
+                    viewCount={pub.view_count}
+                  />
                 </article>
               );
             }

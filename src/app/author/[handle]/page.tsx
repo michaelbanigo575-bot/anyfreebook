@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAuthorByHandle } from '@/lib/creators/server';
+import { getLiveClassForAuthor } from '@/lib/classrooms/server';
 import { tierForReads } from '@/lib/creators/types';
 import { FollowButton } from '@/components/FollowButton';
 
@@ -23,6 +24,7 @@ export default async function AuthorPage({ params }: { params: { handle: string 
   if (!data) notFound();
   const { author, pubs, totalReads } = data;
   const tier = tierForReads(totalReads);
+  const liveClass = await getLiveClassForAuthor(author.id);
 
   return (
     <div className="content-wrapper py-8 max-w-4xl mx-auto">
@@ -36,6 +38,11 @@ export default async function AuthorPage({ params }: { params: { handle: string 
             <h1 className="text-2xl font-display font-bold text-[var(--text)]">{author.display_name || params.handle}</h1>
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white bg-gradient-to-r ${tier.color}`}>{tier.label}</span>
           </div>
+          {liveClass && (
+            <Link href={`/class/${liveClass.room_code}`} className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold hover:bg-red-600 transition-colors">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE — teaching now: {liveClass.title.slice(0, 32)}{liveClass.title.length > 32 ? '…' : ''} →
+            </Link>
+          )}
           <p className="text-sm text-[var(--text-muted)]">@{author.creator_handle}</p>
           {author.creator_bio && <p className="text-sm text-[var(--text-secondary)] mt-2 max-w-lg">{author.creator_bio}</p>}
           <div className="flex items-center justify-center sm:justify-start gap-4 mt-3 text-xs text-[var(--text-muted)]">

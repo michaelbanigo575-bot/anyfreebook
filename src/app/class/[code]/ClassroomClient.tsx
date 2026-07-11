@@ -26,6 +26,7 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [recordingDraft, setRecordingDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [joined, setJoined] = useState(false);   // user explicitly entered the video room
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isHost = user?.id === room.host_id;
@@ -101,8 +102,18 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
     ? `${window.location.origin}/class/${room.room_code}${inviteToken ? `?t=${inviteToken}` : ''}`
     : '';
 
-  const jitsiRoom = `anyfreebook-${room.room_code}`;
-  const jitsiUrl = `https://meet.jit.si/${jitsiRoom}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"&config.prejoinConfig.enabled=true`;
+  // Fetch the video room URL when the user joins (Daily.co when configured — no sign-in for anyone — else Jitsi fallback)
+  useEffect(() => {
+    if (!joined || videoUrl) return;
+    fetch(`/api/classrooms/video?code=${encodeURIComponent(room.room_code)}&name=${encodeURIComponent(displayName || 'Student')}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.url) setVideoUrl(d.url);
+        else setVideoUrl(`https://meet.jit.si/anyfreebook-${room.room_code}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"`);
+      })
+      .catch(() => setVideoUrl(`https://meet.jit.si/anyfreebook-${room.room_code}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"`));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joined, room.room_code]);
 
   return (
     <div className="content-wrapper py-6 max-w-6xl mx-auto">
@@ -164,13 +175,19 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
           {room.status === 'live' && (
             joined ? (
               <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-black">
-                <iframe
-                  src={jitsiUrl}
-                  title={room.title}
-                  className="w-full"
-                  style={{ height: '65vh', minHeight: 420 }}
-                  allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-                />
+                {videoUrl ? (
+                  <iframe
+                    src={videoUrl}
+                    title={room.title}
+                    className="w-full"
+                    style={{ height: '65vh', minHeight: 420 }}
+                    allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center text-white/70 text-sm" style={{ height: '65vh', minHeight: 420 }}>
+                    Opening the room…
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-2xl border-2 border-red-500/40 bg-[var(--surface)] flex flex-col items-center justify-center text-center p-10" style={{ minHeight: 380 }}>

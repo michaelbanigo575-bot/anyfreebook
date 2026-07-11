@@ -186,7 +186,7 @@ export default function NewClassroomPage() {
         </button>
 
         <p className="text-[11px] text-[var(--text-muted)] text-center">
-          Video runs on Jitsi Meet (free, open-source). When you start the class, Jitsi may ask the first person in the room to sign in with Google/GitHub — that&apos;s you, the host, one time.
+          No downloads, no sign-ups — your class runs right in the browser with video, mic and screen share. Just hit &ldquo;Start class&rdquo; when it&apos;s time.
         </p>
       </div>
     </div>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import {
   joinAttendance, sendClassroomMessage, listClassroomMessages, subscribeClassroom,
-  setClassroomStatus, saveRecordingUrl,
+  setClassroomStatus, saveRecordingUrl, trackPresence, bumpPeakAttendance,
   type ClassroomMessage,
 } from '@/lib/classrooms/client';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
@@ -21,6 +21,7 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [messages, setMessages] = useState<ClassroomMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [attendance, setAttendance] = useState<number>(0);
+  const [watching, setWatching] = useState<number>(0);
   const [countdown, setCountdown] = useState('');
   const [recordingDraft, setRecordingDraft] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,7 +30,7 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const isHost = user?.id === room.host_id;
   const displayName = profile?.display_name || user?.email?.split('@')[0] || null;
 
-  // Attendance + chat history + live subscriptions
+  // Attendance + chat history + live subscriptions + realtime presence
   useEffect(() => {
     joinAttendance(room.id, getSessionKey(), displayName).then(setAttendance);
     listClassroomMessages(room.id).then(setMessages);
@@ -38,9 +39,15 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
       m => setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m]),
       patch => setRoom(prev => ({ ...prev, ...patch }))
     );
-    return unsubscribe;
+    const stopPresence = trackPresence(room.id, getSessionKey(), setWatching);
+    return () => { unsubscribe(); stopPresence(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room.id]);
+
+  // The host's browser persists the concurrent-viewers high-water mark (RLS: hosts only)
+  useEffect(() => {
+    if (isHost && watching > 0) bumpPeakAttendance(room.id, watching);
+  }, [isHost, watching, room.id]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -106,7 +113,11 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
             {room.status === 'ended' && (
               <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[10px] font-bold uppercase">Replay</span>
             )}
-            <span className="text-xs text-[var(--text-muted)]">👥 {attendance} joined</span>
+            <span className="text-xs text-[var(--text-muted)]">
+              {room.status === 'live'
+                ? <>👥 <strong className="text-[var(--text)]">{watching}</strong> watching now · {attendance} joined</>
+                : <>👥 {attendance} joined</>}
+            </span>
           </div>
           <h1 className="text-xl md:text-2xl font-display font-bold text-[var(--text)] mt-1">{room.title}</h1>
           <p className="text-xs text-[var(--text-muted)]">

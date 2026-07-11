@@ -141,6 +141,31 @@ export async function listClassroomMessages(classroomId: string, limit = 100): P
   return (data as ClassroomMessage[]) || [];
 }
 
+/**
+ * Realtime presence: tracks who is on the classroom page RIGHT NOW.
+ * onCount fires with the accurate concurrent viewer count. Returns an unsubscribe fn.
+ */
+export function trackPresence(classroomId: string, sessionKey: string, onCount: (n: number) => void): () => void {
+  const sb = createClient();
+  const channel = sb.channel(`presence-${classroomId}`, {
+    config: { presence: { key: sessionKey } },
+  });
+  channel
+    .on('presence', { event: 'sync' }, () => {
+      onCount(Object.keys(channel.presenceState()).length);
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') channel.track({ joined_at: Date.now() });
+    });
+  return () => { sb.removeChannel(channel); };
+}
+
+/** Persist the concurrent-viewers high-water mark (only succeeds for the host, by RLS design). */
+export async function bumpPeakAttendance(classroomId: string, watching: number): Promise<void> {
+  const sb = createClient();
+  await sb.from('classrooms').update({ peak_attendance: watching }).eq('id', classroomId).lt('peak_attendance', watching);
+}
+
 /** Live subscriptions: new chat messages + classroom status changes. Returns an unsubscribe fn. */
 export function subscribeClassroom(
   classroomId: string,

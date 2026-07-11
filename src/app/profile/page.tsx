@@ -94,6 +94,24 @@ export default function ProfilePage() {
         </button>
       </div>
 
+      {/* Publish & Earn — the creator entry point lives here once signed in */}
+      <a
+        href={profile?.is_creator ? '/creators/dashboard' : '/creators'}
+        className="block mb-4 p-4 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white flex items-center justify-between gap-4 flex-wrap hover:shadow-lg hover:-translate-y-0.5 transition-all"
+      >
+        <div>
+          <p className="text-sm font-bold">{profile?.is_creator ? '✍️ Your Creator Studio' : '💸 Publish & Earn'}</p>
+          <p className="text-xs text-white/80 mt-0.5">
+            {profile?.is_creator
+              ? 'Manage your works, host classes, track reads and earnings'
+              : 'Publish your books and notes free — earn from every verified read'}
+          </p>
+        </div>
+        <span className="px-4 py-2 rounded-lg bg-white/20 text-sm font-semibold flex-shrink-0">
+          {profile?.is_creator ? 'Open studio →' : 'Get started →'}
+        </span>
+      </a>
+
       {/* Referral card */}
       {referralLink && (
         <div className="mb-8 p-4 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)]/10 to-[var(--gradient-end)]/10 border border-[var(--primary)]/20 flex items-center justify-between gap-4 flex-wrap">

@@ -78,6 +78,12 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
               {tier.label} Author
             </span>
             <Link
+              href="/classrooms/new"
+              className="px-4 py-2.5 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/10 transition-all"
+            >
+              🎓 Host a class
+            </Link>
+            <Link
               href="/creators/new"
               className="group px-5 py-2.5 rounded-xl bg-white text-[#0c0a1d] text-sm font-bold hover:shadow-[0_0_30px_rgba(167,139,250,0.45)] hover:-translate-y-0.5 transition-all"
             >

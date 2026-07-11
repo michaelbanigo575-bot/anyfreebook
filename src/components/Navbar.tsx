@@ -39,6 +39,7 @@ export function Navbar() {
     { label: 'Trending', href: '/trending' },
     { label: 'Audiobooks', href: '/audiobooks' },
     { label: 'Feed', href: '/feed' },
+    { label: 'Classrooms', href: '/classrooms' },
     { label: 'Publish & Earn', href: '/creators' },
     { label: 'Study Plan', href: '/study-plan' },
     { label: 'Rewards', href: '/rewards' },

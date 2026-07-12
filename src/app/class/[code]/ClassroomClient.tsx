@@ -11,6 +11,7 @@ import {
 import { uploadPublicationFile } from '@/lib/creators/client';
 import { createClient } from '@/lib/supabase/client';
 import { LiveStage } from '@/components/LiveStage';
+import { DocumentReader } from '@/components/DocumentReader';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
 import { getSessionKey } from '@/lib/creators/client';
 
@@ -326,21 +327,9 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
               </div>
 
               {room.material_url ? (
-                /\.(png|jpe?g|gif|webp)(\?|$)/i.test(room.material_url) ? (
-                  <img src={room.material_url} alt={room.material_title || 'Class material'} className="w-full max-h-[70vh] object-contain bg-[var(--bg-secondary)]" />
-                ) : (
-                  <iframe
-                    src={
-                      // Our own pages, storage uploads, and PDFs render directly; Office docs go through Google's viewer
-                      room.material_url.startsWith('/') || /\.pdf(\?|$)/i.test(room.material_url) || room.material_url.includes('supabase.co/storage')
-                        ? room.material_url
-                        : `https://docs.google.com/gview?url=${encodeURIComponent(room.material_url)}&embedded=true`
-                    }
-                    title={room.material_title || 'Class material'}
-                    className="w-full"
-                    style={{ height: '60vh', minHeight: 360 }}
-                  />
-                )
+                <div className="p-2">
+                  <DocumentReader url={room.material_url} title={room.material_title || 'Class material'} height="60vh" />
+                </div>
               ) : isHost && (
                 <div className="p-4 space-y-2">
                   <p className="text-[11px] text-[var(--text-muted)]">

@@ -11,6 +11,7 @@ import { CommentsSection } from '@/components/CommentsSection';
 import { FollowButton } from '@/components/FollowButton';
 import { ReaderSurface } from '@/components/ReaderSurface';
 import { AiStudyAids } from '@/components/AiStudyAids';
+import { DocumentReader } from '@/components/DocumentReader';
 
 export const dynamic = 'force-dynamic';
 
@@ -175,31 +176,10 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
         </div>
       )}
 
-      {/* Attached file: inline PDF viewer or download card */}
+      {/* Attached file: the ANYFREEBOOK Reader */}
       {pub.external_url && (
         <div className="mt-8">
-          {pub.external_url.toLowerCase().includes('.pdf') ? (
-            <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)]">
-              <iframe
-                src={pub.external_url}
-                title={`${pub.title} (PDF)`}
-                className="w-full bg-white"
-                style={{ height: '75vh' }}
-              />
-              <div className="p-3 bg-[var(--surface)] text-center">
-                <a href={pub.external_url} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[var(--primary)] hover:underline">
-                  Open full screen / download PDF →
-                </a>
-              </div>
-            </div>
-          ) : (
-            <div className="p-5 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] text-center">
-              <p className="text-sm text-[var(--text-secondary)] mb-3">This work is also available as a downloadable file.</p>
-              <a href={pub.external_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
-                Open / Download
-              </a>
-            </div>
-          )}
+          <DocumentReader url={pub.external_url} title={pub.title} height="75vh" />
         </div>
       )}
 

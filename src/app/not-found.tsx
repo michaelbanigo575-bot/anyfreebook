@@ -8,7 +8,7 @@ export default function NotFound() {
         Page not found
       </h1>
       <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-        The page you&apos;re looking for doesn&apos;t exist. But we have 247,000+ free books that do.
+        The page you&apos;re looking for doesn&apos;t exist. But we have 1,000,000+ free books that do.
       </p>
       <Link
         href="/"

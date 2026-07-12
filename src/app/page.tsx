@@ -40,7 +40,7 @@ export default async function HomePage() {
   const audiobooks = getAudiobooks();
   const categories = getAllCategories();
   const collections = getCollections();
-  const topCategories = categories.slice(0, 8);
+  const topCategories = categories; // every category gets a pill on the homepage
 
   let liveBooks: any[] = [];
   try {

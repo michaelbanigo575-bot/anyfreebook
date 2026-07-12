@@ -6,7 +6,7 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const title = searchParams.get('title') || 'ANYFREEBOOK';
-  const subtitle = searchParams.get('subtitle') || '247,000+ Free Books for Every Profession';
+  const subtitle = searchParams.get('subtitle') || '1,000,000+ Free Books for Every Profession';
   const type = searchParams.get('type') || 'website';
 
   return new ImageResponse(

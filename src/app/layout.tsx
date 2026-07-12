@@ -14,10 +14,10 @@ import { websiteSchema, organizationSchema } from '@/lib/schema';
 
 export const metadata: Metadata = {
   title: {
-    default: 'ANYFREEBOOK — 247,000+ Free Books, Audiobooks & Textbooks',
+    default: 'ANYFREEBOOK — 1,000,000+ Free Books, Audiobooks & Textbooks',
     template: '%s | ANYFREEBOOK',
   },
-  description: "The world's largest free book aggregator. 247,000+ free books, audiobooks, comics, and magazines across 500+ professions. Download PDF, EPUB, and more — 100% free and legal.",
+  description: "The world's largest free book aggregator. 1,000,000+ free books, audiobooks, comics, and magazines across 500+ professions. Download PDF, EPUB, and more — 100% free and legal.",
   keywords: ['free books', 'free textbooks', 'free ebooks', 'free audiobooks', 'free PDF books', 'download free books', 'open access books', 'free college textbooks'],
   authors: [{ name: 'ANYFREEBOOK' }],
   creator: 'ANYFREEBOOK',
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://anyfreebook.com',
     siteName: 'ANYFREEBOOK',
-    title: 'ANYFREEBOOK — 247,000+ Free Books, Audiobooks & Textbooks',
+    title: 'ANYFREEBOOK — 1,000,000+ Free Books, Audiobooks & Textbooks',
     description: "The world's largest free book aggregator. Download free books across 500+ professions.",
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'ANYFREEBOOK — Free Books for Every Profession' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ANYFREEBOOK — 247,000+ Free Books',
+    title: 'ANYFREEBOOK — 1,000,000+ Free Books',
     description: "The world's largest free book aggregator.",
     images: ['/og-image.png'],
     creator: '@anyfreebook',

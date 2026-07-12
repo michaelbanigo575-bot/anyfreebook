@@ -16,9 +16,9 @@ export async function generateStaticParams() {
 async function fetchLiveCategoryBooks(categoryName: string): Promise<Book[]> {
   try {
     const [ol, archive, gb] = await Promise.allSettled([
-      searchOpenLibrary(categoryName, 10, 1),
-      searchArchive(categoryName, 1, 10),
-      searchGoogleBooks(categoryName, 0, 10),
+      searchOpenLibrary(categoryName, 24, 1),
+      searchArchive(categoryName, 1, 24),
+      searchGoogleBooks(categoryName, 0, 20),
     ]);
     return [
       ...(ol.status === 'fulfilled' ? ol.value.books : []),

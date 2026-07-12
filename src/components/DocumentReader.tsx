@@ -118,9 +118,9 @@ function ImageStage({ url, title, height }: { url: string; title?: string; heigh
 /** Trim Project Gutenberg's license boilerplate to the actual work. */
 function cleanGutenbergText(raw: string): string {
   let t = raw.replace(/\r\n/g, '\n');
-  const start = t.match(/\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG.*?\*\*\*/is);
+  const start = t.match(/\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG[\s\S]*?\*\*\*/i);
   if (start) t = t.slice((start.index || 0) + start[0].length);
-  const end = t.match(/\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG.*?\*\*\*/is);
+  const end = t.match(/\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG[\s\S]*?\*\*\*/i);
   if (end) t = t.slice(0, end.index);
   return t.trim();
 }

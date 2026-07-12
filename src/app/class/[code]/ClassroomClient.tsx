@@ -9,6 +9,7 @@ import {
   type ClassroomMessage,
 } from '@/lib/classrooms/client';
 import { uploadPublicationFile } from '@/lib/creators/client';
+import { createClient } from '@/lib/supabase/client';
 import { LiveStage } from '@/components/LiveStage';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
 import { getSessionKey } from '@/lib/creators/client';
@@ -30,9 +31,24 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [joined, setJoined] = useState(false);   // user explicitly entered the video room
   const [materialDraft, setMaterialDraft] = useState('');
   const [materialBusy, setMaterialBusy] = useState(false);
+  const [myPubs, setMyPubs] = useState<{ id: string; title: string; slug: string; external_url: string | null }[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isHost = user?.id === room.host_id;
+
+  // Host's published works — one tap shows the book/PDF they teach from
+  useEffect(() => {
+    if (!isHost || !user) return;
+    const sb = createClient();
+    sb.from('publications')
+      .select('id, title, slug, external_url')
+      .eq('author_id', user.id)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => setMyPubs(data || []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHost, user?.id]);
   const displayName = profile?.display_name || user?.email?.split('@')[0] || null;
 
   // Attendance + chat history + live subscriptions + realtime presence
@@ -121,6 +137,16 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
     if (error) { alert(error); return; }
     setRoom(r => ({ ...r, material_url: url, material_title: null }));
     setMaterialDraft('');
+  };
+
+  const showPublication = async (pub: { title: string; slug: string; external_url: string | null }) => {
+    // Prefer the uploaded PDF; fall back to embedding our own reader page
+    const url = pub.external_url || `/read/${pub.slug}`;
+    setMaterialBusy(true);
+    const { error } = await setClassroomMaterial(room.id, url, pub.title);
+    setMaterialBusy(false);
+    if (error) { alert(error); return; }
+    setRoom(r => ({ ...r, material_url: url, material_title: pub.title }));
   };
 
   const clearMaterial = async () => {
@@ -304,9 +330,12 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
                   <img src={room.material_url} alt={room.material_title || 'Class material'} className="w-full max-h-[70vh] object-contain bg-[var(--bg-secondary)]" />
                 ) : (
                   <iframe
-                    src={/\.pdf(\?|$)/i.test(room.material_url)
-                      ? room.material_url
-                      : `https://docs.google.com/gview?url=${encodeURIComponent(room.material_url)}&embedded=true`}
+                    src={
+                      // Our own pages, storage uploads, and PDFs render directly; Office docs go through Google's viewer
+                      room.material_url.startsWith('/') || /\.pdf(\?|$)/i.test(room.material_url) || room.material_url.includes('supabase.co/storage')
+                        ? room.material_url
+                        : `https://docs.google.com/gview?url=${encodeURIComponent(room.material_url)}&embedded=true`
+                    }
                     title={room.material_title || 'Class material'}
                     className="w-full"
                     style={{ height: '60vh', minHeight: 360 }}
@@ -317,6 +346,21 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
                   <p className="text-[11px] text-[var(--text-muted)]">
                     Upload a PDF, image or slides — it appears instantly on every student&apos;s screen (works great on phones, no screen share needed).
                   </p>
+                  {myPubs.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-[var(--text-secondary)]">📚 Teach from your published work:</span>
+                      {myPubs.map(pub => (
+                        <button
+                          key={pub.id}
+                          onClick={() => showPublication(pub)}
+                          disabled={materialBusy}
+                          className="px-2.5 py-1 rounded-full border border-[var(--primary)]/40 text-[var(--primary)] text-[11px] font-semibold hover:bg-[var(--primary-light)] transition-colors disabled:opacity-60 max-w-[220px] truncate"
+                        >
+                          {pub.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-2">
                     <label className={`px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-xs font-semibold cursor-pointer ${materialBusy ? 'opacity-60 pointer-events-none' : 'hover:shadow-md'}`}>
                       {materialBusy ? 'Uploading…' : '⬆ Upload document'}

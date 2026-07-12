@@ -9,6 +9,7 @@ import {
   type ClassroomMessage,
 } from '@/lib/classrooms/client';
 import { uploadPublicationFile } from '@/lib/creators/client';
+import { LiveStage } from '@/components/LiveStage';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
 import { getSessionKey } from '@/lib/creators/client';
 
@@ -27,7 +28,6 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   const [recordingDraft, setRecordingDraft] = useState('');
   const [busy, setBusy] = useState(false);
   const [joined, setJoined] = useState(false);   // user explicitly entered the video room
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [materialDraft, setMaterialDraft] = useState('');
   const [materialBusy, setMaterialBusy] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -134,18 +134,6 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
     ? `${window.location.origin}/class/${room.room_code}${inviteToken ? `?t=${inviteToken}` : ''}`
     : '';
 
-  // Fetch the video room URL when the user joins (Daily.co when configured — no sign-in for anyone — else Jitsi fallback)
-  useEffect(() => {
-    if (!joined || videoUrl) return;
-    fetch(`/api/classrooms/video?code=${encodeURIComponent(room.room_code)}&name=${encodeURIComponent(displayName || 'Student')}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.url) setVideoUrl(d.url);
-        else setVideoUrl(`https://meet.jit.si/anyfreebook-${room.room_code}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"`);
-      })
-      .catch(() => setVideoUrl(`https://meet.jit.si/anyfreebook-${room.room_code}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"`));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [joined, room.room_code]);
 
   return (
     <div className="content-wrapper py-6 max-w-6xl mx-auto">
@@ -206,20 +194,17 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
         <div className="lg:col-span-2">
           {room.status === 'live' && (
             joined ? (
-              <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-black">
-                {videoUrl ? (
-                  <iframe
-                    src={videoUrl}
-                    title={room.title}
-                    className="w-full"
-                    style={{ height: '65vh', minHeight: 420 }}
-                    allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center text-white/70 text-sm" style={{ height: '65vh', minHeight: 420 }}>
-                    Opening the room…
-                  </div>
-                )}
+              <div>
+                <LiveStage classroomId={room.id} isHost={isHost} />
+                <p className="text-[10px] text-[var(--text-muted)] text-right mt-1">
+                  Video trouble?{' '}
+                  <a
+                    href={`https://meet.jit.si/anyfreebook-${room.room_code}#userInfo.displayName="${encodeURIComponent(displayName || 'Student')}"`}
+                    target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--primary)]"
+                  >
+                    open the backup room
+                  </a>
+                </p>
               </div>
             ) : (
               <div className="rounded-2xl border-2 border-red-500/40 bg-[var(--surface)] flex flex-col items-center justify-center text-center p-10" style={{ minHeight: 380 }}>
@@ -235,7 +220,9 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
                 >
                   ▶ Join classroom
                 </button>
-                <p className="text-[11px] text-[var(--text-muted)] mt-4">Your browser will ask for camera & microphone access — you can join with both off.</p>
+                <p className="text-[11px] text-[var(--text-muted)] mt-4">
+                  {isHost ? 'Your browser will ask for camera & microphone access.' : 'Just watch and chat — no camera or microphone needed.'}
+                </p>
               </div>
             )
           )}

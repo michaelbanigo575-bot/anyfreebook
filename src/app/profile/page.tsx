@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
+import { ActivityTimeline } from '@/components/ActivityTimeline';
 
-type Tab = 'wishlist' | 'favorites' | 'history' | 'stats';
+type Tab = 'activity' | 'wishlist' | 'favorites' | 'history' | 'stats';
 
 interface StoredInteraction {
   book_id: string;
@@ -19,7 +20,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, profile, loading, signOut } = useAuth();
   const supabase = createClient();
-  const [activeTab, setActiveTab] = useState<Tab>('wishlist');
+  const [activeTab, setActiveTab] = useState<Tab>('activity');
   const [interactions, setInteractions] = useState<StoredInteraction[]>([]);
   const [copied, setCopied] = useState(false);
 
@@ -50,6 +51,7 @@ export default function ProfilePage() {
   const liked = interactions.filter(i => i.action === 'liked');
 
   const tabs: { id: Tab; label: string; icon: string; count: number }[] = [
+    { id: 'activity', label: 'Activity', icon: '🕓', count: 0 },
     { id: 'wishlist', label: 'Wishlist', icon: '📚', count: wishlisted.length },
     { id: 'favorites', label: 'Favorites', icon: '⭐', count: favorited.length },
     { id: 'history', label: 'Liked', icon: '❤️', count: liked.length },
@@ -150,7 +152,9 @@ export default function ProfilePage() {
       </div>
 
       {/* Content */}
-      {activeTab === 'stats' ? (
+      {activeTab === 'activity' ? (
+        <ActivityTimeline userId={user.id} />
+      ) : activeTab === 'stats' ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Books read', value: String(liked.length), icon: '📖' },

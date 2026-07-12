@@ -11,33 +11,46 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * directly; anything else falls back to an iframe so nothing ever dead-ends.
  */
 
-type Mode = 'pdf' | 'image' | 'embed';
+type Mode = 'pdf' | 'image' | 'embed' | 'text';
 
 interface Props {
   url: string;
   title?: string;
   height?: string; // CSS height for the stage, default 65vh
+  mode?: Mode;     // optional override (e.g. force 'text' for a Gutenberg .txt)
 }
 
 function detectMode(url: string): Mode {
   if (/\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) return 'image';
   if (/\.pdf(\?|$)/i.test(url) || url.includes('supabase.co/storage')) return 'pdf';
+  if (/\.(txt|text)(\?|$)/i.test(url)) return 'text';
   return 'embed';
 }
 
-export function DocumentReader({ url, title, height = '65vh' }: Props) {
-  const mode = detectMode(url);
+/** External http(s) files must be fetched same-origin (CORS) — route them through our book proxy. */
+function isExternal(url: string): boolean {
+  return /^https?:\/\//i.test(url) && !url.includes('supabase.co/storage');
+}
+export function proxied(url: string): string {
+  return isExternal(url) ? `/api/book-proxy?url=${encodeURIComponent(url)}` : url;
+}
+
+export function DocumentReader({ url, title, height = '65vh', mode: modeOverride }: Props) {
+  const mode = modeOverride || detectMode(url);
   const [pdfFailed, setPdfFailed] = useState(false);
 
   if (mode === 'image') return <ImageStage url={url} title={title} height={height} />;
+  if (mode === 'text') return <TextStage url={url} title={title} height={height} />;
   if (mode === 'pdf' && !pdfFailed) return <PdfStage url={url} title={title} height={height} onFail={() => setPdfFailed(true)} />;
 
   // Site-relative pages and unsupported formats: plain embed, Office docs via Google's viewer
-  const src = url.startsWith('/') || pdfFailed
-    ? url
-    : /\.(docx?|pptx?|xlsx?)(\?|$)/i.test(url)
-      ? `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`
-      : url;
+  const src = pdfFailed
+    ? proxied(url) // a PDF PDF.js couldn't parse — let the browser's native viewer try, same-origin
+    : url.startsWith('/')
+      ? url
+      : /\.(docx?|pptx?|xlsx?)(\?|$)/i.test(url)
+        ? `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`
+        : url;
   return (
     <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface)]">
       <ReaderBar title={title} url={url} />
@@ -100,6 +113,74 @@ function ImageStage({ url, title, height }: { url: string; title?: string; heigh
   );
 }
 
+/* ---------- plain-text viewer (Gutenberg .txt etc.) ---------- */
+
+/** Trim Project Gutenberg's license boilerplate to the actual work. */
+function cleanGutenbergText(raw: string): string {
+  let t = raw.replace(/\r\n/g, '\n');
+  const start = t.match(/\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG.*?\*\*\*/is);
+  if (start) t = t.slice((start.index || 0) + start[0].length);
+  const end = t.match(/\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG.*?\*\*\*/is);
+  if (end) t = t.slice(0, end.index);
+  return t.trim();
+}
+
+function TextStage({ url, title, height }: { url: string; title?: string; height: string }) {
+  const [text, setText] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [fontSize, setFontSize] = useState(18);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(proxied(url));
+        if (!res.ok) throw new Error(String(res.status));
+        const raw = await res.text();
+        if (!cancelled) setText(cleanGutenbergText(raw));
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [url]);
+
+  const btn = 'px-2 py-1 rounded-md text-[11px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]';
+
+  if (failed) {
+    return (
+      <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface)]">
+        <ReaderBar title={title} url={url} />
+        <iframe src={proxied(url)} title={title || 'Document'} className="w-full bg-white" style={{ height }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface)] flex flex-col">
+      <ReaderBar title={title} url={url}>
+        <button onClick={() => setFontSize(s => Math.max(13, s - 1))} className={btn} title="Smaller text">A−</button>
+        <button onClick={() => setFontSize(s => Math.min(28, s + 1))} className={btn} title="Larger text">A+</button>
+      </ReaderBar>
+      <div className="overflow-auto bg-[var(--bg-secondary)]" style={{ height }}>
+        {text === null ? (
+          <div className="flex flex-col items-center justify-center gap-3 text-[var(--text-muted)] text-sm h-full">
+            <span className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
+            Opening in the ANYFREEBOOK Reader…
+          </div>
+        ) : (
+          <article
+            className="mx-auto max-w-2xl px-6 py-8 whitespace-pre-wrap font-serif text-[var(--text)] leading-relaxed"
+            style={{ fontSize, lineHeight: 1.7 }}
+          >
+            {text}
+          </article>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- PDF viewer (PDF.js) ---------- */
 
 interface PdfDoc {
@@ -129,7 +210,7 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
         const pdfjs = await import('pdfjs-dist');
         // Served from /public — bundling the worker trips Terser on import.meta
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-        const doc = await pdfjs.getDocument({ url }).promise;
+        const doc = await pdfjs.getDocument({ url: proxied(url) }).promise;
         if (cancelled) return;
         docRef.current = doc as unknown as PdfDoc;
         setNumPages(doc.numPages);

@@ -2,30 +2,40 @@
 
 import { useEffect, useCallback } from 'react';
 import type { Book } from '@/lib/data';
+import { DocumentReader } from './DocumentReader';
+
+type ReaderTarget = { mode: 'pdf' | 'text' | 'embed'; url: string };
 
 /**
- * Resolve an embeddable preview URL for a book based on its source.
- * Returns null when the source has no embeddable reader (we then show a fallback).
+ * Resolve the best in-house-reader target for an external book:
+ * a direct PDF or Gutenberg plain-text renders in the ANYFREEBOOK Reader;
+ * Archive/Gutenberg reading pages embed inside it. Returns null when the
+ * source has nothing readable (e.g. Google Books, catalog-only records).
  */
-export function getPreviewEmbedUrl(book: Book): string | null {
-  const { sourceUrl, downloadLinks } = book;
-  const allUrls = [sourceUrl, ...(downloadLinks?.map(l => l.url) || [])].filter((u): u is string => !!u);
+export function getReaderTarget(book: Book): ReaderTarget | null {
+  const links = book.downloadLinks || [];
+  const allUrls = [book.sourceUrl, ...links.map(l => l.url)].filter((u): u is string => !!u);
 
-  // Internet Archive — works regardless of where the link came from (live API or resolved lookup)
+  // 1. A direct PDF from any source → our PDF reader (via proxy)
+  const pdf = links.find(l => /\.pdf(\?|$)/i.test(l.url));
+  if (pdf) return { mode: 'pdf', url: pdf.url };
+
+  // 2. Gutenberg plain text → our reflowable text reader (covers ~all of Gutenberg)
+  const txt = links.find(l => /\.txt(\?|$)/i.test(l.url) || /\bTXT\b/i.test(l.label));
+  if (txt) return { mode: 'text', url: txt.url };
+
+  // 3. Internet Archive scanned book → embed the BookReader inside our frame
   const archiveUrl = allUrls.find(u => u.includes('archive.org/details/'));
   if (archiveUrl) {
-    const identifier = archiveUrl.split('archive.org/details/')[1]?.split(/[/?#]/)[0];
-    if (identifier) return `https://archive.org/embed/${identifier}`;
+    const id = archiveUrl.split('archive.org/details/')[1]?.split(/[/?#]/)[0];
+    if (id) return { mode: 'embed', url: `https://archive.org/embed/${id}` };
   }
 
-  // Note: Google Books deliberately blocks iframe embedding (X-Frame-Options: SAMEORIGIN),
-  // so we don't attempt to embed it — those results fall through to the "read at source" panel below.
-
-  // Project Gutenberg — prefer the HTML reading version if we can derive an ebook id
+  // 4. Gutenberg reading page → embed the images-HTML version
   const gutenbergUrl = allUrls.find(u => u.includes('gutenberg.org'));
   if (gutenbergUrl) {
-    const match = gutenbergUrl.match(/gutenberg\.org\/(?:ebooks|cache\/epub)\/(\d+)/);
-    if (match) return `https://www.gutenberg.org/cache/epub/${match[1]}/pg${match[1]}-images.html`;
+    const m = gutenbergUrl.match(/gutenberg\.org\/(?:ebooks|cache\/epub)\/(\d+)/);
+    if (m) return { mode: 'embed', url: `https://www.gutenberg.org/cache/epub/${m[1]}/pg${m[1]}-images.html` };
   }
 
   return null;
@@ -37,7 +47,7 @@ interface BookPreviewModalProps {
 }
 
 export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
-  const embedUrl = getPreviewEmbedUrl(book);
+  const readerTarget = getReaderTarget(book);
   const externalUrl = book.sourceUrl || book.downloadLinks?.[0]?.url;
 
   const handleKey = useCallback((e: KeyboardEvent) => {
@@ -90,15 +100,11 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
           </div>
         </div>
 
-        {/* Preview body */}
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title={`Preview of ${book.title}`}
-            className="flex-1 w-full border-0 bg-white"
-            allowFullScreen
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          />
+        {/* Preview body — the ANYFREEBOOK Reader when the source has readable content */}
+        {readerTarget ? (
+          <div className="flex-1 overflow-hidden p-2 bg-[var(--bg-secondary)]">
+            <DocumentReader url={readerTarget.url} mode={readerTarget.mode} title={book.title} height="100%" />
+          </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4">
             <p className="text-5xl">📖</p>

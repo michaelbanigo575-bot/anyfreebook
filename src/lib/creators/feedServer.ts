@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import type { FeedPost } from './feed';
-import type { ClassroomWithHost } from '@/lib/classrooms/server';
+import { autoEndStale, isStaleLive, type ClassroomWithHost } from '@/lib/classrooms/server';
 
 export async function getFeedPosts(limit = 20, offset = 0): Promise<FeedPost[]> {
   try {
@@ -58,7 +58,9 @@ export async function getLivePublicClassrooms(): Promise<ClassroomWithHost[]> {
       .eq('status', 'live')
       .order('started_at', { ascending: false })
       .limit(6);
-    return (data as unknown as ClassroomWithHost[]) || [];
+    const rooms = (data as unknown as ClassroomWithHost[]) || [];
+    autoEndStale(rooms);
+    return rooms.filter(c => !isStaleLive(c));
   } catch {
     return [];
   }

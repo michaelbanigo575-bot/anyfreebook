@@ -22,7 +22,7 @@ export default function AboutPage() {
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-12 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
-          <StatBlock number="1M+" label="Free Books" />
+          <StatBlock number="1.7M+" label="Free Books" />
           <StatBlock number="45K+" label="Audiobooks" />
           <StatBlock number="500+" label="Professions" />
           <StatBlock number="40+" label="Sources" />

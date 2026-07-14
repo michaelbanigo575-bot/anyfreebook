@@ -192,7 +192,7 @@
   will-change: transform;
 }
 .book3d-scene:hover .book3d {
-  animation: book3d-spin 2.6s linear infinite;
+  animation: book3d-spin 3.4s linear infinite; /* 30% slower */
 }
 @keyframes book3d-spin {
   to { transform: rotateY(-376deg); }   /* resting -16deg → full 360 turn, seamless loop */

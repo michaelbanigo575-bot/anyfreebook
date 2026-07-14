@@ -14,18 +14,20 @@ import { LiveTrendingSection } from '@/components/LiveTrendingSection';
 
 async function fetchLiveBooks() {
   try {
-    const [gutenberg, openlib, google, archive] = await Promise.allSettled([
+    const [gutenberg, openlib, google, archive, fiction] = await Promise.allSettled([
       getGutenbergPopular(1),
-      getOpenLibrarySubject('popular', 10, 0),
-      searchGoogleBooks('bestseller', 0, 10),
-      searchArchive('popular books', 1, 10),
+      getOpenLibrarySubject('popular', 20, 0),
+      searchGoogleBooks('bestseller', 0, 20),
+      searchArchive('popular books', 1, 20),
+      getOpenLibrarySubject('fiction', 20, 0),
     ]);
 
     const books = [
-      ...(gutenberg.status === 'fulfilled' ? gutenberg.value.books.slice(0, 6) : []),
-      ...(openlib.status === 'fulfilled' ? openlib.value.books.slice(0, 6) : []),
-      ...(google.status === 'fulfilled' ? google.value.books.slice(0, 6) : []),
-      ...(archive.status === 'fulfilled' ? archive.value.books.slice(0, 6) : []),
+      ...(gutenberg.status === 'fulfilled' ? gutenberg.value.books.slice(0, 15) : []),
+      ...(openlib.status === 'fulfilled' ? openlib.value.books.slice(0, 15) : []),
+      ...(google.status === 'fulfilled' ? google.value.books.slice(0, 15) : []),
+      ...(archive.status === 'fulfilled' ? archive.value.books.slice(0, 15) : []),
+      ...(fiction.status === 'fulfilled' ? fiction.value.books.slice(0, 15) : []),
     ];
 
     return books;
@@ -47,7 +49,8 @@ export default async function HomePage() {
     liveBooks = await fetchLiveBooks();
   } catch {}
 
-  const allTrending = [...liveBooks, ...trending].slice(0, 20);
+  // Big rotating pool: the grid shows 25 at a time and cycles through all of these every 3s
+  const allTrending = [...liveBooks, ...trending].slice(0, 80);
 
   return (
     <>

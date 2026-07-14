@@ -4,11 +4,11 @@ import { getAllCategories } from '@/lib/data';
 
 export const metadata: Metadata = {
   title: 'Explore All Categories — 500+ Professions',
-  description: 'Browse free books by profession. 1,000,000+ free books across 500+ categories including technology, medicine, engineering, business, law, and more.',
+  description: 'Browse free books by profession. 1,700,000+ free books across 500+ categories including technology, medicine, engineering, business, law, and more.',
   openGraph: {
     title: 'Explore 500+ Categories — Free Books by Profession',
-    description: 'Browse 1,000,000+ free books across 500+ professional categories.',
-    images: [{ url: '/api/og?title=Explore+All+Categories&subtitle=500%2B+Professions+%E2%80%A2+1%2C000%2C000%2B+Free+Books', width: 1200, height: 630 }],
+    description: 'Browse 1,700,000+ free books across 500+ professional categories.',
+    images: [{ url: '/api/og?title=Explore+All+Categories&subtitle=500%2B+Professions+%E2%80%A2+1%2C700%2C000%2B+Free+Books', width: 1200, height: 630 }],
   },
 };
 

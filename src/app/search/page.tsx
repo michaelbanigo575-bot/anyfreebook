@@ -192,17 +192,10 @@ function SearchResults() {
             >
               <div className="p-4">
                 <div className="flex gap-3">
-                  {/* Cover */}
-                  {book.coverUrl ? (
-                    <img
-                      src={book.coverUrl}
-                      alt={`Cover of ${book.title}`}
-                      className="w-16 h-24 rounded-lg object-cover flex-shrink-0 shadow-sm"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <BookCover title={book.title} author={book.author} size="sm" />
-                  )}
+                  {/* Cover — real image inside the 3D interactive book */}
+                  <div className="flex-shrink-0">
+                    <BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="sm" />
+                  </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">

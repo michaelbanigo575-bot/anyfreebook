@@ -37,19 +37,11 @@ export function LiveTrendingSection({ books }: { books: Book[] }) {
           key={book.id}
           className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--border)] hover:shadow-lg transition-all duration-300 overflow-hidden"
         >
-          <div className="aspect-[2/3] relative overflow-hidden bg-[var(--bg-secondary)]">
-            {book.coverUrl ? (
-              <img
-                src={book.coverUrl}
-                alt={book.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <BookCover title={book.title} author={book.author} size="md" />
-              </div>
-            )}
+          <div className="aspect-[2/3] relative bg-[var(--bg-secondary)]">
+            {/* Real cover inside the 3D interactive book */}
+            <div className="w-full h-full flex items-center justify-center py-2">
+              <BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="md" />
+            </div>
             <div className="absolute top-2 left-2 flex gap-1">
               <SourceBadge source={book.sourceType} />
             </div>

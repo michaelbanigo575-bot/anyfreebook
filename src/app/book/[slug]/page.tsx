@@ -81,7 +81,7 @@ export default async function BookPage({ params }: { params: { slug: string } })
                 bg-gradient-to-l from-neutral-300 via-neutral-200 to-neutral-100
                 dark:from-neutral-600 dark:via-neutral-500 dark:to-neutral-400
                 rounded-r-sm" />
-              <BookCover title={book.title} author={book.author} size="xl" />
+              <BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="xl" />
             </div>
           </div>
 

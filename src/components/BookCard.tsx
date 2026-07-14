@@ -34,15 +34,10 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
         <div className={`flex ${size === 'featured' ? 'gap-5' : size === 'compact' ? 'flex-row gap-3' : 'flex-col gap-3'}`}>
           {/* Cover */}
           <div className="relative flex-shrink-0 self-center">
-            {/* Page edge */}
-            <div className="absolute -right-[2px] top-1 bottom-1 w-[4px]
-              bg-gradient-to-l from-neutral-300 via-neutral-200 to-neutral-100
-              dark:from-neutral-600 dark:via-neutral-500 dark:to-neutral-400
-              rounded-r-sm" />
-
             <BookCover
               title={book.title}
               author={book.author}
+              coverUrl={book.coverUrl}
               size={coverSize}
               className="relative z-[1] transition-transform duration-300
                 group-hover:-translate-y-1 group-hover:shadow-book-hover"

@@ -23,7 +23,7 @@ export function CollectionGrid({ collections }: { collections: Collection[] }) {
                   marginLeft: i > 0 ? '-12px' : '0',
                 }}
               >
-                <BookCover title={book.title} author={book.author} size="xs" />
+                <BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="xs" />
               </div>
             ))}
           </div>

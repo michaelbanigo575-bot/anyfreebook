@@ -176,3 +176,39 @@
   background-color: rgba(51, 141, 255, 0.2);
   color: var(--text);
 }
+
+/* ---- 3D interactive book cover (hover to spin) ---- */
+.book3d-scene {
+  perspective: 900px;
+  display: inline-block;
+}
+.book3d {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateY(-16deg);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.book3d-scene:hover .book3d {
+  animation: book3d-spin 2.6s linear infinite;
+}
+@keyframes book3d-spin {
+  to { transform: rotateY(-376deg); }   /* resting -16deg → full 360 turn, seamless loop */
+}
+.book3d-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.book3d-front { transform: translateZ(calc(var(--book-d) / 2)); }
+.book3d-back  { transform: rotateY(180deg) translateZ(calc(var(--book-d) / 2)); }
+.book3d-spine { left: 0; width: var(--book-d); transform-origin: left center; transform: rotateY(-90deg); border-radius: 2px; }
+.book3d-pages { right: 0; left: auto; width: var(--book-d); transform-origin: right center; transform: rotateY(90deg); border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .book3d-scene:hover .book3d { animation: none; transform: rotateY(-32deg); }
+}

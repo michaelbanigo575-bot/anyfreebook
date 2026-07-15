@@ -14,9 +14,37 @@ import { createClient } from '@/lib/supabase/client';
  * viewers per class (host upload bandwidth); beyond that we'd add an SFU.
  */
 
-const ICE: RTCConfiguration = {
+const FALLBACK_ICE: RTCConfiguration = {
   iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }],
 };
+
+/** Server-provided ICE config: STUN always, plus TURN relay when configured (see /api/rtc-ice). */
+async function fetchIceConfig(): Promise<RTCConfiguration> {
+  try {
+    const res = await fetch('/api/rtc-ice', { signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    if (Array.isArray(data.iceServers) && data.iceServers.length) return { iceServers: data.iceServers };
+  } catch { /* fall through */ }
+  return FALLBACK_ICE;
+}
+
+/**
+ * Cap the outgoing video bitrate so one host upload serves many viewers.
+ * Uncapped 720p (~2.5Mbps/viewer) chokes after 2-3 viewers; capped streams
+ * stay smooth to ~8-12 on a normal connection. Screen shares get more budget
+ * (text must stay legible), cameras less.
+ */
+async function capVideoBitrate(pc: RTCPeerConnection, mode: 'camera' | 'screen'): Promise<void> {
+  const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+  if (!sender) return;
+  try {
+    const params = sender.getParameters();
+    params.encodings = params.encodings?.length ? params.encodings : [{}];
+    params.encodings[0].maxBitrate = mode === 'screen' ? 1_200_000 : 500_000;
+    params.degradationPreference = mode === 'screen' ? 'maintain-resolution' : 'maintain-framerate';
+    await sender.setParameters(params);
+  } catch { /* older browsers: best effort */ }
+}
 
 type Signal =
   | { kind: 'join'; from: string; to: 'host' }
@@ -80,7 +108,7 @@ export function LiveStage({ classroomId, isHost }: Props) {
           const viewerId = payload.from;
           if (payload.kind === 'join') {
             p.pcs.get(viewerId)?.close();
-            const pc = new RTCPeerConnection(ICE);
+            const pc = new RTCPeerConnection(await fetchIceConfig());
             p.pcs.set(viewerId, pc);
             p.stream.getTracks().forEach(t => pc.addTrack(t, p.stream!));
             // Late joiner while a screen share is running: swap the fresh sender too
@@ -88,6 +116,15 @@ export function LiveStage({ classroomId, isHost }: Props) {
               const sender = pc.getSenders().find(s => s.track?.kind === 'video');
               sender?.replaceTrack(p.screenTrack);
             }
+            // Bitrate cap: keeps the host's upload healthy across many viewers
+            capVideoBitrate(pc, p.screenTrack ? 'screen' : 'camera');
+            // Reap dead viewers so they stop consuming upload budget
+            pc.onconnectionstatechange = () => {
+              if (['failed', 'closed'].includes(pc.connectionState)) {
+                pc.close();
+                if (p.pcs.get(viewerId) === pc) p.pcs.delete(viewerId);
+              }
+            };
             pc.onicecandidate = e => { if (e.candidate) send({ kind: 'ice', from: 'host', to: viewerId, candidate: e.candidate.toJSON() }); };
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
@@ -110,7 +147,7 @@ export function LiveStage({ classroomId, isHost }: Props) {
           if (payload.to !== p.myId) return;
           if (payload.kind === 'offer') {
             pc?.close();
-            pc = new RTCPeerConnection(ICE);
+            pc = new RTCPeerConnection(await fetchIceConfig());
             pc.ontrack = e => {
               const v = videoRef.current;
               if (!v) return;
@@ -172,7 +209,10 @@ export function LiveStage({ classroomId, isHost }: Props) {
     p.screenTrack?.stop();
     p.screenTrack = null;
     const camTrack = p.stream?.getVideoTracks()[0] || null;
-    p.pcs.forEach(pc => pc.getSenders().find(s => s.track?.kind === 'video' || s.track === null)?.replaceTrack(camTrack));
+    p.pcs.forEach(pc => {
+      pc.getSenders().find(s => s.track?.kind === 'video' || s.track === null)?.replaceTrack(camTrack);
+      capVideoBitrate(pc, 'camera');
+    });
     if (videoRef.current && p.stream) videoRef.current.srcObject = p.stream;
     setSharing(false);
   };
@@ -185,7 +225,10 @@ export function LiveStage({ classroomId, isHost }: Props) {
       const track = display.getVideoTracks()[0];
       p.screenTrack = track;
       track.onended = stopShare; // browser's own "Stop sharing" button
-      p.pcs.forEach(pc => pc.getSenders().find(s => s.track?.kind === 'video')?.replaceTrack(track));
+      p.pcs.forEach(pc => {
+        pc.getSenders().find(s => s.track?.kind === 'video')?.replaceTrack(track);
+        capVideoBitrate(pc, 'screen');
+      });
       if (videoRef.current) videoRef.current.srcObject = display;
       setSharing(true);
     } catch { /* user cancelled the picker */ }

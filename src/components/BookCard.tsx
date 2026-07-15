@@ -10,6 +10,10 @@ interface BookCardProps {
 
 export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
   const coverSize = size === 'compact' ? 'sm' : size === 'featured' ? 'lg' : 'md';
+  // Live-sourced books link straight to the actual book online; curated ones
+  // go to our detail page (which resolves real download links).
+  const isExternal = !!book.sourceUrl && !!book.sourceType && book.sourceType !== 'local';
+  const href = isExternal ? book.sourceUrl! : `/book/${book.slug}`;
   const contentTypeBadge = {
     AUDIOBOOK: { emoji: '🎧', bg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' },
     COMIC: { emoji: '🦸', bg: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
@@ -21,7 +25,9 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
   return (
     <article className="group relative">
       <Link
-        href={`/book/${book.slug}`}
+        href={href}
+        target={isExternal ? '_blank' : undefined}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
         className={`
           block rounded-xl transition-all duration-300
           ${size === 'featured'

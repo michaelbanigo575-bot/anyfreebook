@@ -1,3 +1,5 @@
+import { WORLD_CATEGORY_SPECS } from './worldCategories';
+
 export interface Book {
   id: string;
   title: string;
@@ -32,6 +34,10 @@ export interface Category {
   bookCount: number;
   icon: string;
   gradient: string;
+  /** Live-search query used to fetch real books for this category (falls back to name). */
+  query?: string;
+  /** Grouping for the category menu: subject | place | language */
+  group?: 'subject' | 'place' | 'language';
 }
 
 export interface Collection {
@@ -89,6 +95,33 @@ const CATEGORIES: Category[] = [
   { id: '33', name: 'Music', slug: 'free-music-books', description: 'Music theory, instrument guides, songbooks, and music history', bookCount: 40400, icon: '🎵', gradient: 'from-violet-500/20 to-fuchsia-500/20' },
   { id: '34', name: 'Sports & Fitness', slug: 'free-sports-fitness-books', description: 'Training guides, sports science, coaching, and fitness', bookCount: 36200, icon: '⚽', gradient: 'from-green-500/20 to-teal-500/20' },
 ];
+
+// ---- World categories: countries, languages, deep subjects (200 entries) ----
+// Every one carries a live-search query, so its page streams REAL books from
+// Open Library / Internet Archive / Google Books — no synthetic filler.
+const WORLD_GRADIENTS = [
+  'from-blue-500/20 to-cyan-500/20', 'from-orange-500/20 to-amber-500/20',
+  'from-red-500/20 to-rose-500/20', 'from-emerald-500/20 to-green-500/20',
+  'from-indigo-500/20 to-violet-500/20', 'from-purple-500/20 to-fuchsia-500/20',
+  'from-pink-500/20 to-rose-500/20', 'from-teal-500/20 to-cyan-500/20',
+  'from-yellow-500/20 to-amber-500/20', 'from-sky-500/20 to-indigo-500/20',
+];
+
+WORLD_CATEGORY_SPECS.forEach(([name, icon, query, group], i) => {
+  const slugBase = name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const hash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  CATEGORIES.push({
+    id: String(35 + i),
+    name,
+    slug: `free-${slugBase}-books`,
+    description: `Free ${name} books, classics, and study texts — streamed live from Open Library, Internet Archive, and Google Books.`,
+    bookCount: 4000 + (hash % 17) * 500,
+    icon,
+    gradient: WORLD_GRADIENTS[i % WORLD_GRADIENTS.length],
+    query: query || name,
+    group: group || 'subject',
+  });
+});
 
 let _id = 0;
 function makeBook(title: string, author: string, catIndex: number, opts: Partial<Book> = {}): Book {

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { CategoryGrid } from '@/components/CategoryGrid';
+import { ExploreCategories } from '@/components/ExploreCategories';
 import { getAllCategories } from '@/lib/data';
 
 export const metadata: Metadata = {
@@ -27,7 +27,7 @@ export default function ExplorePage() {
         </p>
       </div>
 
-      <CategoryGrid categories={categories} />
+      <ExploreCategories categories={categories} />
     </div>
   );
 }

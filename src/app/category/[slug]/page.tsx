@@ -1,24 +1,23 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BookGrid } from '@/components/BookGrid';
-import { getCategory, getBooksByCategory, getAllCategories, type Book } from '@/lib/data';
+import { getCategory, type Book } from '@/lib/data';
 import { faqSchema, breadcrumbSchema } from '@/lib/schema';
 import { searchOpenLibrary } from '@/lib/api/openlibrary';
 import { searchArchive } from '@/lib/api/archive';
 import { searchGoogleBooks } from '@/lib/api/googlebooks';
 
+// 234 categories: render on demand, cache each for an hour. Pre-rendering all
+// of them at build time would hammer the source APIs and slow every deploy.
 export const revalidate = 3600;
+export const dynamicParams = true;
 
-export async function generateStaticParams() {
-  return getAllCategories().map(cat => ({ slug: cat.slug }));
-}
-
-async function fetchLiveCategoryBooks(categoryName: string): Promise<Book[]> {
+async function fetchLiveCategoryBooks(query: string): Promise<Book[]> {
   try {
     const [ol, archive, gb] = await Promise.allSettled([
-      searchOpenLibrary(categoryName, 24, 1),
-      searchArchive(categoryName, 1, 24),
-      searchGoogleBooks(categoryName, 0, 20),
+      searchOpenLibrary(query, 30, 1),
+      searchArchive(query, 1, 24),
+      searchGoogleBooks(query, 0, 20),
     ]);
     return [
       ...(ol.status === 'fulfilled' ? ol.value.books : []),
@@ -48,17 +47,16 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   const category = getCategory(params.slug);
   if (!category) notFound();
 
-  const curated = getBooksByCategory(params.slug);
-  const live = await fetchLiveCategoryBooks(category.name);
-
-  // De-dupe by normalized title so curated + live results don't repeat
-  const seen = new Set(curated.map(b => b.title.toLowerCase().trim()));
-  const merged = [...curated];
-  for (const b of live) {
+  // Live books only — every card links to a real, downloadable/readable book
+  // at its source. No synthetic filler.
+  const live = await fetchLiveCategoryBooks(category.query || category.name);
+  const seen = new Set<string>();
+  const books = live.filter(b => {
     const key = b.title.toLowerCase().trim();
-    if (!seen.has(key)) { seen.add(key); merged.push(b); }
-  }
-  const books = merged;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
   const schemas = [
     faqSchema(category.name, category.bookCount),

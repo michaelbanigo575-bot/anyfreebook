@@ -42,7 +42,9 @@ export default async function HomePage() {
   const audiobooks = getAudiobooks();
   const categories = getAllCategories();
   const collections = getCollections();
-  const topCategories = categories; // every category gets a pill on the homepage
+  // Hero pills: original core categories; the full 234 live in the navbar
+  // Categories dropdown (searchable) and /explore
+  const topCategories = categories.slice(0, 34);
 
   let liveBooks: any[] = [];
   try {
@@ -148,7 +150,12 @@ export default async function HomePage() {
       {/* BROWSE BY PROFESSION */}
       <section className="content-wrapper py-10">
         <SectionHeader title="Browse by profession" icon="🧭" />
-        <CategoryGrid categories={categories} />
+        <CategoryGrid categories={categories.slice(0, 34)} />
+        <div className="text-center mt-6">
+          <a href="/explore" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-[var(--primary)] text-[var(--primary)] text-sm font-semibold hover:bg-[var(--primary-light)] transition-colors">
+            🌍 Browse all {categories.length} categories — countries, languages & subjects →
+          </a>
+        </div>
       </section>
 
       {/* AUDIOBOOKS */}

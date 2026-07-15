@@ -16,7 +16,12 @@ export function PWAInstallPrompt() {
     if (localStorage.getItem('pwa-dismissed')) return;
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      if (process.env.NODE_ENV === 'development') {
+        // Dev: a caching SW serves stale chunks and breaks hot reload — keep it out
+        navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+      } else {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      }
     }
 
     const handler = (e: Event) => {

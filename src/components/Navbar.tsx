@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { SearchBar } from './SearchBar';
 import { useAuth } from './AuthProvider';
 import { NotificationsBell } from './NotificationsBell';
+import { CategoryMenu } from './CategoryMenu';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -83,6 +85,7 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              <CategoryMenu />
             </nav>
 
             {/* Desktop search + actions */}
@@ -90,6 +93,7 @@ export function Navbar() {
               <div className="w-72">
                 <SearchBar compact />
               </div>
+              <LanguageSwitcher />
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors"
@@ -149,6 +153,12 @@ export function Navbar() {
             <div className="content-wrapper py-4 space-y-2">
               <div className="pb-3">
                 <SearchBar />
+              </div>
+              <div className="flex items-center justify-between px-3 pb-1">
+                <Link href="/explore" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-[var(--primary)]">
+                  📚 All categories
+                </Link>
+                <LanguageSwitcher compact />
               </div>
               {navLinks.map(link => (
                 <Link

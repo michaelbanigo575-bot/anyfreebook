@@ -85,12 +85,11 @@ export default async function HomePage() {
             Open Library, Project Gutenberg, Google Books, Internet Archive, PubMed Central, and DOAJ.
           </p>
 
-          <div className="mt-10 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <SearchBar />
-          </div>
-
-          {/* All 234 categories live inside one searchable dropdown */}
-          <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          {/* Main search + Category dropdown side by side */}
+          <div className="mt-10 max-w-2xl mx-auto flex items-stretch gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex-1 min-w-0">
+              <SearchBar />
+            </div>
             <HomeCategoryFinder categories={categories} />
           </div>
         </div>

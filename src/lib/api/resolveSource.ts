@@ -55,5 +55,17 @@ export async function resolveBookSource(title: string, author: string): Promise<
     }
   } catch {}
 
-  return null;
+  // Last resort: never leave a book unlinked. Send the reader to live source
+  // searches for this exact title — real result pages with actual copies.
+  const tq = encodeURIComponent(title);
+  const taq = encodeURIComponent(`${title} ${author}`.trim());
+  return {
+    sourceUrl: `https://openlibrary.org/search?q=${taq}`,
+    sourceType: 'openlibrary',
+    downloadLinks: [
+      { label: 'Find on Open Library', url: `https://openlibrary.org/search?q=${taq}`, source: 'Open Library' },
+      { label: 'Find on Internet Archive', url: `https://archive.org/search?query=${tq}&and%5B%5D=mediatype%3A%22texts%22`, source: 'Internet Archive' },
+      { label: 'Find on Google Books', url: `https://www.google.com/search?tbm=bks&q=${taq}`, source: 'Google Books' },
+    ],
+  };
 }

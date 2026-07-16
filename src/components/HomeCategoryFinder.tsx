@@ -36,43 +36,38 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
       .filter(g => g.items.length > 0);
   }, [categories, q]);
 
-  const popular = categories.slice(0, 8);
-
   return (
     <div ref={ref} className="relative max-w-2xl mx-auto">
-      {/* The search button/box */}
-      <button
-        onClick={() => setOpen(true)}
-        className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--surface)] border-2 text-left transition-all ${
-          open ? 'border-[var(--primary)] shadow-lg' : 'border-[var(--border-subtle)] hover:border-[var(--border)] shadow-sm'
-        }`}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--text-muted)] flex-shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        {open ? (
+      {!open ? (
+        /* Collapsed: one distinctive "See categories" button — animated gradient ring */
+        <div className="flex justify-center">
+          <button
+            onClick={() => setOpen(true)}
+            className="group relative inline-flex rounded-full p-[2px] bg-gradient-to-r from-[var(--gradient-start)] via-fuchsia-500 to-[var(--gradient-end)] bg-[length:200%_200%] animate-gradient-x shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+          >
+            <span className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-[var(--bg)] text-sm font-bold text-[var(--text)] group-hover:bg-transparent group-hover:text-white transition-colors">
+              <span className="grid grid-cols-2 gap-[3px]" aria-hidden>
+                {[0, 1, 2, 3].map(i => <span key={i} className="w-[5px] h-[5px] rounded-[1.5px] bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] group-hover:from-white group-hover:to-white transition-colors" />)}
+              </span>
+              See all {categories.length} categories
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9" /></svg>
+            </span>
+          </button>
+        </div>
+      ) : (
+        /* Open: search box */
+        <div className="w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[var(--surface)] border-2 border-[var(--primary)] shadow-lg">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--text-muted)] flex-shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input
             autoFocus
             value={q}
             onChange={e => setQ(e.target.value)}
-            onClick={e => e.stopPropagation()}
             placeholder={`Type to search ${categories.length} categories…`}
             className="flex-1 bg-transparent text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
           />
-        ) : (
-          <span className="flex-1 text-sm text-[var(--text-muted)]">
-            Search all {categories.length} categories — subjects, countries & languages
-          </span>
-        )}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`text-[var(--text-muted)] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-
-      {/* Popular quick chips (collapsed state only) */}
-      {!open && (
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {popular.map(c => (
-            <Link key={c.slug} href={`/category/${c.slug}`} className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--primary)] hover:text-white hover:border-transparent transition-all">
-              {c.icon} {c.name}
-            </Link>
-          ))}
+          <button onClick={() => { setOpen(false); setQ(''); }} className="text-[var(--text-muted)] hover:text-[var(--text)]" aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
       )}
 

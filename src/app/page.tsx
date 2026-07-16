@@ -134,17 +134,6 @@ export default async function HomePage() {
         <BookGrid books={newBooks} layout="carousel" />
       </section>
 
-      {/* BROWSE CATEGORIES — one compact searchable dropdown, not a grid sprawl */}
-      <section className="content-wrapper py-10">
-        <SectionHeader title="Browse categories" icon="🧭" />
-        <HomeCategoryFinder categories={categories} />
-        <div className="text-center mt-5">
-          <a href="/explore" className="text-sm font-semibold text-[var(--primary)] hover:underline">
-            Or open the full category directory →
-          </a>
-        </div>
-      </section>
-
       {/* AUDIOBOOKS */}
       <section className="content-wrapper py-10">
         <SectionHeader title="Free audiobooks" icon="🎧" action={{ label: 'Browse all', href: '/audiobooks' }} />

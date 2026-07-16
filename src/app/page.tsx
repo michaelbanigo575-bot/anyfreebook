@@ -1,6 +1,6 @@
 import { SearchBar } from '@/components/SearchBar';
 import { BookGrid } from '@/components/BookGrid';
-import { CategoryGrid } from '@/components/CategoryGrid';
+import { HomeCategoryFinder } from '@/components/HomeCategoryFinder';
 import { CollectionGrid } from '@/components/CollectionGrid';
 import { SectionHeader } from '@/components/SectionHeader';
 import { StatBlock } from '@/components/StatBlock';
@@ -42,9 +42,6 @@ export default async function HomePage() {
   const audiobooks = getAudiobooks();
   const categories = getAllCategories();
   const collections = getCollections();
-  // Hero pills: original core categories; the full 234 live in the navbar
-  // Categories dropdown (searchable) and /explore
-  const topCategories = categories.slice(0, 34);
 
   let liveBooks: any[] = [];
   try {
@@ -92,19 +89,9 @@ export default async function HomePage() {
             <SearchBar />
           </div>
 
-          <div className="mt-8 flex flex-wrap justify-center gap-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-            {topCategories.map(cat => (
-              <a
-                key={cat.slug}
-                href={`/category/${cat.slug}`}
-                className="px-4 py-2 rounded-full text-sm font-medium
-                  bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)]
-                  hover:bg-[var(--primary)] hover:text-white hover:border-transparent
-                  transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                {cat.icon} {cat.name}
-              </a>
-            ))}
+          {/* All 234 categories live inside one searchable dropdown */}
+          <div className="mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <HomeCategoryFinder categories={categories} />
           </div>
         </div>
       </section>
@@ -147,13 +134,13 @@ export default async function HomePage() {
         <BookGrid books={newBooks} layout="carousel" />
       </section>
 
-      {/* BROWSE BY PROFESSION */}
+      {/* BROWSE CATEGORIES — one compact searchable dropdown, not a grid sprawl */}
       <section className="content-wrapper py-10">
-        <SectionHeader title="Browse by profession" icon="🧭" />
-        <CategoryGrid categories={categories.slice(0, 34)} />
-        <div className="text-center mt-6">
-          <a href="/explore" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-[var(--primary)] text-[var(--primary)] text-sm font-semibold hover:bg-[var(--primary-light)] transition-colors">
-            🌍 Browse all {categories.length} categories — countries, languages & subjects →
+        <SectionHeader title="Browse categories" icon="🧭" />
+        <HomeCategoryFinder categories={categories} />
+        <div className="text-center mt-5">
+          <a href="/explore" className="text-sm font-semibold text-[var(--primary)] hover:underline">
+            Or open the full category directory →
           </a>
         </div>
       </section>

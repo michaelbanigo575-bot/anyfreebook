@@ -3,11 +3,8 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      { protocol: 'https', hostname: 'covers.openlibrary.org' },
-      { protocol: 'https', hostname: 'books.google.com' },
-      { protocol: 'https', hostname: 'archive.org' },
-      { protocol: 'https', hostname: 'res.cloudinary.com' },
-      { protocol: 'https', hostname: 'images-na.ssl-images-amazon.com' },
+      // Publication covers may be uploaded to storage or linked from anywhere
+      { protocol: 'https', hostname: '**' },
     ],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],

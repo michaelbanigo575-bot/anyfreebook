@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -63,7 +64,7 @@ export default async function AuthorPage({ params }: { params: { handle: string 
         <div className="grid sm:grid-cols-2 gap-4">
           {pubs.map(p => (
             <Link key={p.id} href={`/read/${p.slug}`} className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] hover:shadow-lg transition-all overflow-hidden">
-              {p.cover_url && <img src={p.cover_url} alt={p.title} className="w-full h-36 object-cover" />}
+              {p.cover_url && <Image src={p.cover_url} alt={p.title} width={640} height={144} className="w-full h-36 object-cover" />}
               <div className="p-4">
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--primary-light)] text-[var(--primary)] uppercase">{p.content_type}</span>
                 <h3 className="font-semibold text-[var(--text)] group-hover:text-[var(--primary)] mt-1.5 line-clamp-2">{p.title}</h3>

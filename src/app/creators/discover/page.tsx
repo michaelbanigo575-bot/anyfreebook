@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getRecentPublications } from '@/lib/creators/server';
@@ -36,7 +37,7 @@ export default async function DiscoverPage() {
           {pubs.map(p => (
             <Link key={p.id} href={`/read/${p.slug}`} className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] hover:shadow-lg transition-all overflow-hidden">
               {p.cover_url ? (
-                <img src={p.cover_url} alt={p.title} className="w-full h-40 object-cover" />
+                <Image src={p.cover_url} alt={p.title} width={640} height={160} className="w-full h-40 object-cover" />
               ) : (
                 <div className="w-full h-40 bg-gradient-to-br from-[var(--gradient-start)]/20 to-[var(--gradient-end)]/20 flex items-center justify-center">
                   <span className="text-4xl">📖</span>

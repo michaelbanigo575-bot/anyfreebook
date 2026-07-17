@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getProgramConfig, getRecentPublications } from '@/lib/creators/server';
@@ -132,7 +133,7 @@ export default async function CreatorProgramPage() {
             {recent.map(p => (
               <Link key={p.id} href={`/read/${p.slug}`} className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-all overflow-hidden">
                 <div className="h-28 bg-gradient-to-br from-[var(--gradient-start)]/20 to-[var(--gradient-end)]/20 flex items-center justify-center">
-                  {p.cover_url ? <img src={p.cover_url} alt={p.title} className="w-full h-full object-cover" /> : <span className="text-2xl">📖</span>}
+                  {p.cover_url ? <Image src={p.cover_url} alt={p.title} width={160} height={160} className="w-full h-full object-cover" /> : <span className="text-2xl">📖</span>}
                 </div>
                 <div className="p-2">
                   <h3 className="text-xs font-semibold text-[var(--text)] line-clamp-2 group-hover:text-[var(--primary)]">{p.title}</h3>

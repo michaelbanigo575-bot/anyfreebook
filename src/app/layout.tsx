@@ -5,6 +5,7 @@ import { Footer } from '@/components/Footer';
 import { AudioProvider, AudioPlayerBar } from '@/components/AudioPlayer';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
+import { ErrorMonitor } from '@/components/ErrorMonitor';
 import { ReadingReminderProvider } from '@/components/ReadingReminderProvider';
 import { AuthProvider } from '@/components/AuthProvider';
 import { BackButton } from '@/components/BackButton';
@@ -90,6 +91,7 @@ export default function RootLayout({
               </main>
               <PublicOnly><AudioPlayerBar /></PublicOnly>
               <PublicOnly><PWAInstallPrompt /></PublicOnly>
+              <ErrorMonitor />
               <PublicOnly><ReadingReminderProvider /></PublicOnly>
               <PublicOnly><Footer /></PublicOnly>
             </AudioProvider>

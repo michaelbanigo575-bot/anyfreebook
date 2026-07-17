@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getUnifiedFeed } from '@/lib/creators/feedServer';
@@ -35,8 +36,11 @@ const PUB_TYPE_LABEL: Record<string, string> = {
   story: '📖 Story', guide: '🧭 Guide',
 };
 
-export default async function FeedPage() {
-  const { live, soon, items } = await getUnifiedFeed(30);
+export default async function FeedPage({ searchParams }: { searchParams?: { limit?: string } }) {
+  // Pagination: ?limit grows by 30 per "Load more" click (capped at 300)
+  const limit = Math.min(300, Math.max(30, parseInt(searchParams?.limit || '30', 10) || 30));
+  const { live, soon, items } = await getUnifiedFeed(limit);
+  const mayHaveMore = items.length >= limit;
 
   return (
     <div className="content-wrapper py-8 max-w-2xl mx-auto">
@@ -134,7 +138,7 @@ export default async function FeedPage() {
                     <p className="px-4 mt-2 text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">{pub.description}</p>
                   )}
                   {pub.cover_url && (
-                    <img src={pub.cover_url} alt={pub.title} className="w-full mt-3 max-h-80 object-cover" />
+                    <Image src={pub.cover_url} alt={pub.title} width={672} height={320} className="w-full mt-3 max-h-80 object-cover" />
                   )}
                   <FeedPubActions
                     publicationId={pub.id}
@@ -177,7 +181,7 @@ export default async function FeedPage() {
                 )}
 
                 {post.cover_url && !embed && (
-                  <img src={post.cover_url} alt={post.title} className="w-full mt-3 max-h-80 object-cover" />
+                  <Image src={post.cover_url} alt={post.title} width={672} height={320} className="w-full mt-3 max-h-80 object-cover" />
                 )}
 
                 {embed && (
@@ -202,6 +206,18 @@ export default async function FeedPage() {
               </article>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {mayHaveMore && (
+        <div className="text-center mt-8">
+          <a
+            href={`/feed?limit=${limit + 30}`}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-[var(--primary)] text-[var(--primary)] text-sm font-semibold hover:bg-[var(--primary-light)] transition-colors"
+          >
+            Load more ↓
+          </a>
         </div>
       )}
     </div>

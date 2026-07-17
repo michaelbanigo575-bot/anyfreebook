@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -100,7 +101,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
       </header>
 
       {pub.cover_url && (
-        <img src={pub.cover_url} alt={pub.title} className="w-full rounded-2xl mb-6 max-h-[420px] object-cover" />
+        <Image src={pub.cover_url} alt={pub.title} width={800} height={420} className="w-full rounded-2xl mb-6 max-h-[420px] object-cover" />
       )}
 
       <PublicationInteractions

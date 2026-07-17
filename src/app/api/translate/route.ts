@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,20 +39,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });
   }
   const items: string[] = texts.slice(0, MAX_ITEMS).map(t => String(t).slice(0, 500));
-  const joined = items.join('\n');
-  if (joined.length > MAX_CHARS) return NextResponse.json({ error: 'Too large' }, { status: 413 });
+  if (items.join('\n').length > MAX_CHARS) return NextResponse.json({ error: 'Too large' }, { status: 413 });
 
+  // Persistent cache: strings translated once are served from Supabase for
+  // every future visitor. Degrades gracefully if the table doesn't exist yet.
+  const hashes = items.map(t => createHash('sha1').update(t).digest('hex'));
+  const out = new Array<string | null>(items.length).fill(null);
+  let sb: ReturnType<typeof createServiceClient> | null = null;
   try {
-    const translated = await gtxTranslate(joined, to);
-    if (translated === null) return NextResponse.json({ error: 'Upstream failed' }, { status: 502 });
+    sb = createServiceClient();
+    const { data } = await sb.from('translation_cache')
+      .select('source_hash, translated')
+      .eq('lang', to)
+      .in('source_hash', [...new Set(hashes)]);
+    const hitMap = new Map((data || []).map((r: { source_hash: string; translated: string }) => [r.source_hash, r.translated]));
+    hashes.forEach((h, i) => { const hit = hitMap.get(h); if (hit !== undefined) out[i] = hit; });
+  } catch { sb = null; }
 
-    let parts = translated.split('\n');
-    // Alignment guard: if the line count drifted, retry item-by-item for correctness
-    if (parts.length !== items.length) {
-      parts = await Promise.all(items.map(async t => (await gtxTranslate(t, to)) ?? t));
+  const missIdx = out.map((v, i) => (v === null ? i : -1)).filter(i => i >= 0);
+
+  if (missIdx.length > 0) {
+    try {
+      const missTexts = missIdx.map(i => items[i]);
+      const translated = await gtxTranslate(missTexts.join('\n'), to);
+      let parts = translated !== null ? translated.split('\n') : null;
+      // Alignment guard: if the line count drifted, retry item-by-item
+      if (!parts || parts.length !== missTexts.length) {
+        parts = await Promise.all(missTexts.map(async t => (await gtxTranslate(t, to)) ?? t));
+      }
+      missIdx.forEach((itemI, j) => { out[itemI] = parts![j]; });
+
+      // Write-through to the cache (best effort, deduped)
+      if (sb) {
+        const seen = new Set<string>();
+        const rows = missIdx.flatMap((itemI, j) => {
+          const h = hashes[itemI];
+          if (seen.has(h) || !parts![j]?.trim()) return [];
+          seen.add(h);
+          return [{ lang: to, source_hash: h, source_text: items[itemI], translated: parts![j] }];
+        });
+        if (rows.length) void sb.from('translation_cache').upsert(rows, { onConflict: 'lang,source_hash' }).then(() => {});
+      }
+    } catch {
+      return NextResponse.json({ error: 'Translate failed' }, { status: 502 });
     }
-    return NextResponse.json({ texts: parts });
-  } catch {
-    return NextResponse.json({ error: 'Translate failed' }, { status: 502 });
   }
+
+  return NextResponse.json({ texts: out.map((v, i) => v ?? items[i]), cached: items.length - missIdx.length });
 }

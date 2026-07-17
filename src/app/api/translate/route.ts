@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,12 @@ async function gtxTranslate(joined: string, to: string): Promise<string | null> 
 }
 
 export async function POST(request: NextRequest) {
+  // 40 batches/min per IP ≈ several full page translations — humans never hit it
+  const rl = rateLimit(`tr:${clientIp(request.headers)}`, 40, 60_000);
+  if (!rl.ok) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
+  }
+
   const { texts, to } = await request.json().catch(() => ({}));
   if (!Array.isArray(texts) || !texts.length || typeof to !== 'string' || !/^[a-z]{2}(-[A-Za-z]{2,4})?$/.test(to)) {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });

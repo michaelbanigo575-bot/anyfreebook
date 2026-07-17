@@ -224,3 +224,54 @@ body { top: 0 !important; }
   50% { background-position: 100% 50%; }
 }
 .animate-gradient-x { animation: gradient-x 4s ease infinite; }
+
+/* ---- Dynamic gradient buttons, sitewide ---- */
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 1. Gradient CTAs ("Publish now", "Join classroom", "Sign In"...): the
+      gradient now flows continuously instead of sitting still */
+button[class*="from-[var(--gradient-start)]"],
+a[class*="from-[var(--gradient-start)]"] {
+  background-image: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+  background-size: 200% auto;
+  animation: gradient-flow 3.5s linear infinite;
+}
+
+/* 2. Solid primary buttons ("Show it", "Attach", tab pills...) upgrade to
+      the same flowing gradient. Leading space keeps hover:bg-* variants out. */
+button[class*=" bg-[var(--primary)] "],
+a[class*=" bg-[var(--primary)] "] {
+  background-image: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+  background-size: 200% auto;
+  animation: gradient-flow 3.5s linear infinite;
+}
+
+/* 3. Outline buttons ("Read in ANYFREEBOOK Reader", "Re-check", chips...):
+      animated gradient BORDER, surface fill preserved */
+button[class*="border-[var(--primary)]"],
+a[class*="border-[var(--primary)]"] {
+  border-color: transparent !important;
+  background-image:
+    linear-gradient(var(--surface), var(--surface)),
+    linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 100% 100%, 200% auto;
+  animation: gradient-flow 3.5s linear infinite;
+}
+
+/* Respect reduced-motion: gradients render but stay still */
+@media (prefers-reduced-motion: reduce) {
+  button[class*="from-[var(--gradient-start)]"],
+  a[class*="from-[var(--gradient-start)]"],
+  button[class*=" bg-[var(--primary)] "],
+  a[class*=" bg-[var(--primary)] "],
+  button[class*="border-[var(--primary)]"],
+  a[class*="border-[var(--primary)]"] {
+    animation: none;
+  }
+}

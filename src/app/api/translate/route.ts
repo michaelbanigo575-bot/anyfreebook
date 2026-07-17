@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       .select('source_hash, translated')
       .eq('lang', to)
       .in('source_hash', Array.from(new Set(hashes)));
-    const hitMap = new Map((data || []).map((r: { source_hash: string; translated: string }) => [r.source_hash, r.translated]));
+    const hitMap = new Map((data || []).map((r: { source_hash: string; translated: string }): [string, string] => [r.source_hash, r.translated]));
     hashes.forEach((h, i) => { const hit = hitMap.get(h); if (hit !== undefined) out[i] = hit; });
   } catch { sb = null; }
 

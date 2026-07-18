@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BLOG_POSTS } from '@/lib/blogPosts';
 
 export const metadata: Metadata = {
   title: 'Blog — Free Book Guides, Reviews & Reading Lists',
@@ -11,57 +12,6 @@ export const metadata: Metadata = {
   },
 };
 
-const POSTS = [
-  {
-    title: 'Top 25 Free Programming Books in 2026',
-    slug: 'top-25-free-programming-books-2026',
-    excerpt: 'The best free programming books for every language and skill level. From Python beginners to systems programming experts.',
-    category: 'Technology',
-    readTime: '12 min',
-    date: 'Jan 15, 2026',
-  },
-  {
-    title: 'Free Alternatives to Campbell Biology (Save $189)',
-    slug: 'free-alternatives-campbell-biology',
-    excerpt: "Campbell Biology costs $189. Here are the best free alternatives that cover the same material — legally and completely free.",
-    category: 'Sciences',
-    readTime: '8 min',
-    date: 'Jan 10, 2026',
-  },
-  {
-    title: 'Learn Machine Learning for Free — Complete Reading List',
-    slug: 'learn-machine-learning-free-reading-list',
-    excerpt: '15 free books that take you from ML beginner to practitioner. Organized by difficulty with estimated study times.',
-    category: 'Technology',
-    readTime: '10 min',
-    date: 'Jan 5, 2026',
-  },
-  {
-    title: 'Where to Download Free Medical Textbooks Online',
-    slug: 'where-to-download-free-medical-textbooks',
-    excerpt: 'A complete guide to finding free, legal medical textbooks. Covers anatomy, pharmacology, pathology, and more.',
-    category: 'Medicine',
-    readTime: '9 min',
-    date: 'Dec 28, 2025',
-  },
-  {
-    title: 'The 15 Best Free Audiobooks of All Time',
-    slug: '15-best-free-audiobooks-all-time',
-    excerpt: 'From Sapiens to 1984, these free audiobooks are worth every minute of your time. All legally free.',
-    category: 'Collections',
-    readTime: '7 min',
-    date: 'Dec 20, 2025',
-  },
-  {
-    title: "Free Alternatives to Mankiw's Principles of Economics (Save $170)",
-    slug: 'free-alternatives-mankiw-economics',
-    excerpt: "Gregory Mankiw's textbook costs $170. These free alternatives are just as good — used at top universities worldwide.",
-    category: 'Economics',
-    readTime: '8 min',
-    date: 'Dec 15, 2025',
-  },
-];
-
 const gradients = [
   'from-blue-500/10 to-cyan-500/10',
   'from-emerald-500/10 to-green-500/10',
@@ -72,6 +22,9 @@ const gradients = [
 ];
 
 export default function BlogPage() {
+  // Newest first, sourced from the single BLOG_POSTS list (was previously a hand-duplicated array)
+  const posts = [...BLOG_POSTS].sort((a, b) => +new Date(b.date) - +new Date(a.date));
+
   return (
     <div className="content-wrapper py-8">
       <div className="mb-10">
@@ -84,7 +37,7 @@ export default function BlogPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {POSTS.map((post, i) => (
+        {posts.map((post, i) => (
           <Link
             key={post.slug}
             href={`/blog/${post.slug}`}
@@ -105,7 +58,7 @@ export default function BlogPage() {
                 {post.title}
               </h2>
               <p className="text-sm text-[var(--text-muted)] mt-2 line-clamp-2">
-                {post.excerpt}
+                {post.description}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-3">{post.date}</p>
             </div>

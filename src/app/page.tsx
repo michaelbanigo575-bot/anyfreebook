@@ -12,6 +12,12 @@ import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchArchive } from '@/lib/api/archive';
 import { LiveTrendingSection } from '@/components/LiveTrendingSection';
 
+// Serve the homepage from cache for 5 minutes instead of hitting 4 external
+// book APIs on every single visitor — critical under a traffic spike (a
+// launch post, etc.), where uncached external calls would slow the page or
+// get the site rate-limited by those APIs.
+export const revalidate = 300;
+
 async function fetchLiveBooks() {
   try {
     const [gutenberg, openlib, google, archive, fiction] = await Promise.allSettled([

@@ -6,6 +6,7 @@ import { searchArchive } from '@/lib/api/archive';
 import { searchPubMed } from '@/lib/api/pubmed';
 import { searchDOAJ } from '@/lib/api/doaj';
 import { searchBooks as searchLocal, type Book } from '@/lib/data';
+import { rateLimit, clientIp } from '@/lib/rateLimit';
 
 interface SourceJob {
   id: string;
@@ -14,6 +15,16 @@ interface SourceJob {
 }
 
 export async function GET(request: NextRequest) {
+  // Each request fans out to up to 6 external book APIs at once — cap per-IP
+  // so a traffic spike can't get those providers to rate-limit or block us.
+  const rl = rateLimit(`search:${clientIp(request.headers)}`, 30, 60_000);
+  if (!rl.ok) {
+    return new Response(JSON.stringify({ error: 'Too many requests' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfterSec) },
+    });
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q') || '';
   const page = parseInt(searchParams.get('page') || '1');

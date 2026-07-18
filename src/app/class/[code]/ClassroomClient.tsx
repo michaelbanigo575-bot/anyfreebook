@@ -100,7 +100,7 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
 
   const startClass = async () => {
     setBusy(true);
-    const { error } = await setClassroomStatus(room.id, 'live');
+    const { error } = await setClassroomStatus(room.id, 'live', room.room_code);
     setBusy(false);
     if (error) { alert(`Could not start the class: ${error}`); return; }
     setRoom(r => ({ ...r, status: 'live' }));

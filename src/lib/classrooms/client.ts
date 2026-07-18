@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { pingIndexNow } from '@/lib/indexnow';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface Classroom {
@@ -70,12 +71,13 @@ export async function createClassroom(input: {
   return { error: null, roomCode, inviteToken };
 }
 
-export async function setClassroomStatus(id: string, status: 'live' | 'ended'): Promise<{ error: string | null }> {
+export async function setClassroomStatus(id: string, status: 'live' | 'ended', roomCode?: string): Promise<{ error: string | null }> {
   const sb = createClient();
   const patch: Record<string, unknown> = { status };
   if (status === 'live') patch.started_at = new Date().toISOString();
   if (status === 'ended') patch.ended_at = new Date().toISOString();
   const { error } = await sb.from('classrooms').update(patch).eq('id', id);
+  if (!error && status === 'live' && roomCode) void pingIndexNow([`https://anyfreebook.com/class/${roomCode}`]);
   return { error: error?.message ?? null };
 }
 

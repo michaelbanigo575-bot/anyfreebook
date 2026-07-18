@@ -50,6 +50,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  alternates: {
+    types: { 'application/rss+xml': 'https://anyfreebook.com/feed.xml' },
+  },
 };
 
 export default function RootLayout({

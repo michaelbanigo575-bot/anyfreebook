@@ -35,7 +35,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
 
   const toggleStatus = async (p: Publication) => {
     setBusy(p.id);
-    await updatePublication(p.id, { publish: p.status !== 'published' });
+    await updatePublication(p.id, { publish: p.status !== 'published', slug: p.slug });
     setBusy(null);
     startRefresh(() => router.refresh());
   };

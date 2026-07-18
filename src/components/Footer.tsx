@@ -26,6 +26,7 @@ export function Footer() {
       title: 'Company',
       links: [
         { label: 'About', href: '/about' },
+        { label: 'FAQ', href: '/faq' },
         { label: 'Blog', href: '/blog' },
         { label: 'Contact', href: '/contact' },
         { label: 'Privacy Policy', href: '/privacy' },

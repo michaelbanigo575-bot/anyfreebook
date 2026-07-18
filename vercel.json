@@ -1,5 +1,6 @@
 {
   "crons": [
-    { "path": "/api/cron/end-stale-classes", "schedule": "0 3 * * *" }
+    { "path": "/api/cron/end-stale-classes", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/daily-distribution", "schedule": "0 8 * * *" }
   ]
 }

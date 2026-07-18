@@ -113,6 +113,19 @@ export function faqSchema(category: string, count: number) {
   };
 }
 
+/** Site-wide FAQPage schema for /faq — distinct from the per-category faqSchema above. */
+export function siteFaqSchema(qa: { q: string; a: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: qa.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
+  };
+}
+
 export function breadcrumbSchema(crumbs: { name: string; path: string }[]) {
   return {
     '@context': 'https://schema.org',

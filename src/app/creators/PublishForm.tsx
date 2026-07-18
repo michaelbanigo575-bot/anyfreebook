@@ -100,7 +100,7 @@ export function PublishForm({ existing }: { existing?: Publication }) {
       : originalityStatus;
 
     if (existing) {
-      const { error } = await updatePublication(existing.id, { title, subtitle, description, category, content_type: contentType, publication_type: publicationType, originality_status: finalOriginalityStatus, body, cover_url: coverUrl, external_url: externalUrl, publish });
+      const { error } = await updatePublication(existing.id, { title, subtitle, description, category, content_type: contentType, publication_type: publicationType, originality_status: finalOriginalityStatus, body, cover_url: coverUrl, external_url: externalUrl, publish, slug: existing.slug });
       setSaving(false);
       if (error) { setError(error); return; }
       router.push('/creators/dashboard');

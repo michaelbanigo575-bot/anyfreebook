@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { pingIndexNow } from '@/lib/indexnow';
 import type { Publication, PublicationType, OriginalityStatus } from './types';
 
 function slugify(s: string): string {
@@ -67,10 +68,11 @@ export async function createPublication(input: {
   });
 
   if (error) return { error: error.message };
+  if (input.publish) void pingIndexNow([`https://anyfreebook.com/read/${slug}`]);
   return { error: null, slug };
 }
 
-export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean }): Promise<{ error: string | null }> {
+export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean; slug?: string }): Promise<{ error: string | null }> {
   const sb = createClient();
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'publication_type', 'originality_status', 'body', 'cover_url', 'external_url'] as const) {
@@ -81,6 +83,7 @@ export async function updatePublication(id: string, patch: Partial<Publication> 
     if (patch.publish) update.published_at = new Date().toISOString();
   }
   const { error } = await sb.from('publications').update(update).eq('id', id);
+  if (!error && patch.publish && patch.slug) void pingIndexNow([`https://anyfreebook.com/read/${patch.slug}`]);
   return { error: error?.message ?? null };
 }
 

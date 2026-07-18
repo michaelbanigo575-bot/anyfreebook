@@ -81,8 +81,17 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     headline: post.title,
     description: post.description,
     datePublished: post.date,
-    author: { '@type': 'Organization', name: 'ANYFREEBOOK' },
-    publisher: { '@type': 'Organization', name: 'ANYFREEBOOK', url: 'https://anyfreebook.com' },
+    dateModified: post.date,
+    inLanguage: 'en',
+    image: `https://anyfreebook.com/api/og?title=${encodeURIComponent(post.title)}&subtitle=${encodeURIComponent(post.category + ' — ANYFREEBOOK Blog')}`,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://anyfreebook.com/blog/${post.slug}` },
+    author: { '@type': 'Organization', name: 'ANYFREEBOOK', url: 'https://anyfreebook.com' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'ANYFREEBOOK',
+      url: 'https://anyfreebook.com',
+      logo: { '@type': 'ImageObject', url: 'https://anyfreebook.com/logo.png' },
+    },
   };
 
   return (

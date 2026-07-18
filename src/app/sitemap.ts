@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getAllBooks, getAllCategories } from '@/lib/data';
+import { BLOG_POSTS } from '@/lib/blogPosts';
 import { createServiceClient } from '@/lib/supabase/server';
 
 async function getPublishedWorkPages(baseUrl: string): Promise<MetadataRoute.Sitemap> {
@@ -51,7 +52,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  const blogPages: MetadataRoute.Sitemap = BLOG_POSTS.map(post => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.date),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   const workPages = await getPublishedWorkPages(baseUrl);
 
-  return [...staticPages, ...categoryPages, ...bookPages, ...workPages];
+  return [...staticPages, ...categoryPages, ...bookPages, ...blogPages, ...workPages];
 }

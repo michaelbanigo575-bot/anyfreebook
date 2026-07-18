@@ -64,6 +64,9 @@ export function LiveStage({ classroomId, isHost }: Props) {
   const [sharing, setSharing] = useState(false);
   const [status, setStatus] = useState<'connecting' | 'live' | 'waiting' | 'error'>(isHost ? 'connecting' : 'waiting');
   const [needTap, setNeedTap] = useState(false);
+  const [iceState, setIceState] = useState<string>('new');
+  const [connectFailed, setConnectFailed] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0); // host-side: how many peer connections are live
 
   // Long-lived plumbing kept in refs so re-renders never touch connections
   const plumbing = useRef<{
@@ -118,11 +121,14 @@ export function LiveStage({ classroomId, isHost }: Props) {
             }
             // Bitrate cap: keeps the host's upload healthy across many viewers
             capVideoBitrate(pc, p.screenTrack ? 'screen' : 'camera');
+            const countLive = () => setViewerCount(Array.from(p.pcs.values()).filter(c => c.connectionState === 'connected').length);
             // Reap dead viewers so they stop consuming upload budget
             pc.onconnectionstatechange = () => {
+              countLive();
               if (['failed', 'closed'].includes(pc.connectionState)) {
                 pc.close();
                 if (p.pcs.get(viewerId) === pc) p.pcs.delete(viewerId);
+                countLive();
               }
             };
             pc.onicecandidate = e => { if (e.candidate) send({ kind: 'ice', from: 'host', to: viewerId, candidate: e.candidate.toJSON() }); };
@@ -141,11 +147,13 @@ export function LiveStage({ classroomId, isHost }: Props) {
     // ---------- VIEWER: ask to join, keep asking until video flows ----------
     const runViewer = () => {
       let pc: RTCPeerConnection | null = null;
+      let attempts = 0;
 
       channel
         .on('broadcast', { event: 'signal' }, async ({ payload }: { payload: Signal }) => {
           if (payload.to !== p.myId) return;
           if (payload.kind === 'offer') {
+            attempts++;
             pc?.close();
             pc = new RTCPeerConnection(await fetchIceConfig());
             pc.ontrack = e => {
@@ -155,18 +163,27 @@ export function LiveStage({ classroomId, isHost }: Props) {
               v.play().then(() => setNeedTap(false)).catch(() => setNeedTap(true));
               p.connected = true;
               setStatus('live');
+              setConnectFailed(false);
             };
             pc.onconnectionstatechange = () => {
-              if (pc && ['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+              if (!pc) return;
+              setIceState(pc.connectionState);
+              if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
                 p.connected = false;
                 setStatus('waiting'); // host refreshed or dropped — the join loop below recovers
               }
             };
+            pc.oniceconnectionstatechange = () => { if (pc) setIceState(pc.iceConnectionState); };
             pc.onicecandidate = e => { if (e.candidate) send({ kind: 'ice', from: p.myId, to: 'host', candidate: e.candidate.toJSON() }); };
             await pc.setRemoteDescription(payload.sdp);
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             send({ kind: 'answer', from: p.myId, to: 'host', sdp: answer });
+            // After several retries with no connection, the direct path likely
+            // isn't traversable on this network (needs a TURN relay) — say so.
+            if (attempts >= 3) {
+              setTimeout(() => { if (!p.connected) setConnectFailed(true); }, 8000);
+            }
           } else if (payload.kind === 'ice') {
             await pc?.addIceCandidate(payload.candidate).catch(() => {});
           }
@@ -244,10 +261,20 @@ export function LiveStage({ classroomId, isHost }: Props) {
         style={{ height: '65vh', minHeight: 420 }}
       />
 
-      {status === 'waiting' && (
+      {status === 'waiting' && !connectFailed && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-white/80 text-sm gap-2 bg-black/70">
           <span className="w-8 h-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
           Connecting to the host&apos;s stream…
+          <span className="text-[10px] text-white/40">status: {iceState}</span>
+        </div>
+      )}
+      {status === 'waiting' && connectFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 text-sm gap-2 bg-black/80 p-6 text-center">
+          <p className="text-3xl mb-1">📡</p>
+          <p className="font-semibold">Can&apos;t reach the host directly on this network.</p>
+          <p className="text-white/60 text-xs max-w-xs">
+            Some Wi-Fi/mobile networks block direct device-to-device video. This isn&apos;t your device — the class needs a relay server for networks like this. Still retrying…
+          </p>
         </div>
       )}
       {status === 'connecting' && (
@@ -268,6 +295,12 @@ export function LiveStage({ classroomId, isHost }: Props) {
         >
           ▶ Tap to watch
         </button>
+      )}
+
+      {isHost && status === 'live' && (
+        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/50 text-white/80 text-[11px] font-medium">
+          👥 {viewerCount} connected
+        </div>
       )}
 
       {isHost && status === 'live' && (

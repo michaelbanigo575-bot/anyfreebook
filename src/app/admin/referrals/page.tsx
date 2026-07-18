@@ -27,8 +27,9 @@ async function getReferralData() {
 
       if (leaders.length > 0) {
         const { data: profs } = await sb.from('profiles').select('id, email').in('id', leaders.map(l => l.referrer_id));
-        const emailMap = new Map((profs as { id: string; email: string }[] || []).map((p): [string, string] => [p.id, p.email]));
-        leaders = leaders.map(l => ({ ...l, email: emailMap.get(l.referrer_id) }));
+        const emailMap: Record<string, string> = {};
+        for (const p of (profs || []) as { id: string; email: string }[]) emailMap[p.id] = p.email;
+        leaders = leaders.map(l => ({ ...l, email: emailMap[l.referrer_id] }));
       }
     }
 

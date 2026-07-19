@@ -647,6 +647,33 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: 'tip', text: "ANYFREEBOOK's Short Stories category aggregates live results across these and many more collections, updated as new public-domain scans are added." },
     ],
   },
+  {
+    slug: 'introducing-anyfreebook-live-classrooms',
+    title: 'Introducing Live Classrooms on ANYFREEBOOK',
+    description: 'ANYFREEBOOK now has free live classrooms built directly into the platform — video, chat, and document sharing, with no software to install and no account required to watch.',
+    category: 'Announcements',
+    readTime: '6 min',
+    date: 'Mar 18, 2026',
+    content: [
+      { type: 'p', text: "ANYFREEBOOK now has live classrooms built directly into the platform. Any author or educator on the site can start a free live class — video, live chat, and document sharing — and anyone can join and watch without creating an account or installing anything." },
+      { type: 'h2', text: 'What it actually does' },
+      { type: 'ul', items: [
+        'Host a live class straight from your browser — camera, microphone, and screen share, no downloads.',
+        'Viewers join with a single click. No sign-up is required to watch or use the live chat.',
+        'Share a document or slide deck directly in the class — including a published book or note you\'ve written on ANYFREEBOOK — so students see exactly what you\'re teaching from without switching windows.',
+        'Choose public (listed and discoverable by anyone) or private (invite-link only) for each class.',
+        'An accurate "watching now" count, visible to the host, based on real connected viewers rather than an estimate.',
+      ] },
+      { type: 'h2', text: 'Why it works the way it does' },
+      { type: 'p', text: "Most free video-call tools require every participant to create an account, install an app, or at minimum sign in once before joining. That's a real barrier for a classroom where the goal is to remove friction between a teacher and whoever wants to learn — so classrooms on ANYFREEBOOK were built specifically so that watching a class takes exactly one click and nothing else." },
+      { type: 'p', text: 'The connection between host and viewers runs directly over the browser\'s own video technology (WebRTC) rather than routing through a third-party video company\'s branded app — which is also why there\'s no cost passed on to either the teacher or the student.' },
+      { type: 'h2', text: 'A practical note on scale' },
+      { type: 'p', text: "Because video runs directly between the host and each viewer rather than through a large relay infrastructure, a single class comfortably supports a real study-group or classroom-sized audience. It's built for teaching a class, not broadcasting to a stadium — which matches what most educators actually need." },
+      { type: 'h2', text: 'Who this is for' },
+      { type: 'p', text: "If you've ever wanted to teach a free class — a study session before an exam, a walkthrough of a book you've published, a language lesson, office hours for students who can't afford a formal course — this removes the two biggest barriers: cost, and asking your audience to sign up for yet another account before they can just watch." },
+      { type: 'tip', text: 'Browse currently scheduled and live classes, or start your own, from the Classrooms link in the navigation bar. No teaching credentials or approval process required — just a topic worth teaching.' },
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string): BlogPost | undefined {

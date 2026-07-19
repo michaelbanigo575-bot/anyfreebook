@@ -185,7 +185,7 @@ export function PublishForm({ existing }: { existing?: Publication }) {
           <input
             ref={fileRef}
             type="file"
-            accept=".pdf,.epub,.doc,.docx,application/pdf,application/epub+zip,audio/mpeg,audio/mp4,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept=".pdf,.epub,.doc,.docx,.ppt,.pptx,application/pdf,application/epub+zip,audio/mpeg,audio/mp4,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation"
             className="hidden"
             onChange={e => handleFile(e.target.files?.[0] ?? null)}
           />

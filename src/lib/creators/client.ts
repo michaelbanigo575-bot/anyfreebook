@@ -152,8 +152,10 @@ export async function uploadPublicationFile(file: File): Promise<{ error: string
     'audio/mp4',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   ];
-  if (!allowed.includes(file.type)) return { error: 'Only PDF, EPUB, Word (.doc/.docx) or MP3/M4A files are allowed.' };
+  if (!allowed.includes(file.type)) return { error: 'Only PDF, EPUB, Word (.doc/.docx), PowerPoint (.ppt/.pptx), or MP3/M4A files are allowed.' };
 
   const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').slice(-80);
   const path = `${user.id}/${Date.now()}-${safeName}`;
@@ -165,8 +167,36 @@ export async function uploadPublicationFile(file: File): Promise<{ error: string
   if (error) return { error: error.message };
 
   const { data } = sb.storage.from('publications').getPublicUrl(path);
-  return { error: null, url: data.publicUrl };
+  const uploadedUrl = data.publicUrl;
+
+  // Word/PowerPoint files convert to PDF automatically so they get the same
+  // swipeable reader as native PDFs. If conversion isn't configured or
+  // fails, the original file is used — readers still see it via Google's
+  // document viewer, so nothing breaks either way.
+  const officeFormat = OFFICE_MIME_TO_FORMAT[file.type];
+  if (officeFormat) {
+    try {
+      const res = await fetch('/api/convert-to-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: uploadedUrl, format: officeFormat }),
+      });
+      if (res.ok) {
+        const { url: pdfUrl } = await res.json();
+        if (pdfUrl) return { error: null, url: pdfUrl };
+      }
+    } catch { /* fall through to the original file */ }
+  }
+
+  return { error: null, url: uploadedUrl };
 }
+
+const OFFICE_MIME_TO_FORMAT: Record<string, string> = {
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.ms-powerpoint': 'ppt',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+};
 
 /** Stable-ish per-browser key for anonymous read de-duplication. */
 export function getSessionKey(): string {

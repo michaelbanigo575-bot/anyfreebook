@@ -21,10 +21,16 @@ interface Props {
 }
 
 function detectMode(url: string): Mode {
-  if (/\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(url)) return 'image';
-  if (/\.pdf(\?|$)/i.test(url) || url.includes('supabase.co/storage')) return 'pdf';
-  if (/\.(txt|text)(\?|$)/i.test(url)) return 'text';
-  return 'embed';
+  // Extension-sniff regardless of host — a same-origin bucket (Supabase
+  // storage) can hold any file type, so "it's on our storage" was never a
+  // valid signal that a file is a PDF (it previously misrouted uploaded
+  // Word/PowerPoint/Excel files into the PDF viewer, which then failed and
+  // fell back to a raw iframe that renders those formats as blank white).
+  const clean = url.split('?')[0].split('#')[0];
+  if (/\.(png|jpe?g|gif|webp|svg)$/i.test(clean)) return 'image';
+  if (/\.pdf$/i.test(clean)) return 'pdf';
+  if (/\.(txt|text)$/i.test(clean)) return 'text';
+  return 'embed'; // covers .docx/.pptx/.xlsx (routed to Google's viewer below) and anything else
 }
 
 /** External http(s) files must be fetched same-origin (CORS) — route them through our book proxy. */

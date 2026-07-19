@@ -62,10 +62,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
   }
 
+  // Forward Range requests: PDF.js loads large PDFs progressively via byte
+  // ranges rather than downloading the whole file upfront — without this,
+  // every page-render forces a full-file refetch, which is slow and can
+  // stall PDF.js's internal loading state entirely on large scans.
+  const rangeHeader = request.headers.get('range');
+
   try {
     const upstream = await fetch(target.toString(), {
       redirect: 'follow',
-      headers: { 'User-Agent': 'ANYFREEBOOK-Reader/1.0', Accept: '*/*' },
+      headers: {
+        'User-Agent': 'ANYFREEBOOK-Reader/1.0',
+        Accept: '*/*',
+        ...(rangeHeader ? { Range: rangeHeader } : {}),
+      },
       signal: AbortSignal.timeout(20000),
     });
     if (!upstream.ok || !upstream.body) {
@@ -86,14 +96,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'File too large' }, { status: 413 });
     }
 
-    return new NextResponse(buf, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=86400, s-maxage=604800', // cache a day client / a week edge
-        'X-Content-Type-Options': 'nosniff',
-      },
-    });
+    // 206 = upstream honored the byte-range; pass that through as-is so
+    // PDF.js's range-aware loader keeps working. Otherwise it's a full 200.
+    const isPartial = upstream.status === 206;
+    const headers: Record<string, string> = {
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400, s-maxage=604800', // cache a day client / a week edge
+      'X-Content-Type-Options': 'nosniff',
+      'Accept-Ranges': 'bytes',
+    };
+    const contentRange = upstream.headers.get('content-range');
+    if (isPartial && contentRange) headers['Content-Range'] = contentRange;
+
+    return new NextResponse(buf, { status: isPartial ? 206 : 200, headers });
   } catch {
     return NextResponse.json({ error: 'Fetch failed' }, { status: 502 });
   }

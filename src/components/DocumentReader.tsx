@@ -181,7 +181,7 @@ function TextStage({ url, title, height }: { url: string; title?: string; height
   );
 }
 
-/* ---------- PDF viewer (PDF.js) ---------- */
+/* ---------- PDF viewer (PDF.js) — TikTok-style vertical swipe between pages ---------- */
 
 interface PdfDoc {
   numPages: number;
@@ -193,9 +193,12 @@ interface PdfDoc {
 
 function PdfStage({ url, title, height, onFail }: { url: string; title?: string; height: string; onFail: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const renderedAtZoom = useRef<Map<number, number>>(new Map()); // page -> zoom it was last rendered at
   const docRef = useRef<PdfDoc | null>(null);
+
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
@@ -223,15 +226,15 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
-  // Render the current page whenever page/zoom changes
-  const renderPage = useCallback(async () => {
+  const renderPageAt = useCallback(async (pageNum: number) => {
     const doc = docRef.current;
-    const canvas = canvasRef.current;
-    const stage = stageRef.current;
-    if (!doc || !canvas || !stage) return;
-    const pdfPage = await doc.getPage(page);
+    const canvas = canvasRefs.current[pageNum - 1];
+    const section = sectionRefs.current[pageNum - 1];
+    if (!doc || !canvas || !section) return;
+    if (renderedAtZoom.current.get(pageNum) === zoom) return; // already current
+    const pdfPage = await doc.getPage(pageNum);
     const base = pdfPage.getViewport({ scale: 1 });
-    const fitScale = (stage.clientWidth - 24) / base.width; // fit width with padding
+    const fitScale = Math.min((section.clientWidth - 24) / base.width, (section.clientHeight - 24) / base.height);
     const scale = fitScale * zoom;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const viewport = pdfPage.getViewport({ scale: scale * dpr });
@@ -242,34 +245,67 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-  }, [page, zoom]);
+    renderedAtZoom.current.set(pageNum, zoom);
+  }, [zoom]);
 
+  // Track the current page and lazy-render nearby pages from scroll position
+  // directly — deterministic (scrollTop / section height), so it works the
+  // same for a real touch swipe, a mouse-wheel scroll, or a programmatic
+  // scrollIntoView jump. Never renders the whole document upfront, so a
+  // 500-page PDF opens as fast as a 5-page one.
   useEffect(() => {
-    if (!loading) renderPage();
-  }, [loading, renderPage]);
+    if (loading || numPages === 0) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
 
-  useEffect(() => {
-    const onResize = () => renderPage();
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    window.addEventListener('resize', onResize);
-    document.addEventListener('fullscreenchange', onFsChange);
-    return () => {
-      window.removeEventListener('resize', onResize);
-      document.removeEventListener('fullscreenchange', onFsChange);
+    const syncFromScroll = () => {
+      const sectionHeight = scroller.clientHeight || 1;
+      const current = Math.min(numPages, Math.max(1, Math.round(scroller.scrollTop / sectionHeight) + 1));
+      setPage(p => (p === current ? p : current));
+      // Render the current page plus one ahead/behind so the swipe never shows a blank page
+      [current - 1, current, current + 1].forEach(p => { if (p >= 1 && p <= numPages) renderPageAt(p); });
     };
-  }, [renderPage]);
 
-  // Arrow-key page turns while the reader is on screen
+    syncFromScroll(); // render page 1 immediately on open
+    // A plain timeout-debounce rather than requestAnimationFrame: rAF is
+    // throttled/suspended in background or non-focused tabs by design, which
+    // would silently stall page tracking there. Scroll-snap fires only a
+    // handful of scroll events per page turn, so no debounce is even
+    // strictly necessary — this just avoids redundant work mid-gesture.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onScroll = () => { if (timer) clearTimeout(timer); timer = setTimeout(syncFromScroll, 50); };
+    scroller.addEventListener('scroll', onScroll, { passive: true });
+    return () => { scroller.removeEventListener('scroll', onScroll); if (timer) clearTimeout(timer); };
+  }, [loading, numPages, renderPageAt]);
+
+  // Re-render the currently visible page (and its neighbors) when zoom changes
+  useEffect(() => {
+    if (loading) return;
+    [page - 1, page, page + 1].forEach(p => { if (p >= 1 && p <= numPages) renderPageAt(p); });
+  }, [zoom, loading, page, numPages, renderPageAt]);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const goToPage = useCallback((target: number) => {
+    const clamped = Math.max(1, Math.min(numPages, target));
+    sectionRefs.current[clamped - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [numPages]);
+
+  // Swipe is native (CSS scroll-snap) on touch; arrow keys/PageUp/PageDown for desktop
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-      if (e.key === 'ArrowRight') setPage(p => Math.min(numPages, p + 1));
-      if (e.key === 'ArrowLeft') setPage(p => Math.max(1, p - 1));
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goToPage(page + 1); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goToPage(page - 1); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [numPages]);
+  }, [page, goToPage]);
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) document.exitFullscreen();
@@ -277,6 +313,7 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
   };
 
   const btn = 'px-2 py-1 rounded-md text-[11px] font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] disabled:opacity-40';
+  const chevron = 'w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center text-lg disabled:opacity-30 disabled:hover:bg-black/40 backdrop-blur-sm transition-colors';
 
   return (
     <div ref={containerRef} className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface)] flex flex-col">
@@ -287,26 +324,45 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
         <button onClick={toggleFullscreen} className={btn} title="Fullscreen">{isFullscreen ? '🗗' : '⛶'}</button>
       </ReaderBar>
 
-      <div ref={stageRef} className="overflow-auto bg-[var(--bg-secondary)] flex-1 flex justify-center p-3" style={{ height: isFullscreen ? 'auto' : height }}>
+      <div className="relative bg-[#111] overflow-hidden" style={{ height: isFullscreen ? '100%' : height }}>
         {loading ? (
-          <div className="flex flex-col items-center justify-center gap-3 text-[var(--text-muted)] text-sm">
-            <span className="w-8 h-8 rounded-full border-2 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
+          <div className="flex flex-col items-center justify-center gap-3 text-white/70 text-sm h-full">
+            <span className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
             Opening in the ANYFREEBOOK Reader…
           </div>
         ) : (
-          <canvas ref={canvasRef} className="shadow-lg rounded-sm self-start" />
+          <>
+            {/* Vertical swipe deck — native scroll-snap gives real touch-swipe for free.
+                Explicit height (not h-full) because this sits in a flex column where
+                percentage heights don't reliably resolve against an auto-height ancestor. */}
+            <div
+              ref={scrollerRef}
+              className="w-full overflow-y-auto overscroll-contain"
+              style={{ height: isFullscreen ? '100%' : height, scrollSnapType: 'y mandatory' }}
+            >
+              {Array.from({ length: numPages }, (_, i) => (
+                <div
+                  key={i}
+                  ref={el => { sectionRefs.current[i] = el; }}
+                  className="w-full flex items-center justify-center overflow-auto p-3"
+                  style={{ height: isFullscreen ? '100%' : height, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+                >
+                  <canvas ref={el => { canvasRefs.current[i] = el; }} className="shadow-2xl rounded-sm flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+
+            {/* TikTok-style side rail: up/down + page counter */}
+            <div className="absolute right-3 bottom-3 flex flex-col items-center gap-2">
+              <button onClick={() => goToPage(page - 1)} disabled={page <= 1} className={chevron} title="Previous page (↑)">︿</button>
+              <span className="px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[10px] font-bold whitespace-nowrap">
+                {page} / {numPages}
+              </span>
+              <button onClick={() => goToPage(page + 1)} disabled={page >= numPages} className={chevron} title="Next page (↓)">﹀</button>
+            </div>
+          </>
         )}
       </div>
-
-      {!loading && (
-        <div className="flex items-center justify-center gap-3 px-3 py-2 border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)]">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className={btn}>← Prev</button>
-          <span className="text-xs font-semibold text-[var(--text)]">
-            Page {page} <span className="text-[var(--text-muted)] font-normal">of {numPages}</span>
-          </span>
-          <button onClick={() => setPage(p => Math.min(numPages, p + 1))} disabled={page >= numPages} className={btn}>Next →</button>
-        </div>
-      )}
     </div>
   );
 }

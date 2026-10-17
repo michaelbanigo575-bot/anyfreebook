@@ -194,7 +194,11 @@ interface PdfDoc {
   getPage: (n: number) => Promise<{
     getViewport: (o: { scale: number }) => { width: number; height: number };
     render: (o: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<void> };
+    /** pdf.js frees the document's font/image/worker resources through this. */
+    cleanup: () => void;
   }>;
+  /** Releases the worker + document resources. Required to avoid leaking memory. */
+  destroy: () => Promise<void>;
 }
 
 function PdfStage({ url, title, height, onFail }: { url: string; title?: string; height: string; onFail: () => void }) {
@@ -220,7 +224,12 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
         // Served from /public — bundling the worker trips Terser on import.meta
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
         const doc = await pdfjs.getDocument({ url: proxied(url) }).promise;
-        if (cancelled) return;
+        if (cancelled) {
+          // Unmounted while loading — destroy immediately or the worker and its
+          // decoded resources stay resident for the life of the tab.
+          void (doc as unknown as PdfDoc).destroy();
+          return;
+        }
         docRef.current = doc as unknown as PdfDoc;
         setNumPages(doc.numPages);
         setLoading(false);
@@ -228,7 +237,12 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
         if (!cancelled) onFail(); // CORS or corrupt file → iframe fallback
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      const doc = docRef.current;
+      docRef.current = null;
+      if (doc) void doc.destroy();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
@@ -353,7 +367,10 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
                   className="w-full flex items-center justify-center overflow-auto p-3"
                   style={{ height: isFullscreen ? '100%' : height, scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
                 >
-                  <canvas ref={el => { canvasRefs.current[i] = el; }} className="shadow-2xl rounded-sm flex-shrink-0" />
+                  {/* The canvas is a pure visual rendering of the PDF page; the document text
+                      lives in the PdfDoc and is not exposed to AT, so the canvas
+                      is decorative to a screen reader. */}
+                  <canvas ref={el => { canvasRefs.current[i] = el; }} aria-hidden="true" className="shadow-2xl rounded-sm flex-shrink-0" />
                 </div>
               ))}
             </div>

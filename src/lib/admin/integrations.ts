@@ -17,6 +17,10 @@ export function getIntegrations(vercelConnected: boolean, githubConnected: boole
   const cloudflare = !!process.env.CLOUDFLARE_API_TOKEN;
   const gsc = false; // Search Console has no API token in env
   const resend = !!process.env.RESEND_API_KEY;
+  const turn = !!(process.env.TURN_URLS && process.env.TURN_USERNAME && process.env.TURN_CREDENTIAL);
+  const cloudconvert = !!process.env.CLOUDCONVERT_API_KEY;
+  const discord = !!process.env.DISCORD_WEBHOOK_URL;
+  const mastodon = !!(process.env.MASTODON_API_URL && process.env.MASTODON_ACCESS_TOKEN);
 
   return [
     {
@@ -90,6 +94,43 @@ export function getIntegrations(vercelConnected: boolean, githubConnected: boole
       status: resend ? 'connected' : 'disconnected',
       detail: resend ? 'Transactional email ready' : 'Not connected — set RESEND_API_KEY when ready to send notifications',
       cta: resend ? undefined : { label: 'Sign up free', href: 'https://resend.com' },
+    },
+    {
+      id: 'turn',
+      name: 'TURN relay (Metered.ca)',
+      icon: '📡',
+      status: turn ? 'connected' : 'disconnected',
+      detail: turn ? 'Classroom video works across strict NATs/carriers' : 'Not set — classroom video may fail cross-network. Set TURN_URLS, TURN_USERNAME, TURN_CREDENTIAL',
+      cta: turn ? undefined : { label: 'Get free TURN', href: 'https://www.metered.ca/tools/openrelay/' },
+    },
+    {
+      id: 'cloudconvert',
+      name: 'CloudConvert',
+      icon: '📄',
+      status: cloudconvert ? 'connected' : 'disconnected',
+      detail: cloudconvert ? 'Word/PowerPoint auto-convert to PDF on upload' : 'Not set — Office uploads stay in their original format. Set CLOUDCONVERT_API_KEY',
+      cta: cloudconvert ? undefined : { label: 'Get free key', href: 'https://cloudconvert.com/dashboard/api/v2/keys' },
+    },
+    {
+      id: 'indexnow',
+      name: 'IndexNow',
+      icon: '🔔',
+      status: 'connected',
+      detail: 'Instant Bing/Yandex indexing on publish — key hardcoded, no setup needed',
+    },
+    {
+      id: 'discord',
+      name: 'Discord distribution',
+      icon: '💬',
+      status: discord ? 'connected' : 'disconnected',
+      detail: discord ? 'New publications post to Discord daily' : 'Optional — set DISCORD_WEBHOOK_URL to auto-post new content',
+    },
+    {
+      id: 'mastodon',
+      name: 'Mastodon distribution',
+      icon: '🐘',
+      status: mastodon ? 'connected' : 'disconnected',
+      detail: mastodon ? 'New publications post to Mastodon daily' : 'Optional — set MASTODON_API_URL and MASTODON_ACCESS_TOKEN to auto-post new content',
     },
   ];
 }

@@ -42,6 +42,7 @@ export async function createPublication(input: {
   coverUrl?: string;
   externalUrl?: string;
   publish?: boolean;
+  institutionId?: string | null;
 }): Promise<{ error: string | null; slug?: string }> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -65,6 +66,7 @@ export async function createPublication(input: {
     external_url: input.externalUrl || null,
     status: input.publish ? 'published' : 'draft',
     published_at: input.publish ? new Date().toISOString() : null,
+    institution_id: input.institutionId || null,
   });
 
   if (error) return { error: error.message };
@@ -72,10 +74,10 @@ export async function createPublication(input: {
   return { error: null, slug };
 }
 
-export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean; slug?: string }): Promise<{ error: string | null }> {
+export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean; slug?: string; institution_id?: string | null }): Promise<{ error: string | null }> {
   const sb = createClient();
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'publication_type', 'originality_status', 'body', 'cover_url', 'external_url'] as const) {
+  for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'publication_type', 'originality_status', 'body', 'cover_url', 'external_url', 'institution_id'] as const) {
     if (patch[k] !== undefined) update[k] = patch[k];
   }
   if (patch.publish !== undefined) {

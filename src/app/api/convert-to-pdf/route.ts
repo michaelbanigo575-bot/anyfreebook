@@ -97,7 +97,14 @@ export async function POST(request: NextRequest) {
     const pdfBuf = await pdfRes.arrayBuffer();
 
     const sb = createServiceClient();
+    // Derive the storage object path from the validated URL and re-validate it.
+    // A URL can be on our own storage host yet still carry a traversal-shaped
+    // pathname; without this check that string is written straight into a
+    // storage key, letting a caller place objects at arbitrary paths.
     const origPath = decodeURIComponent(sourceUrl.pathname.split('/publications/')[1] || '');
+    if (!origPath || origPath.includes('..') || origPath.startsWith('/')) {
+      return NextResponse.json({ error: 'Unrecognised publications path' }, { status: 400 });
+    }
     const pdfPath = origPath.replace(/\.[a-z0-9]+$/i, '') + `-converted-${Date.now()}.pdf`;
     const { error: uploadErr } = await sb.storage.from('publications').upload(pdfPath, Buffer.from(pdfBuf), {
       contentType: 'application/pdf',

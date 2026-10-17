@@ -19,6 +19,7 @@ export interface Publication {
   like_count: number;
   save_count?: number;
   comment_count?: number;
+  institution_id?: string | null;
   created_at: string;
   published_at: string | null;
   updated_at: string;

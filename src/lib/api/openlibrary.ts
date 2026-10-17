@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 interface OLSearchDoc {
@@ -76,13 +77,17 @@ function olDocToBook(doc: OLSearchDoc, source: 'openlibrary'): Book {
     author: doc.author_name?.join(', ') || 'Unknown Author',
     slug: `${slug}-ol-${olKey}`,
     coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : null,
-    description: `Read "${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} for free. Available from Open Library${hasIA ? ' and Internet Archive' : ''}. ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`,
-    rating: doc.ratings_average ? +doc.ratings_average.toFixed(1) : +(3.5 + Math.random() * 1.2).toFixed(1),
-    ratingCount: doc.ratings_count || Math.floor(50 + Math.random() * 2000),
+    description: hasIA
+      ? `Read "${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} on Internet Archive. ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`
+      : `"${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} — catalog listing on Open Library (no scanned copy indexed yet). ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`,
+    // Real upstream values only. 0 means "Open Library has no rating for this
+    // record" and the UI omits the row — we never substitute a random number.
+    rating: doc.ratings_average ? +doc.ratings_average.toFixed(1) : 0,
+    ratingCount: doc.ratings_count || 0,
     contentType: 'BOOK',
     formats: ['PDF', 'EPUB'],
-    viewCount: (doc.already_read_count || 0) + (doc.want_to_read_count || 0) + Math.floor(Math.random() * 10000),
-    likeCount: doc.want_to_read_count || Math.floor(50 + Math.random() * 1000),
+    viewCount: (doc.already_read_count || 0) + (doc.want_to_read_count || 0),
+    likeCount: 0,
     pageCount: doc.number_of_pages_median,
     publishYear: doc.first_publish_year,
     isbn: doc.isbn?.[0],
@@ -102,7 +107,7 @@ export async function searchOpenLibrary(query: string, limit = 30, page = 1): Pr
   const offset = (page - 1) * limit;
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fields=key,title,author_name,cover_i,first_publish_year,number_of_pages_median,isbn,publisher,subject,language,edition_count,ratings_average,ratings_count,already_read_count,want_to_read_count,ia,ebook_access`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: OLSearchResponse = await res.json();
 
@@ -114,7 +119,7 @@ export async function searchOpenLibrary(query: string, limit = 30, page = 1): Pr
 
 export async function getOpenLibrarySubject(subject: string, limit = 30, offset = 0): Promise<{ books: Book[]; total: number }> {
   const url = `https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=${limit}&offset=${offset}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: OLSubjectResponse = await res.json();
 
@@ -127,13 +132,15 @@ export async function getOpenLibrarySubject(subject: string, limit = 30, offset 
       author: w.authors?.map(a => a.name).join(', ') || 'Unknown Author',
       slug: `${slug}-ol-${olKey}`,
       coverUrl: w.cover_id ? `https://covers.openlibrary.org/b/id/${w.cover_id}-M.jpg` : null,
-      description: `Read "${w.title}" for free on Open Library. ${w.edition_count ? `${w.edition_count} editions available.` : ''}`,
-      rating: +(3.5 + Math.random() * 1.4).toFixed(1),
-      ratingCount: Math.floor(100 + Math.random() * 5000),
+      description: w.ia && w.ia.length > 0
+        ? `Read "${w.title}" on Internet Archive. ${w.edition_count ? `${w.edition_count} editions available.` : ''}`
+        : `"${w.title}" — catalog listing on Open Library (no scanned copy indexed yet). ${w.edition_count ? `${w.edition_count} editions available.` : ''}`,
+      rating: 0,
+      ratingCount: 0,
       contentType: 'BOOK' as const,
       formats: ['PDF', 'EPUB'],
-      viewCount: Math.floor(1000 + Math.random() * 50000),
-      likeCount: Math.floor(50 + Math.random() * 3000),
+      viewCount: 0,
+      likeCount: 0,
       publishYear: w.first_publish_year,
       language: 'en',
       category: mapCategory(w.subject),

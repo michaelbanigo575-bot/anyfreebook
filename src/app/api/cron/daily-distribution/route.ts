@@ -32,40 +32,57 @@ async function findNewPublications(): Promise<NewPub[]> {
     .map(p => ({ title: p.title, slug: p.slug, description: p.description, author_name: p.author?.display_name || null }));
 }
 
-async function postDiscord(pub: NewPub): Promise<void> {
+async function postDiscord(pub: NewPub): Promise<string | null> {
   const url = process.env.DISCORD_WEBHOOK_URL;
-  if (!url) return;
+  if (!url) return null;
   const line = `📖 **New on ANYFREEBOOK**: "${pub.title}"${pub.author_name ? ` by ${pub.author_name}` : ''}\nhttps://anyfreebook.com/read/${pub.slug}`;
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content: line }),
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => {});
+  // Return a failure string instead of swallowing: a silently dropped post means
+  // a creator's book is simply never announced and nobody finds out.
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: line }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return `discord ${res.status}`;
+    return null;
+  } catch (err) {
+    return `discord ${err instanceof Error ? err.message : 'request failed'}`;
+  }
 }
 
-async function postMastodon(pub: NewPub): Promise<void> {
+async function postMastodon(pub: NewPub): Promise<string | null> {
   const base = process.env.MASTODON_API_URL;
   const token = process.env.MASTODON_ACCESS_TOKEN;
-  if (!base || !token) return;
+  if (!base || !token) return null;
   const status = `New on ANYFREEBOOK: "${pub.title}"${pub.author_name ? ` by ${pub.author_name}` : ''} — free to read.\nhttps://anyfreebook.com/read/${pub.slug}`;
-  await fetch(`${base.replace(/\/$/, '')}/api/v1/statuses`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ status, visibility: 'public' }),
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => {});
+  try {
+    const res = await fetch(`${base.replace(/\/$/, '')}/api/v1/statuses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status, visibility: 'public' }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return `mastodon ${res.status}`;
+    return null;
+  } catch (err) {
+    return `mastodon ${err instanceof Error ? err.message : 'request failed'}`;
+  }
 }
 
 export async function GET() {
   const pubs = await findNewPublications();
 
-  await Promise.all(pubs.flatMap(p => [postDiscord(p), postMastodon(p)]));
+  const outcomes = await Promise.all(pubs.flatMap(p => [postDiscord(p), postMastodon(p)]));
+  const failures = outcomes.filter((r): r is string => r !== null);
+  if (failures.length > 0) console.error('[daily-distribution] announcement failures:', failures);
   void pingIndexNow(pubs.map(p => `https://anyfreebook.com/read/${p.slug}`));
 
   return NextResponse.json({
-    ok: true,
+    ok: failures.length === 0,
     distributed: pubs.length,
+    failures,
     discordConfigured: !!process.env.DISCORD_WEBHOOK_URL,
     mastodonConfigured: !!(process.env.MASTODON_API_URL && process.env.MASTODON_ACCESS_TOKEN),
   });

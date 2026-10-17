@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 interface ArchiveDoc {
@@ -45,12 +46,12 @@ function docToBook(doc: ArchiveDoc): Book {
     slug: `${slug}-ia-${doc.identifier}`.slice(0, 100),
     coverUrl: `https://archive.org/services/img/${doc.identifier}`,
     description: `Free to read/borrow on the Internet Archive. ${doc.year ? `Published ${doc.year}.` : ''} ${doc.downloads ? `${doc.downloads.toLocaleString()} downloads.` : ''}`,
-    rating: +(3.5 + Math.random() * 1.2).toFixed(1),
-    ratingCount: Math.floor(50 + Math.random() * 2000),
+    rating: 0,
+    ratingCount: 0,
     contentType: 'BOOK',
     formats: ['PDF', 'EPUB', 'TXT'],
-    viewCount: doc.downloads || Math.floor(1000 + Math.random() * 20000),
-    likeCount: Math.floor((doc.downloads || 1000) / 20),
+    viewCount: doc.downloads || 0,
+    likeCount: 0,
     publishYear: doc.year ? parseInt(doc.year) : undefined,
     language: (Array.isArray(doc.language) ? doc.language[0] : doc.language) || 'en',
     category: mapCategory(doc.subject),
@@ -74,12 +75,12 @@ function audioDocToBook(doc: ArchiveDoc): Book {
     slug: `${slug}-ia-audio-${doc.identifier}`.slice(0, 100),
     coverUrl: `https://archive.org/services/img/${doc.identifier}`,
     description: `Free audio from the Internet Archive. ${doc.year ? `Published ${doc.year}.` : ''} ${doc.downloads ? `${doc.downloads.toLocaleString()} plays.` : ''}`,
-    rating: +(3.6 + Math.random() * 1.2).toFixed(1),
-    ratingCount: Math.floor(50 + Math.random() * 1500),
+    rating: 0,
+    ratingCount: 0,
     contentType: 'AUDIOBOOK',
     formats: ['MP3'],
-    viewCount: doc.downloads || Math.floor(500 + Math.random() * 15000),
-    likeCount: Math.floor((doc.downloads || 500) / 15),
+    viewCount: doc.downloads || 0,
+    likeCount: 0,
     publishYear: doc.year ? parseInt(doc.year) : undefined,
     language: (Array.isArray(doc.language) ? doc.language[0] : doc.language) || 'en',
     category: mapCategory(doc.subject),
@@ -96,7 +97,7 @@ export async function searchArchiveAudio(query: string, page = 1, rows = 20): Pr
   const q = `${query} AND mediatype:audio`;
   const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&fl[]=language&rows=${rows}&page=${page}&output=json`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: ArchiveResponse = await res.json();
 
@@ -110,7 +111,7 @@ export async function searchArchive(query: string, page = 1, rows = 20): Promise
   const q = `${query} AND mediatype:texts`;
   const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&fl[]=language&rows=${rows}&page=${page}&output=json`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: ArchiveResponse = await res.json();
 

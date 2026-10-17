@@ -18,7 +18,12 @@ const STUDY_PLAN_KEY = 'afb_study_plan';
 function getLocalStudyPlan(): StudyPlan | null {
   if (typeof window === 'undefined') return null;
   const saved = localStorage.getItem(STUDY_PLAN_KEY);
-  return saved ? JSON.parse(saved) : null;
+  // A corrupted value would throw during render and blank the whole tree.
+  try {
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
 }
 
 function saveLocalStudyPlan(plan: StudyPlan) {

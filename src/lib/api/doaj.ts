@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 interface DoajLink {
@@ -53,12 +54,13 @@ function articleToBook(article: DoajArticle): Book | null {
     slug: `${slug}-doaj-${article.id}`.slice(0, 100),
     coverUrl: null,
     description: `Free open-access article${bibjson.journal?.title ? ` from ${bibjson.journal.title}` : ''} via DOAJ (Directory of Open Access Journals). ${year ? `Published ${year}.` : ''}`,
-    rating: +(3.7 + Math.random() * 1.1).toFixed(1),
-    ratingCount: Math.floor(10 + Math.random() * 300),
+    // DOAJ article records carry no rating or readership figures.
+    rating: 0,
+    ratingCount: 0,
     contentType: 'BOOK',
     formats: ['HTML', 'PDF'],
-    viewCount: Math.floor(200 + Math.random() * 8000),
-    likeCount: Math.floor(10 + Math.random() * 300),
+    viewCount: 0,
+    likeCount: 0,
     publishYear: year && !isNaN(year) ? year : undefined,
     language: 'en',
     category: mapCategory(bibjson.subject),
@@ -73,7 +75,7 @@ function articleToBook(article: DoajArticle): Book | null {
 export async function searchDOAJ(query: string, page = 1, pageSize = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://doaj.org/api/search/articles/${encodeURIComponent(query)}?page=${page}&pageSize=${pageSize}`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: DoajResponse = await res.json();
 

@@ -65,7 +65,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     audio.addEventListener('play', () => setIsPlaying(true));
     audio.addEventListener('pause', () => setIsPlaying(false));
 
-    return () => { audio.pause(); audio.src = ''; };
+    return () => {
+      audio.pause();
+      audio.src = '';
+      // A pending sleep timer outlives the provider otherwise — it fires after
+      // unmount against a null audioRef and never leaves the timer queue.
+      if (sleepTimerRef.current) {
+        clearTimeout(sleepTimerRef.current);
+        sleepTimerRef.current = null;
+      }
+    };
   }, []);
 
   const updateMediaSession = useCallback((track: AudioTrack) => {
@@ -203,6 +212,7 @@ export function AudioPlayerBar() {
 
           <button
             onClick={isPlaying ? pause : resume}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
             className="w-10 h-10 rounded-full bg-[var(--primary)] text-white flex items-center justify-center hover:opacity-90 transition-opacity shadow-md"
           >
             {isPlaying ? (

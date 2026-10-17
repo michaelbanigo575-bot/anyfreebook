@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 interface GoogleVolume {
@@ -75,12 +76,13 @@ function googleToBook(v: GoogleVolume): Book {
     slug: `${slug}-gb-${v.id}`,
     coverUrl,
     description: info.description?.slice(0, 300) || `Free ebook available on Google Books. ${info.categories?.join(', ') || ''}`,
-    rating: info.averageRating || +(3.5 + Math.random() * 1.2).toFixed(1),
-    ratingCount: info.ratingsCount || Math.floor(50 + Math.random() * 1000),
+    rating: info.averageRating ? +info.averageRating.toFixed(1) : 0,
+    ratingCount: info.ratingsCount || 0,
     contentType: 'BOOK',
     formats,
-    viewCount: Math.floor(1000 + Math.random() * 50000),
-    likeCount: Math.floor(50 + Math.random() * 2000),
+    // Google Books exposes neither read counts nor likes for these results.
+    viewCount: 0,
+    likeCount: 0,
     pageCount: info.pageCount,
     publishYear: info.publishedDate ? parseInt(info.publishedDate) : undefined,
     isbn: info.industryIdentifiers?.find(i => i.type === 'ISBN_13')?.identifier,
@@ -100,7 +102,7 @@ function apiKeyParam(): string {
 
 export async function searchGoogleBooks(query: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) {
     console.error(`[googlebooks] request failed: ${res.status} ${res.statusText}, hasKey=${!!process.env.GOOGLE_BOOKS_API_KEY}`);
     return { books: [], total: 0 };
@@ -115,7 +117,7 @@ export async function searchGoogleBooks(query: string, startIndex = 0, maxResult
 
 export async function getGoogleBooksBySubject(subject: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://www.googleapis.com/books/v1/volumes?q=subject:${encodeURIComponent(subject)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) return { books: [], total: 0 };
   const data: GoogleBooksResponse = await res.json();
 

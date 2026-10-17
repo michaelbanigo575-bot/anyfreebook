@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
+import { useNow } from '@/lib/useNow';
 
 interface Notification {
   id: string;
@@ -16,8 +17,10 @@ interface Notification {
 
 const TYPE_ICON: Record<string, string> = { live_class: '🔴', new_publication: '📖', new_post: '📰' };
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+/** `now` comes from useNow() so the first client render matches the server HTML. */
+function timeAgo(iso: string, now: number | null): string {
+  if (now === null) return '';
+  const diff = now - new Date(iso).getTime();
   const min = Math.floor(diff / 60000);
   if (min < 1) return 'now';
   if (min < 60) return `${min}m`;
@@ -32,6 +35,7 @@ export function NotificationsBell() {
   const [unread, setUnread] = useState(0);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const now = useNow();
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -125,7 +129,7 @@ export function NotificationsBell() {
                   <span className="text-lg flex-shrink-0">{TYPE_ICON[n.type] || '🔔'}</span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-[13px] text-[var(--text)] leading-snug">{n.title}</span>
-                    <span className="block text-[10px] text-[var(--text-muted)] mt-0.5">{timeAgo(n.created_at)} ago</span>
+                    <span className="block text-[10px] text-[var(--text-muted)] mt-0.5">{timeAgo(n.created_at, now)} ago</span>
                   </span>
                 </Link>
               ))

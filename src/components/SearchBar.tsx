@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { searchBooks, type Book } from '@/lib/data';
 
 interface SearchBarProps {
@@ -8,6 +9,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ compact }: SearchBarProps) {
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Book[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +47,13 @@ export function SearchBar({ compact }: SearchBarProps) {
       e.preventDefault();
       setSelectedIndex(i => Math.max(i - 1, -1));
     } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      window.location.href = `/book/${results[selectedIndex].slug}`;
+      // Client-side navigation, not window.location.href — a full page reload here
+      // throws away the whole SPA shell on the most-used control in the header.
+      const slug = results[selectedIndex]?.slug;
+      if (!slug) return;
+      setIsOpen(false);
+      inputRef.current?.blur();
+      router.push(`/book/${slug}`);
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       inputRef.current?.blur();

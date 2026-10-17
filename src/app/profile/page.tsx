@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
 import { ActivityTimeline } from '@/components/ActivityTimeline';
+import { listMyInstitutions, type Institution, type InstitutionMember } from '@/lib/institutions/client';
 
 type Tab = 'activity' | 'wishlist' | 'favorites' | 'history' | 'stats';
 
@@ -23,10 +24,15 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<Tab>('activity');
   const [interactions, setInteractions] = useState<StoredInteraction[]>([]);
   const [copied, setCopied] = useState(false);
+  const [institutions, setInstitutions] = useState<(InstitutionMember & { institution: Institution })[]>([]);
 
   useEffect(() => {
     if (!loading && !user) router.push('/login');
   }, [loading, user, router]);
+
+  useEffect(() => {
+    if (user) listMyInstitutions().then(setInstitutions);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -113,6 +119,35 @@ export default function ProfilePage() {
           {profile?.is_creator ? 'Open studio →' : 'Get started →'}
         </span>
       </a>
+
+      {/* My institutions */}
+      {institutions.length > 0 ? (
+        <div className="mb-4 space-y-2">
+          {institutions.map(m => (
+            <a
+              key={m.institution.id}
+              href={['owner', 'admin', 'teacher'].includes(m.role) ? `/institutions/${m.institution.slug}/dashboard` : `/institutions/${m.institution.slug}`}
+              className="block p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-colors flex items-center justify-between gap-4"
+            >
+              <div>
+                <p className="text-sm font-bold text-[var(--text)]">🏛 {m.institution.name}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5 capitalize">{m.role} · {m.institution.member_count} members</p>
+              </div>
+              <span className="text-xs font-semibold text-[var(--primary)] flex-shrink-0">
+                {['owner', 'admin', 'teacher'].includes(m.role) ? 'Dashboard →' : 'View →'}
+              </span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <a href="/institutions/new" className="block mb-4 p-4 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] transition-colors flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-sm font-bold text-[var(--text)]">🏛 Run a school or library?</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">Manage classes, assign reading, and publish under your institution — free.</p>
+          </div>
+          <span className="text-xs font-semibold text-[var(--primary)] flex-shrink-0">Add your institution →</span>
+        </a>
+      )}
 
       {/* Referral card */}
       {referralLink && (

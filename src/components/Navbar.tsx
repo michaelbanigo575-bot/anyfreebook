@@ -43,6 +43,7 @@ export function Navbar() {
     { label: 'Audiobooks', href: '/audiobooks' },
     { label: 'Feed', href: '/feed' },
     { label: 'Classrooms', href: '/classrooms' },
+    { label: 'Institutions', href: '/institutions' },
     // Signed-in users reach Publish & Earn from their profile dashboard instead
     ...(user ? [] : [{ label: 'Publish & Earn', href: '/creators' }]),
     { label: 'Study Plan', href: '/study-plan' },

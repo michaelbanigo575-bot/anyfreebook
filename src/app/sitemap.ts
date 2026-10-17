@@ -38,16 +38,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
+  // NOTE: no lastModified on category/book entries. These come from the static
+  // catalog in data.ts and only change when we deploy, so there is no truthful
+  // per-page timestamp to publish. Emitting `now` on every crawl told crawlers
+  // all ~280 pages changed on every request, which is exactly the signal that
+  // makes a sitemap get ignored.
   const categoryPages: MetadataRoute.Sitemap = getAllCategories().map(cat => ({
     url: `${baseUrl}/category/${cat.slug}`,
-    lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.9,
   }));
 
   const bookPages: MetadataRoute.Sitemap = getAllBooks().map(book => ({
     url: `${baseUrl}/book/${book.slug}`,
-    lastModified: now,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));

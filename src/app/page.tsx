@@ -11,6 +11,7 @@ import { getOpenLibrarySubject } from '@/lib/api/openlibrary';
 import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchArchive } from '@/lib/api/archive';
 import { LiveTrendingSection } from '@/components/LiveTrendingSection';
+import { cardClass } from '@/lib/ui';
 
 // Serve the homepage from cache for 5 minutes instead of hitting 4 external
 // book APIs on every single visitor — critical under a traffic spike (a
@@ -115,7 +116,7 @@ export default async function HomePage() {
             { icon: '📝', title: 'WAEC & JAMB Prep', desc: 'Curated official exam-prep resources for Nigerian students', href: '/waec-jamb', badge: 'NEW' },
             { icon: '🌙', title: 'Reader Comfort', desc: 'Fonts, sepia & dark themes, text size — reading your way', href: '/creators/discover', badge: 'NEW' },
           ].map(f => (
-            <a key={f.title} href={f.href} className="relative rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4 hover:border-[var(--primary)] hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <a key={f.title} href={f.href} className={`relative ${cardClass({ padding: 'p-4' })}`}>
               {f.badge && (
                 <span className="absolute top-3 right-3 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-[8px] font-bold">{f.badge}</span>
               )}

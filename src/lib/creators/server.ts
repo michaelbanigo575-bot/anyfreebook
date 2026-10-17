@@ -4,7 +4,10 @@ import { DEFAULT_CONFIG, type ProgramConfig, type Publication, type CreatorProfi
 export async function getProgramConfig(): Promise<ProgramConfig> {
   try {
     const sb = createClient();
-    const { data } = await sb.from('creator_program_config').select('*').eq('id', 1).single();
+    // maybeSingle(), not single(): the config row is a singleton that an admin
+    // can delete. single() throws on zero rows and would burn a throw/catch on
+    // every creator page load.
+    const { data } = await sb.from('creator_program_config').select('*').eq('id', 1).maybeSingle();
     return data ? {
       pool_percentage: Number(data.pool_percentage),
       platform_percentage: Number(data.platform_percentage),
@@ -107,6 +110,7 @@ export async function getCreatorDashboard(authorId: string): Promise<{
   verifiedReadsThisMonth: number;
   totalLikes: number;
   followerCount: number;
+  dailyReads: { day: string; count: number }[];
 }> {
   const sb = createServiceClient();
   const { data: pubs } = await sb.from('publications').select('*').eq('author_id', authorId).order('created_at', { ascending: false });
@@ -128,6 +132,29 @@ export async function getCreatorDashboard(authorId: string): Promise<{
     verifiedReadsThisMonth = count || 0;
   }
 
+  // 30-day daily reads series for the dashboard sparkline, bucketed the same way
+  // getViewMetrics() does in src/lib/admin/metrics.ts.
+  const dailyBuckets: Record<string, number> = {};
+  const now = Date.now();
+  for (let i = 29; i >= 0; i--) {
+    const key = new Date(now - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    dailyBuckets[key] = 0;
+  }
+  if (pubIds.length > 0) {
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data: readRows } = await sb
+      .from('publication_reads')
+      .select('day')
+      .in('publication_id', pubIds)
+      .gte('day', thirtyDaysAgo)
+      .limit(50000);
+    for (const row of (readRows || [])) {
+      const day = (row as { day: string }).day;
+      if (day in dailyBuckets) dailyBuckets[day]++;
+    }
+  }
+  const dailyReads = Object.entries(dailyBuckets).map(([day, count]) => ({ day, count }));
+
   return {
     pubs: list,
     totalViews: list.reduce((a, p) => a + (p.view_count || 0), 0),
@@ -136,5 +163,6 @@ export async function getCreatorDashboard(authorId: string): Promise<{
     verifiedReadsThisMonth,
     totalLikes: list.reduce((a, p) => a + (p.like_count || 0), 0),
     followerCount: prof?.follower_count || 0,
+    dailyReads,
   };
 }

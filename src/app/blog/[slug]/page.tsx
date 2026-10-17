@@ -1,7 +1,9 @@
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BLOG_POSTS, getBlogPost, type BlogBlock } from '@/lib/blogPosts';
+import { AdUnit } from '@/components/AdUnit';
 
 export async function generateStaticParams() {
   return BLOG_POSTS.map(p => ({ slug: p.slug }));
@@ -122,7 +124,14 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
       <div>
         {post.content.map((block, i) => (
-          <Block key={i} block={block} />
+          <Fragment key={i}>
+            <Block block={block} />
+            {i === Math.floor(post.content.length / 2) && (
+              <div className="my-8">
+                <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BLOG} />
+              </div>
+            )}
+          </Fragment>
         ))}
       </div>
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { deletePublication, updatePublication } from '@/lib/creators/client';
+import { Sparkline } from '@/components/ui/Sparkline';
 import type { Publication, ProgramConfig, CreatorTier } from '@/lib/creators/types';
 import type { EarningsEstimate } from '@/lib/creators/earnings';
 
@@ -15,6 +16,7 @@ interface Props {
   earnings: EarningsEstimate;
   tier: CreatorTier;
   config: ProgramConfig;
+  dailyReads: { day: string; count: number }[];
 }
 
 function fmt(n: number) {
@@ -23,7 +25,7 @@ function fmt(n: number) {
   return n.toLocaleString();
 }
 
-export function DashboardClient({ handle, displayName, pubs, stats, earnings, tier, config }: Props) {
+export function DashboardClient({ handle, displayName, pubs, stats, earnings, tier, config, dailyReads }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [refreshing, startRefresh] = useTransition();
@@ -111,6 +113,13 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
             </div>
           </div>
 
+          {dailyReads.some(d => d.count > 0) && (
+            <div className="relative mt-5">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-violet-300/70 font-semibold mb-1.5">Reads — last 30 days</div>
+              <Sparkline values={dailyReads.map(d => d.count)} color="#34d399" height={48} />
+            </div>
+          )}
+
           {/* Qualification meters — both reads AND followers must clear the bar */}
           <div className="relative mt-6 space-y-4">
             <div>
@@ -149,9 +158,12 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
 
         {/* Stats grid */}
         <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Stat label="Readers" value={fmt(stats.followerCount)} accent="text-fuchsia-300" />
+          {/* Labels must match the fields behind them: totalViews is publications.
+              view_count, totalReads is read_count (verified reads only), and
+              followerCount is author_follows — not "readers". */}
+          <Stat label="Followers" value={fmt(stats.followerCount)} accent="text-fuchsia-300" />
           <Stat label="Likes" value={fmt(stats.totalLikes)} accent="text-rose-300" />
-          <Stat label="Reads" value={fmt(stats.totalViews)} accent="text-sky-300" />
+          <Stat label="Views" value={fmt(stats.totalViews)} accent="text-sky-300" />
           <Stat label="Verified reads" value={fmt(stats.totalReads)} accent="text-emerald-300" />
           <Stat label="Hours read" value={hoursRead} accent="text-amber-300" />
           <Stat label="Published" value={String(published.length)} accent="text-violet-300" />

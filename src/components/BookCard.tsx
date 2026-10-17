@@ -31,8 +31,8 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
         className={`
           block rounded-xl transition-all duration-300
           ${size === 'featured'
-            ? 'p-5 bg-[var(--surface)] shadow-md hover:shadow-xl border border-[var(--border-subtle)]'
-            : 'p-3 hover:bg-[var(--surface)] hover:shadow-lg'
+            ? 'p-5 bg-[var(--surface)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)]'
+            : 'p-3 hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)]'
           }
           ease-[var(--ease-out-expo)]
         `}
@@ -100,10 +100,14 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
                   </span>
                 ))}
               </div>
-              <div className="flex items-center gap-3 mt-1.5 text-[11px] text-[var(--text-muted)]">
-                <span>{formatCount(book.viewCount)} reads</span>
-                <span>{formatCount(book.likeCount)} likes</span>
-              </div>
+              {/* Engagement stats render only when the source gave us real
+                  numbers. 0 means "unknown", not "zero" — never print 0 reads. */}
+              {(book.viewCount > 0 || book.likeCount > 0) && (
+                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-[var(--text-muted)]">
+                  {book.viewCount > 0 && <span>{formatCount(book.viewCount)} reads</span>}
+                  {book.likeCount > 0 && <span>{formatCount(book.likeCount)} likes</span>}
+                </div>
+              )}
             </div>
           </div>
         </div>

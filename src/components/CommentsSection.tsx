@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { fetchComments, postComment, deleteComment, type Comment } from '@/lib/creators/social';
+import { useNow } from '@/lib/useNow';
 
-function relTime(iso: string): string {
-  const diff = Date.now() - Date.parse(iso);
+/** `now` comes from useNow(); null on the first render keeps SSR and hydration identical. */
+function relTime(iso: string, now: number | null): string {
+  if (now === null) return '';
+  const diff = now - Date.parse(iso);
   const m = Math.round(diff / 60000);
   if (m < 1) return 'just now';
   if (m < 60) return `${m}m ago`;
@@ -23,6 +26,7 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  const now = useNow();
 
   useEffect(() => {
     fetchComments(publicationId).then(c => { setComments(c); setLoading(false); });
@@ -91,7 +95,7 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-[var(--text)]">{c.authorName}</span>
-                  <span className="text-[11px] text-[var(--text-muted)]">{relTime(c.created_at)}</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">{relTime(c.created_at, now)}</span>
                   {user?.id === c.user_id && (
                     <button onClick={() => remove(c.id)} className="text-[11px] text-red-500 hover:underline ml-auto">Delete</button>
                   )}

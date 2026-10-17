@@ -31,7 +31,13 @@ export async function GET(request: NextRequest) {
   const requestedSource = searchParams.get('source') || 'all';
 
   if (!query.trim()) {
-    return new Response('', { status: 200 });
+    // A 200 with an empty body breaks the NDJSON consumer: it never sees the
+    // terminal `{ type: 'done' }` line and has to special-case "stream ended
+    // with nothing". A 400 is the honest answer for a missing query.
+    return new Response(JSON.stringify({ error: 'Missing search query' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   const jobs: SourceJob[] = [
@@ -46,7 +52,7 @@ export async function GET(request: NextRequest) {
 
   const seen = new Set<string>();
   const dedupe = (books: Book[]) => books.filter(b => {
-    const hasLink = !!(b.sourceUrl || (b.downloadLinks && b.downloadLinks.length > 0) || b.slug);
+    const hasLink = !!(b.sourceUrl || (b.downloadLinks && b.downloadLinks.length > 0));
     if (!hasLink) return false;
     const key = `${b.title.toLowerCase().slice(0, 40)}-${b.author?.toLowerCase().slice(0, 20)}`;
     if (seen.has(key)) return false;

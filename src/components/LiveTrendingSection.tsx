@@ -58,7 +58,10 @@ export function LiveTrendingSection({ books }: { books: Book[] }) {
     >
       {visible.map((book) => (
         <div
-          key={book.id}
+          // Composite key: this pool merges 5 upstream sources and two books
+          // from different sources can share an `id`, which makes React reuse
+          // the wrong DOM node and leaves a stale card during rotation.
+          key={`${book.sourceType || 'unknown'}:${book.slug || book.id}`}
           className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--border)] hover:shadow-lg transition-all duration-300 overflow-hidden animate-fade-in"
         >
           <div className="aspect-[2/3] relative bg-[var(--bg-secondary)]">

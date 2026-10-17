@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BookGrid } from '@/components/BookGrid';
+import { AdUnit } from '@/components/AdUnit';
 import { getCategory, type Book } from '@/lib/data';
 import { faqSchema, breadcrumbSchema } from '@/lib/schema';
 import { searchOpenLibrary } from '@/lib/api/openlibrary';
@@ -105,6 +106,12 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             <p className="text-5xl mb-4">📚</p>
             <p className="text-lg font-medium text-[var(--text-secondary)]">Books coming soon</p>
             <p className="text-sm text-[var(--text-muted)] mt-2">We&apos;re adding {category.name.toLowerCase()} books daily.</p>
+          </div>
+        )}
+
+        {books.length > 0 && (
+          <div className="mt-10">
+            <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CATEGORY} />
           </div>
         )}
 

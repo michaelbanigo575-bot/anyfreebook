@@ -77,7 +77,11 @@ export function LiveStage({ classroomId, isHost }: Props) {
     myId: string;
     connected: boolean;
     joinTimer: ReturnType<typeof setInterval> | null;
-  }>({ stream: null, screenTrack: null, pcs: new Map(), channel: null, myId: Math.random().toString(36).slice(2, 10), connected: false, joinTimer: null });
+    /** The viewer's own peer connection. It is not in `pcs` (that's the host's
+     *  map keyed by viewer id), so without this slot the unmount cleanup has
+     *  no reference to it and the viewer connection leaks. */
+    viewerPc: RTCPeerConnection | null;
+  }>({ stream: null, screenTrack: null, pcs: new Map(), channel: null, myId: Math.random().toString(36).slice(2, 10), connected: false, joinTimer: null, viewerPc: null });
 
   useEffect(() => {
     const p = plumbing.current;
@@ -156,6 +160,7 @@ export function LiveStage({ classroomId, isHost }: Props) {
             attempts++;
             pc?.close();
             pc = new RTCPeerConnection(await fetchIceConfig());
+            p.viewerPc = pc; // so unmount cleanup can close it
             pc.ontrack = e => {
               const v = videoRef.current;
               if (!v) return;
@@ -201,7 +206,11 @@ export function LiveStage({ classroomId, isHost }: Props) {
     if (isHost) runHost(); else runViewer();
 
     return () => {
-      if (p.joinTimer) clearInterval(p.joinTimer);
+      if (p.joinTimer) { clearInterval(p.joinTimer); p.joinTimer = null; }
+      // The viewer's PC lives outside p.pcs, so close it explicitly —
+      // otherwise it survives unmount holding the remote stream open.
+      p.viewerPc?.close();
+      p.viewerPc = null;
       p.pcs.forEach(pc => pc.close());
       p.pcs.clear();
       p.screenTrack?.stop();
@@ -257,6 +266,7 @@ export function LiveStage({ classroomId, isHost }: Props) {
         ref={videoRef}
         autoPlay
         playsInline
+        aria-label="Live classroom video from the host"
         className="w-full object-contain bg-black"
         style={{ height: '65vh', minHeight: 420 }}
       />

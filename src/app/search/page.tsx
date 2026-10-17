@@ -5,6 +5,8 @@ import { Fragment, Suspense, useState, useEffect, useCallback, useRef } from 're
 import { BookCover } from '@/components/BookCover';
 import { BookPreviewModal } from '@/components/BookPreviewModal';
 import { AdUnit } from '@/components/AdUnit';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { cardClass } from '@/lib/ui';
 import type { Book } from '@/lib/data';
 
 function SourceBadge({ source }: { source?: string }) {
@@ -164,13 +166,13 @@ function SearchResults() {
       {loading && results.length === 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
+            <div key={i} className={cardClass({ hover: false })}>
               <div className="flex gap-3">
-                <div className="w-16 h-24 rounded bg-[var(--bg-secondary)]" />
+                <Skeleton className="w-16 h-24 rounded" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 rounded bg-[var(--bg-secondary)]" />
-                  <div className="h-3 w-1/2 rounded bg-[var(--bg-secondary)]" />
-                  <div className="h-3 w-1/3 rounded bg-[var(--bg-secondary)]" />
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                  <Skeleton className="h-3 w-1/2 rounded" />
+                  <Skeleton className="h-3 w-1/3 rounded" />
                 </div>
               </div>
             </div>
@@ -188,7 +190,7 @@ function SearchResults() {
                 </div>
               )}
             <div
-              className="group rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--border)] hover:shadow-lg transition-all duration-300 overflow-hidden"
+              className={`group overflow-hidden ${cardClass({ padding: '' })}`}
             >
               <div className="p-4">
                 <div className="flex gap-3">
@@ -258,7 +260,7 @@ function SearchResults() {
 
                 {book.downloadLinks && book.downloadLinks.length > 1 && (
                   <div className="relative group/more">
-                    <button className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] transition-colors">
+                    <button aria-label="More result options" className="p-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-hover)] transition-colors">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
                     </button>
                     <div className="absolute right-0 bottom-full mb-1 w-48 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl opacity-0 invisible group-hover/more:opacity-100 group-hover/more:visible transition-all z-10">

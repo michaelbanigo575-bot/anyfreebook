@@ -1,7 +1,15 @@
 import Link from 'next/link';
 
 export function Footer() {
-  const linkGroups = [
+  /** Matches the `sameAs` handles declared in organizationSchema() (src/lib/schema.ts). */
+const SOCIAL_LINKS = [
+  { name: 'Twitter', url: 'https://twitter.com/anyfreebook' },
+  { name: 'LinkedIn', url: 'https://linkedin.com/company/anyfreebook' },
+  { name: 'TikTok', url: 'https://tiktok.com/@anyfreebook' },
+  { name: 'Instagram', url: 'https://instagram.com/anyfreebook' },
+];
+
+const linkGroups = [
     {
       title: 'Browse',
       links: [
@@ -63,14 +71,18 @@ export function Footer() {
               The world&apos;s largest free book aggregator. 5M+ free books, textbooks & papers from 6 open-access sources.
             </p>
             <div className="flex gap-3 mt-4">
-              {['Twitter', 'LinkedIn', 'TikTok', 'Instagram'].map(social => (
-                <span
-                  key={social}
-                  className="w-8 h-8 rounded-lg bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors cursor-pointer"
-                  title={social}
+              {SOCIAL_LINKS.map(social => (
+                <a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer me"
+                  aria-label={`ANYFREEBOOK on ${social.name}`}
+                  className="w-8 h-8 rounded-lg bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--primary)] hover:border-[var(--primary)] transition-colors"
+                  title={social.name}
                 >
-                  {social[0]}
-                </span>
+                  {social.name[0]}
+                </a>
               ))}
             </div>
           </div>

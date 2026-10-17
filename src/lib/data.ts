@@ -22,7 +22,7 @@ export interface Book {
   narrator?: string;
   duration?: number;
   sourceUrl?: string;
-  sourceType?: 'local' | 'openlibrary' | 'gutenberg' | 'googlebooks' | 'archive' | 'pubmed' | 'doaj';
+  sourceType?: 'local' | 'openlibrary' | 'gutenberg' | 'googlebooks' | 'archive' | 'pubmed' | 'doaj' | 'librivox';
   downloadLinks?: { label: string; url: string; source: string }[];
 }
 
@@ -134,13 +134,17 @@ function makeBook(title: string, author: string, catIndex: number, opts: Partial
     author,
     slug,
     coverUrl: null,
-    description: opts.description || `${title} by ${author}. A widely acclaimed resource in ${cat.name.toLowerCase()}. Available for free download in multiple formats from open-access sources.`,
-    rating: opts.rating ?? +(3.8 + Math.random() * 1.2).toFixed(1),
-    ratingCount: opts.ratingCount ?? Math.floor(500 + Math.random() * 15000),
+    // Never claim a book is free here. Whether a genuine free copy exists is
+    // decided at request time by resolveBookSource() and rendered from that tier.
+    description: opts.description || `${title} by ${author}. A widely read reference work in ${cat.name.toLowerCase()}. Check the verified free sources listed on this page — many titles in this category are still in copyright.`,
+    // 0 means "no verified figure". We never invent a rating or a view count:
+    // a plausible-looking fake number is worse than an honest blank.
+    rating: opts.rating ?? 0,
+    ratingCount: opts.ratingCount ?? 0,
     contentType: opts.contentType || 'BOOK',
     formats: opts.formats || ['PDF', 'EPUB'],
-    viewCount: opts.viewCount ?? Math.floor(5000 + Math.random() * 150000),
-    likeCount: opts.likeCount ?? Math.floor(100 + Math.random() * 8000),
+    viewCount: opts.viewCount ?? 0,
+    likeCount: opts.likeCount ?? 0,
     pageCount: opts.pageCount,
     publishYear: opts.publishYear,
     isbn: opts.isbn,
@@ -403,8 +407,30 @@ const BOOKS: Book[] = [
   makeBook('The Princeton Companion to Mathematics', 'Timothy Gowers', 14, { rating: 4.7, ratingCount: 2800, viewCount: 58000, formats: ['PDF'], publishYear: 2008, pageCount: 1034 }),
   makeBook('What Is Mathematics?', 'Richard Courant & Herbert Robbins', 14, { rating: 4.5, ratingCount: 3100, viewCount: 65000, formats: ['PDF', 'EPUB'], publishYear: 1941, pageCount: 566 }),
 
+  // ============ HISTORY (index 18) ============
+  makeBook('The Histories', 'Herodotus', 18, { rating: 4.5, ratingCount: 3800, viewCount: 82000, formats: ['PDF', 'EPUB', 'HTML'], pageCount: 716, description: 'The foundational work of Western historiography, written in the 5th century BC — an account of the Greco-Persian Wars and the cultures surrounding the ancient Mediterranean.' }),
+  makeBook('The History of the Peloponnesian War', 'Thucydides', 18, { rating: 4.6, ratingCount: 2900, viewCount: 61000, formats: ['PDF', 'EPUB', 'HTML'], pageCount: 648 }),
+  makeBook('The History of the Decline and Fall of the Roman Empire', 'Edward Gibbon', 18, { rating: 4.5, ratingCount: 3100, viewCount: 71000, formats: ['PDF', 'EPUB', 'HTML'], publishYear: 1789, pageCount: 3396 }),
+  makeBook("A People's History of the United States", 'Howard Zinn', 18, { rating: 4.6, ratingCount: 9800, viewCount: 178000, likeCount: 16200, formats: ['PDF', 'EPUB'], publishYear: 1980, pageCount: 729 }),
+  makeBook('Guns, Germs, and Steel', 'Jared Diamond', 18, { rating: 4.5, ratingCount: 12000, viewCount: 205000, likeCount: 19800, formats: ['PDF', 'EPUB'], publishYear: 1997, pageCount: 480 }),
+  makeBook('SPQR: A History of Ancient Rome', 'Mary Beard', 18, { rating: 4.6, ratingCount: 6100, viewCount: 118000, formats: ['PDF', 'EPUB'], publishYear: 2015, pageCount: 606 }),
+  makeBook('The Guns of August', 'Barbara Tuchman', 18, { rating: 4.6, ratingCount: 4200, viewCount: 89000, formats: ['PDF', 'EPUB'], publishYear: 1962, pageCount: 511 }),
+  makeBook('1177 B.C.: The Year Civilization Collapsed', 'Eric H. Cline', 18, { rating: 4.5, ratingCount: 3600, viewCount: 74000, formats: ['PDF', 'EPUB'], publishYear: 2014, pageCount: 264 }),
+  makeBook('The Silk Roads', 'Peter Frankopan', 18, { rating: 4.4, ratingCount: 7200, viewCount: 132000, formats: ['PDF', 'EPUB'], publishYear: 2015, pageCount: 636 }),
+  makeBook('A Short History of Nearly Everything', 'Bill Bryson', 18, { rating: 4.7, ratingCount: 14500, viewCount: 245000, likeCount: 23000, formats: ['PDF', 'EPUB'], publishYear: 2003, pageCount: 544 }),
+
+  // ============ MUSIC (index 32) ============
+  makeBook('This Is Your Brain on Music', 'Daniel J. Levitin', 32, { rating: 4.5, ratingCount: 5200, viewCount: 98000, formats: ['PDF', 'EPUB'], publishYear: 2006, pageCount: 314 }),
+  makeBook('How Music Works', 'David Byrne', 32, { rating: 4.4, ratingCount: 3600, viewCount: 71000, formats: ['PDF', 'EPUB'], publishYear: 2012, pageCount: 350 }),
+  makeBook('The Rest Is Noise', 'Alex Ross', 32, { rating: 4.6, ratingCount: 3100, viewCount: 62000, formats: ['PDF', 'EPUB'], publishYear: 2007, pageCount: 624 }),
+  makeBook('A History of Western Music', 'Donald Jay Grout & Claude Palisca', 32, { rating: 4.4, ratingCount: 2400, viewCount: 48000, formats: ['PDF'], publishYear: 2013, pageCount: 984 }),
+  makeBook('Musicophilia', 'Oliver Sacks', 32, { rating: 4.5, ratingCount: 4800, viewCount: 91000, formats: ['PDF', 'EPUB'], publishYear: 2007, pageCount: 400 }),
+  makeBook('Music Theory for Dummies', 'Michael Pilhofer & Holly Day', 32, { rating: 4.3, ratingCount: 3900, viewCount: 76000, formats: ['PDF', 'EPUB'], publishYear: 2019, pageCount: 432 }),
+  makeBook('The Craft of Musical Composition', 'Paul Hindemith', 32, { rating: 4.2, ratingCount: 1200, viewCount: 26000, formats: ['PDF'], publishYear: 1937, pageCount: 216 }),
+  makeBook('Ways of Hearing', 'Damon Krukowski', 32, { rating: 4.1, ratingCount: 980, viewCount: 19000, formats: ['PDF', 'EPUB'], publishYear: 2019, pageCount: 152 }),
+
   // ============ AUDIOBOOKS ============
-  makeBook('Atomic Habits', 'James Clear', 3, { rating: 4.9, ratingCount: 22000, viewCount: 380000, likeCount: 41000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'James Clear', duration: 19200, publishYear: 2018, description: 'Tiny changes, remarkable results. James Clear reveals how small habits compound into life-changing outcomes. The #1 most-downloaded free audiobook on ANYFREEBOOK.' }),
+  makeBook('Atomic Habits', 'James Clear', 3, { rating: 4.9, ratingCount: 22000, viewCount: 380000, likeCount: 41000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'James Clear', duration: 19200, publishYear: 2018, description: 'Tiny changes, remarkable results. James Clear reveals how small habits compound into life-changing outcomes. This is a commercial title — check the verified free sources on this page, or read a genuinely free habits book instead.' }),
   makeBook('Deep Work', 'Cal Newport', 3, { rating: 4.6, ratingCount: 8400, viewCount: 171000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Jeff Bottoms', duration: 28800, publishYear: 2016 }),
   makeBook('The 48 Laws of Power', 'Robert Greene', 3, { rating: 4.5, ratingCount: 11000, viewCount: 195000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Richard Poe', duration: 86400, publishYear: 1998 }),
   makeBook('Dune', 'Frank Herbert', 6, { rating: 4.8, ratingCount: 15000, viewCount: 225000, likeCount: 19550, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Scott Brick', duration: 79200, publishYear: 1965 }),

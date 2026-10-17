@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 
@@ -43,14 +43,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
+  const lastLoadedUserId = useRef<string | null>(null);
 
-  const loadProfile = useCallback(async (userId: string) => {
+  const loadProfile = useCallback(async (userId: string, force = false) => {
+    if (!force && lastLoadedUserId.current === userId) return;
+    lastLoadedUserId.current = userId;
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
     setProfile(data as Profile | null);
   }, [supabase]);
 
   const refreshProfile = useCallback(async () => {
-    if (user) await loadProfile(user.id);
+    if (user) await loadProfile(user.id, true);
   }, [user, loadProfile]);
 
   useEffect(() => {
@@ -65,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.user) {
         loadProfile(session.user.id);
       } else {
+        lastLoadedUserId.current = null;
         setProfile(null);
       }
     });

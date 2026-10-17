@@ -46,6 +46,7 @@ export async function createClassroom(input: {
   durationMin?: number;
   visibility: 'public' | 'private';
   publicationId?: string | null;
+  institutionId?: string | null;
 }): Promise<{ error: string | null; roomCode?: string; inviteToken?: string | null }> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -65,6 +66,7 @@ export async function createClassroom(input: {
     visibility: input.visibility,
     scheduled_at: input.scheduledAt,
     duration_min: input.durationMin || 60,
+    institution_id: input.institutionId || null,
   });
 
   if (error) return { error: error.message };

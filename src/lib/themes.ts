@@ -214,5 +214,10 @@ export function saveCustomGradient(custom: CustomGradientTheme) {
 export function loadCustomGradient(): CustomGradientTheme | null {
   if (typeof window === 'undefined') return null;
   const saved = localStorage.getItem('anyfreebook-custom-gradient');
-  return saved ? JSON.parse(saved) : null;
+  // Corrupted storage must not white-screen the site — fall back to no gradient.
+  try {
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
 }

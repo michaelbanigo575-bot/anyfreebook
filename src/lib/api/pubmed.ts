@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 interface ESearchResponse {
@@ -30,12 +31,13 @@ function summaryToBook(item: ESummaryResult): Book {
     slug: `${slug}-pmc-${item.uid}`.slice(0, 100),
     coverUrl: null,
     description: `Free open-access research article from PubMed Central${item.fulljournalname ? ` — ${item.fulljournalname}` : ''}. ${year ? `Published ${year}.` : ''}`,
-    rating: +(3.8 + Math.random() * 1.0).toFixed(1),
-    ratingCount: Math.floor(20 + Math.random() * 500),
+    // PubMed returns no ratings or engagement metrics for an article record.
+    rating: 0,
+    ratingCount: 0,
     contentType: 'BOOK',
     formats: ['HTML', 'PDF'],
-    viewCount: Math.floor(500 + Math.random() * 10000),
-    likeCount: Math.floor(20 + Math.random() * 500),
+    viewCount: 0,
+    likeCount: 0,
     publishYear: year && !isNaN(year) ? year : undefined,
     language: 'en',
     category: { name: 'Medicine', slug: 'free-medicine-books' },
@@ -50,14 +52,14 @@ function summaryToBook(item: ESummaryResult): Book {
 export async function searchPubMed(query: string, retstart = 0, retmax = 20): Promise<{ books: Book[]; total: number }> {
   const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pmc&term=${encodeURIComponent(query)}+AND+open+access[filter]&retstart=${retstart}&retmax=${retmax}&retmode=json`;
 
-  const searchRes = await fetch(searchUrl, { next: { revalidate: 3600 } });
+  const searchRes = await fetch(searchUrl, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!searchRes.ok) return { books: [], total: 0 };
   const searchData: ESearchResponse = await searchRes.json();
   const ids = searchData.esearchresult.idlist;
   if (!ids || ids.length === 0) return { books: [], total: 0 };
 
   const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pmc&id=${ids.join(',')}&retmode=json`;
-  const summaryRes = await fetch(summaryUrl, { next: { revalidate: 3600 } });
+  const summaryRes = await fetch(summaryUrl, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!summaryRes.ok) return { books: [], total: 0 };
   const summaryData: ESummaryResponse = await summaryRes.json();
 

@@ -1,3 +1,4 @@
+import { UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 // gutendex.com blocks requests with no/generic User-Agent (common anti-bot behavior
@@ -62,12 +63,14 @@ function gutenbergToBook(g: GutenbergBook): Book {
     slug: `${slug}-pg-${g.id}`,
     coverUrl,
     description: `Free public domain book from Project Gutenberg. ${g.subjects.slice(0, 3).join(', ')}. Downloaded ${g.download_count.toLocaleString()} times.`,
-    rating: +(3.5 + Math.random() * 1.3).toFixed(1),
-    ratingCount: Math.floor(g.download_count / 100),
+    rating: 0,
+    ratingCount: 0,
     contentType: 'BOOK',
     formats: available.map(f => f.name),
     viewCount: g.download_count,
-    likeCount: Math.floor(g.download_count / 20),
+    // Gutendex reports no likes. Deriving them from downloads would invent a
+    // number, so we leave it at 0 and the UI omits the likes stat.
+    likeCount: 0,
     language: g.languages[0] || 'en',
     category: mapCategory(g.subjects, g.bookshelves),
     sourceUrl: `https://www.gutenberg.org/ebooks/${g.id}`,
@@ -89,7 +92,7 @@ async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ boo
   const q = query === '*' ? 'collection:gutenberg' : `${query} AND collection:gutenberg`;
   const sort = query === '*' ? '&sort[]=downloads+desc' : '';
   const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&rows=32&page=${page}${sort}&output=json`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) {
     console.error(`[gutenberg] archive fallback failed: ${res.status} ${res.statusText}`);
     return { books: [], total: 0 };
@@ -113,12 +116,12 @@ async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ boo
       slug: pgId ? `${slug}-pg-${pgId}` : `${slug}-ia-${d.identifier}`.slice(0, 100),
       coverUrl: `https://archive.org/services/img/${d.identifier}`,
       description: `Free public domain book from Project Gutenberg. ${subjects.slice(0, 3).join(', ')}`,
-      rating: +(3.5 + Math.random() * 1.3).toFixed(1),
-      ratingCount: Math.floor((d.downloads || 1000) / 100),
+      rating: 0,
+      ratingCount: 0,
       contentType: 'BOOK' as const,
       formats: ['HTML', 'EPUB', 'TXT'],
-      viewCount: d.downloads || Math.floor(1000 + Math.random() * 20000),
-      likeCount: Math.floor((d.downloads || 1000) / 20),
+      viewCount: d.downloads || 0,
+      likeCount: 0,
       publishYear: d.year ? parseInt(d.year) : undefined,
       language: 'en',
       category: mapCategory(subjects, []),
@@ -137,7 +140,7 @@ async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ boo
 export async function searchGutenberg(query: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?search=${encodeURIComponent(query)}&page=${page}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS, signal: UPSTREAM_TIMEOUT() });
     if (!res.ok) {
       console.error(`[gutenberg] gutendex failed (${res.status}), using archive.org fallback`);
       return searchGutenbergViaArchive(query, page);
@@ -157,7 +160,7 @@ export async function searchGutenberg(query: string, page = 1): Promise<{ books:
 export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?sort=popular&page=${page}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+    const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS, signal: UPSTREAM_TIMEOUT() });
     if (!res.ok) {
       console.error(`[gutenberg] popular failed (${res.status}), using archive.org fallback`);
       return searchGutenbergViaArchive('*', page);
@@ -176,7 +179,7 @@ export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; to
 
 export async function getGutenbergByTopic(topic: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?topic=${encodeURIComponent(topic)}&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS });
+  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) {
     console.error(`[gutenberg] topic request failed: ${res.status} ${res.statusText}`);
     return { books: [], total: 0 };

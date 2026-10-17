@@ -42,6 +42,7 @@ export default async function CreatorDashboardPage() {
       earnings={earnings}
       tier={tier}
       config={config}
+      dailyReads={dash.dailyReads}
     />
   );
 }

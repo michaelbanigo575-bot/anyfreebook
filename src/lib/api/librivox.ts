@@ -1,4 +1,5 @@
 import type { Book } from '../data';
+import { UPSTREAM_TIMEOUT } from './http';
 
 interface LibrivoxBook {
   id: string;
@@ -21,9 +22,10 @@ function authorName(authors: LibrivoxBook['authors']): string {
   return authors.map(a => [a.first_name, a.last_name].filter(Boolean).join(' ')).join(', ') || 'Unknown';
 }
 
-function librivoxToBook(b: LibrivoxBook): Book {
+function librivoxToBook(b: LibrivoxBook): Book | null {
+  if (!b.url_librivox) return null; // no real per-title page to link to — skip rather than point at the homepage
   const slug = b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80);
-  const url = b.url_librivox || `https://librivox.org/`;
+  const url = b.url_librivox;
 
   return {
     id: `lv-${b.id}`,
@@ -32,17 +34,18 @@ function librivoxToBook(b: LibrivoxBook): Book {
     slug: `${slug}-lv-${b.id}`.slice(0, 100),
     coverUrl: null,
     description: (b.description || `Free public-domain audiobook from LibriVox, read by volunteers.`).slice(0, 300),
-    rating: +(3.6 + Math.random() * 1.2).toFixed(1),
-    ratingCount: Math.floor(50 + Math.random() * 2000),
+    // LibriVox's API reports no ratings or play counts.
+    rating: 0,
+    ratingCount: 0,
     contentType: 'AUDIOBOOK',
     formats: ['MP3'],
-    viewCount: Math.floor(1000 + Math.random() * 30000),
-    likeCount: Math.floor(50 + Math.random() * 1500),
+    viewCount: 0,
+    likeCount: 0,
     duration: b.totaltimesecs,
     language: (b.language || 'English').slice(0, 2).toLowerCase() === 'en' ? 'en' : (b.language || 'en'),
     category: { name: 'Arts & Humanities', slug: 'free-arts-books' },
     sourceUrl: url,
-    sourceType: 'archive' as const,
+    sourceType: 'librivox' as const,
     downloadLinks: [
       { label: 'Listen on LibriVox', url, source: 'LibriVox' },
     ],
@@ -52,10 +55,10 @@ function librivoxToBook(b: LibrivoxBook): Book {
 export async function searchLibrivox(query: string, limit = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://librivox.org/api/feed/audiobooks/?title=^${encodeURIComponent(query)}&format=json&limit=${limit}`;
   try {
-    const res = await fetch(url, { next: { revalidate: 3600 }, signal: AbortSignal.timeout(10000) });
+    const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
     if (!res.ok) return { books: [], total: 0 };
     const data: LibrivoxResponse = await res.json();
-    const books = (data.books || []).filter(b => b.title).map(librivoxToBook);
+    const books = (data.books || []).filter(b => b.title).map(librivoxToBook).filter((b): b is Book => b !== null);
     return { books, total: books.length };
   } catch {
     return { books: [], total: 0 };

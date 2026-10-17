@@ -1,4 +1,5 @@
 import type { Book } from './data';
+import type { SourceTier } from './api/resolveSource';
 
 export function websiteSchema() {
   return {
@@ -41,12 +42,17 @@ export function organizationSchema() {
   };
 }
 
-export function bookSchema(book: Book) {
+export function bookSchema(book: Book, tier: SourceTier = 'download') {
+  const isFreeToDownload = tier === 'download';
+  const claim = isFreeToDownload ? 'Free Download' : tier === 'borrow' ? 'Available to Borrow Free' : 'Where to Find It Free';
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Book',
     name: book.title,
-    headline: `${book.title} — Free Download`,
+    // The headline must never claim "Free Download" unless we verified a
+    // public-domain full text. This string is indexed by search engines.
+    headline: `${book.title} — ${claim}`,
     author: { '@type': 'Person', name: book.author },
     description: book.description,
     url: `https://anyfreebook.com/book/${book.slug}`,
@@ -58,16 +64,22 @@ export function bookSchema(book: Book) {
     datePublished: book.publishYear ? `${book.publishYear}` : undefined,
     isbn: book.isbn || undefined,
     publisher: book.publisher ? { '@type': 'Organization', name: book.publisher } : undefined,
-    offers: {
+  };
+
+  // Only advertise a free price when a free copy is actually verified.
+  // For 'borrow' (Controlled Digital Lending) and 'unverified' we emit no Offer,
+  // because price:0 + InStock tells Google the book is a free download.
+  if (isFreeToDownload) {
+    schema.offers = {
       '@type': 'Offer',
       price: '0',
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       url: `https://anyfreebook.com/book/${book.slug}`,
-    },
-  };
+    };
+  }
 
-  if (book.rating && book.ratingCount > 0) {
+  if (book.rating > 0 && book.ratingCount > 0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
       ratingValue: book.rating.toFixed(1),
@@ -154,7 +166,9 @@ export function collectionSchema(title: string, books: Book[]) {
         author: { '@type': 'Person', name: book.author },
         url: `https://anyfreebook.com/book/${book.slug}`,
         image: book.coverUrl,
-        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        // No Offer here on purpose: collections mix public-domain works with
+        // in-copyright textbooks, so a blanket price:0 would be a false claim.
+        // Per-book availability is expressed by each book's own page schema.
       },
     })),
   };

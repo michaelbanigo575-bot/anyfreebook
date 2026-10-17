@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { createClassroom } from '@/lib/classrooms/client';
+import { listMyInstitutions, type Institution, type InstitutionMember } from '@/lib/institutions/client';
 import { createClient } from '@/lib/supabase/client';
 
 interface PubOption { id: string; title: string }
@@ -21,11 +22,16 @@ export default function NewClassroomPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ roomCode: string; inviteToken: string | null } | null>(null);
+  const [hostAsInstitutions, setHostAsInstitutions] = useState<(InstitutionMember & { institution: Institution })[]>([]);
+  const [institutionId, setInstitutionId] = useState('');
 
   useEffect(() => {
     if (!user) return;
     createClient().from('publications').select('id, title').eq('author_id', user.id).eq('status', 'published')
       .then(({ data }) => setPubs((data as PubOption[]) || []));
+    listMyInstitutions().then(memberships => {
+      setHostAsInstitutions(memberships.filter(m => ['owner', 'admin', 'teacher'].includes(m.role)));
+    });
   }, [user]);
 
   if (!loading && !user) {
@@ -83,6 +89,7 @@ export default function NewClassroomPage() {
     const { error, roomCode, inviteToken } = await createClassroom({
       title, description, scheduledAt: scheduledAt.toISOString(),
       durationMin: duration, visibility, publicationId: publicationId || null,
+      institutionId: institutionId || null,
     });
     setSaving(false);
     if (error) { setError(error); return; }
@@ -126,6 +133,15 @@ export default function NewClassroomPage() {
       <p className="text-sm text-[var(--text-muted)] mb-6">Teach from your published work — live video, screen sharing, and chat, right on ANYFREEBOOK.</p>
 
       <div className="space-y-4">
+        {hostAsInstitutions.length > 0 && (
+          <div>
+            <label className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5 block">Host as</label>
+            <select value={institutionId} onChange={e => setInstitutionId(e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--primary)]">
+              <option value="">Myself</option>
+              {hostAsInstitutions.map(m => <option key={m.institution.id} value={m.institution.id}>{m.institution.name}</option>)}
+            </select>
+          </div>
+        )}
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}

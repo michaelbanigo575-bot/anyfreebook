@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getPublicationBySlug, getPublishedChapters } from '@/lib/creators/server';
 import { getLiveClassForAuthor } from '@/lib/classrooms/server';
+import { getInstitutionById } from '@/lib/institutions/server';
 import { PublicationContent } from '@/components/PublicationContent';
 import { ReadTracker } from '@/components/ReadTracker';
 import { ReaderFooterAd } from '@/components/ReaderFooterAd';
@@ -41,6 +42,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
 
   const chapters = await getPublishedChapters(pub.id);
   const liveClass = author ? await getLiveClassForAuthor(author.id) : null;
+  const institution = pub.institution_id ? await getInstitutionById(pub.institution_id) : null;
   const chParam = parseInt(searchParams.ch || '', 10);
   const activeIdx = chapters.length > 0 && chParam >= 1 && chParam <= chapters.length ? chParam - 1 : null;
   const activeChapter = activeIdx !== null ? chapters[activeIdx] : null;
@@ -76,27 +78,45 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)] leading-tight">{pub.title}</h1>
         {pub.subtitle && <p className="mt-2 text-lg text-[var(--text-secondary)]">{pub.subtitle}</p>}
 
-        {/* Author byline */}
+        {/* Author byline (or institution branding when posted on behalf of an org) */}
         <div className="flex items-center gap-3 mt-5 pb-5 border-b border-[var(--border-subtle)]">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold">
-            {(author?.display_name || 'A').slice(0, 1).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            {author?.creator_handle ? (
-              <Link href={`/author/${author.creator_handle}`} className="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">{author.display_name || 'Author'}</Link>
-            ) : (
-              <span className="text-sm font-semibold text-[var(--text)]">{author?.display_name || 'Author'}</span>
-            )}
-            <div className="text-[11px] text-[var(--text-muted)]">
-              {fmt(author?.follower_count || 0)} readers · {fmt(pub.view_count)} reads · {fmt(pub.read_count)} verified reads
-            </div>
-            {liveClass && (
-              <Link href={`/class/${liveClass.room_code}`} className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors">
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE — teaching now →
-              </Link>
-            )}
-          </div>
-          {author && <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} size="sm" />}
+          {institution ? (
+            <>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold overflow-hidden">
+                {institution.logo_url ? <img src={institution.logo_url} alt="" className="w-full h-full object-cover" /> : (institution.name || 'I').slice(0, 1).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <Link href={`/institutions/${institution.slug}`} className="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">
+                  {institution.name}{institution.verified && <span className="ml-1 text-[var(--primary)]">✓</span>}
+                </Link>
+                <div className="text-[11px] text-[var(--text-muted)]">
+                  {fmt(pub.view_count)} reads · {fmt(pub.read_count)} verified reads
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold">
+                {(author?.display_name || 'A').slice(0, 1).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                {author?.creator_handle ? (
+                  <Link href={`/author/${author.creator_handle}`} className="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">{author.display_name || 'Author'}</Link>
+                ) : (
+                  <span className="text-sm font-semibold text-[var(--text)]">{author?.display_name || 'Author'}</span>
+                )}
+                <div className="text-[11px] text-[var(--text-muted)]">
+                  {fmt(author?.follower_count || 0)} readers · {fmt(pub.view_count)} reads · {fmt(pub.read_count)} verified reads
+                </div>
+                {liveClass && (
+                  <Link href={`/class/${liveClass.room_code}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE — teaching now →
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
+          {!institution && author && <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} size="sm" />}
         </div>
       </header>
 

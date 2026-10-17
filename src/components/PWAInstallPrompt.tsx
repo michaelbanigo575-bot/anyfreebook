@@ -58,7 +58,7 @@ export function PWAInstallPrompt() {
             <p className="text-sm font-semibold text-[var(--text)]">Install ANYFREEBOOK</p>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">Quick access, offline reading, background audio</p>
           </div>
-          <button onClick={dismiss} className="text-[var(--text-muted)] hover:text-[var(--text)] p-1">
+          <button onClick={dismiss} aria-label="Dismiss install prompt" className="text-[var(--text-muted)] hover:text-[var(--text)] p-1">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
           </button>
         </div>

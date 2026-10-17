@@ -9,29 +9,58 @@ interface SavingsShareCardProps {
   onClose?: () => void;
 }
 
+// We only make a "you saved $X" claim when we were given a REAL retail price by
+// the caller. We never invent a price to make the maths look impressive, and we
+// never post a savings figure to social media that we did not actually receive.
 const SHARE_MESSAGES = [
-  (title: string, price: string) => `I just got "${title}" for FREE on ANYFREEBOOK — you'd pay ${price} elsewhere! 📚`,
-  (title: string, price: string) => `Why pay ${price} for "${title}" when you can read it free? Found it on ANYFREEBOOK 🔥`,
-  (title: string, price: string) => `Just saved ${price} on "${title}" with ANYFREEBOOK — the world's largest free book aggregator!`,
+  (title: string, price: number | null) => price
+    ? `I just got "${title}" for FREE on ANYFREEBOOK — you'd pay $${price} elsewhere! 📚`
+    : `I just got "${title}" for FREE on ANYFREEBOOK 📚 — genuinely open-access, no paywall.`,
+  (title: string, price: number | null) => price
+    ? `Why pay $${price} for "${title}" when you can read it free? Found it on ANYFREEBOOK 🔥`
+    : `Found "${title}" free to read on ANYFREEBOOK 🔥 — no paywall, no signup.`,
+  (title: string, price: number | null) => price
+    ? `Just saved $${price} on "${title}" with ANYFREEBOOK.`
+    : `Read "${title}" free on ANYFREEBOOK.`,
 ];
 
+const EMPTY_SAVINGS = { total: 0, books: 0 };
+
+function readSavings(): { total: number; books: number } {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('afb_savings') || JSON.stringify(EMPTY_SAVINGS));
+    return {
+      total: Number(parsed?.total) || 0,
+      books: Number(parsed?.books) || 0,
+    };
+  } catch {
+    // Corrupted storage must not crash the component.
+    return { ...EMPTY_SAVINGS };
+  }
+}
+
 export function SavingsShareCard({ bookTitle, bookAuthor, retailPrice, onClose }: SavingsShareCardProps) {
-  const [price] = useState(() => retailPrice || Math.floor(15 + Math.random() * 60));
+  // price is null when the caller had no verified retail price for this title.
+  const [price] = useState<number | null>(() => (retailPrice && retailPrice > 0 ? retailPrice : null));
   const [totalSaved, setTotalSaved] = useState(0);
   const [booksRead, setBooksRead] = useState(0);
   const [showCopied, setShowCopied] = useState(false);
   const [shareUrl, setShareUrl] = useState('https://anyfreebook.com');
-  const shareMsg = useState(() => SHARE_MESSAGES[Math.floor(Math.random() * SHARE_MESSAGES.length)](bookTitle, `$${price}`))[0];
+  const shareMsg = useState(() => SHARE_MESSAGES[Math.floor(Math.random() * SHARE_MESSAGES.length)](bookTitle, price))[0];
 
   useEffect(() => {
     setShareUrl(window.location.href);
   }, []);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('afb_savings') || '{"total":0,"books":0}');
-    saved.total += price;
+    const saved = readSavings();
+    // Only accumulate a real saving. Without a verified retail price we still
+    // count the book read, but we add $0 rather than an invented amount.
+    if (price) saved.total += price;
     saved.books += 1;
-    localStorage.setItem('afb_savings', JSON.stringify(saved));
+    try {
+      localStorage.setItem('afb_savings', JSON.stringify(saved));
+    } catch {}
     setTotalSaved(saved.total);
     setBooksRead(saved.books);
   }, [price]);
@@ -59,8 +88,17 @@ export function SavingsShareCard({ bookTitle, bookAuthor, retailPrice, onClose }
       <div className="relative w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden">
         {/* Celebration header */}
         <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-8 text-center text-white">
-          <p className="text-sm font-medium opacity-90 mb-1">🎉 You just saved</p>
-          <p className="text-5xl font-bold font-mono">${price}</p>
+          {price ? (
+            <>
+              <p className="text-sm font-medium opacity-90 mb-1">🎉 You just saved</p>
+              <p className="text-5xl font-bold font-mono">${price}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-medium opacity-90 mb-1">🎉 You just read a book</p>
+              <p className="text-4xl font-bold font-mono">FREE</p>
+            </>
+          )}
           <p className="text-sm opacity-80 mt-2">on &ldquo;{bookTitle}&rdquo;</p>
         </div>
 
@@ -105,6 +143,7 @@ export function SavingsShareCard({ bookTitle, bookAuthor, retailPrice, onClose }
         {/* Close */}
         <button
           onClick={onClose}
+          aria-label="Close savings summary"
           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
@@ -118,8 +157,7 @@ export function SavingsBadge() {
   const [savings, setSavings] = useState({ total: 0, books: 0 });
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('afb_savings') || '{"total":0,"books":0}');
-    setSavings(saved);
+    setSavings(readSavings());
   }, []);
 
   if (savings.total === 0) return null;

@@ -8,7 +8,7 @@ export function websiteSchema() {
     name: 'ANYFREEBOOK',
     alternateName: 'Any Free Book',
     url: 'https://anyfreebook.com',
-    description: "The world's largest free book aggregator. 1,700,000+ free books, audiobooks, comics, and magazines across 500+ professions.",
+    description: "A free book aggregator. Curated books plus live results from 7 open-access sources.",
     publisher: organizationSchema(),
     potentialAction: {
       '@type': 'SearchAction',

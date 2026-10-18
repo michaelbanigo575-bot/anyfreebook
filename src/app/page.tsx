@@ -13,28 +13,49 @@ import { searchArchive } from '@/lib/api/archive';
 import { LiveTrendingSection } from '@/components/LiveTrendingSection';
 import { cardClass } from '@/lib/ui';
 
-// Serve the homepage from cache for 5 minutes instead of hitting 4 external
-// book APIs on every single visitor — critical under a traffic spike (a
-// launch post, etc.), where uncached external calls would slow the page or
-// get the site rate-limited by those APIs.
+// Serve the homepage from cache instead of hitting 5 external book APIs on
+// every visitor — critical under a traffic spike (a launch post, etc.), where
+// uncached external calls would slow the page or get the site rate-limited by
+// those APIs.
 export const revalidate = 300;
+
+/**
+ * Hard ceiling on how long the homepage may wait for third-party APIs.
+ *
+ * The adapters themselves abort at 10s, so a slow upstream could hold the
+ * homepage open for ~11s. Google's crawler gives up around 10s and records
+ * the site as "down or unavailable" — which is what happened to our AdSense
+ * review. 3s keeps us comfortably inside that budget: anything slower is
+ * dropped and we fall back to the local catalog, which always responds.
+ */
+const HOMEPAGE_API_BUDGET_MS = 3000;
 
 async function fetchLiveBooks() {
   try {
+    // Each call is individually capped at 3s. allSettled means a timeout
+    // costs us that one shelf, never the page.
+    const withBudget = <T,>(p: Promise<T>): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('homepage api budget exceeded')), HOMEPAGE_API_BUDGET_MS)
+        ),
+      ]);
+
     const [gutenberg, openlib, google, archive, fiction] = await Promise.allSettled([
-      getGutenbergPopular(1),
-      getOpenLibrarySubject('popular', 20, 0),
-      searchGoogleBooks('bestseller', 0, 20),
-      searchArchive('popular books', 1, 20),
-      getOpenLibrarySubject('fiction', 20, 0),
+      withBudget(getGutenbergPopular(1)),
+      withBudget(getOpenLibrarySubject('popular', 20, 0)),
+      withBudget(searchGoogleBooks('bestseller', 0, 20)),
+      withBudget(searchArchive('popular books', 1, 20)),
+      withBudget(getOpenLibrarySubject('fiction', 20, 0)),
     ]);
 
     const books = [
-      ...(gutenberg.status === 'fulfilled' ? gutenberg.value.books.slice(0, 15) : []),
-      ...(openlib.status === 'fulfilled' ? openlib.value.books.slice(0, 15) : []),
-      ...(google.status === 'fulfilled' ? google.value.books.slice(0, 15) : []),
-      ...(archive.status === 'fulfilled' ? archive.value.books.slice(0, 15) : []),
-      ...(fiction.status === 'fulfilled' ? fiction.value.books.slice(0, 15) : []),
+      ...(gutenberg.status === 'fulfilled' && gutenberg.value ? gutenberg.value.books.slice(0, 15) : []),
+      ...(openlib.status === 'fulfilled' && openlib.value ? openlib.value.books.slice(0, 15) : []),
+      ...(google.status === 'fulfilled' && google.value ? google.value.books.slice(0, 15) : []),
+      ...(archive.status === 'fulfilled' && archive.value ? archive.value.books.slice(0, 15) : []),
+      ...(fiction.status === 'fulfilled' && fiction.value ? fiction.value.books.slice(0, 15) : []),
     ];
 
     return books;
@@ -77,7 +98,7 @@ export default async function HomePage() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--primary)] font-mono text-xs tracking-widest font-semibold">
-              5,000,000+ FREE BOOKS FROM 6 SOURCES
+              240+ CURATED BOOKS FROM 7 OPEN SOURCES
             </span>
           </div>
 
@@ -88,7 +109,7 @@ export default async function HomePage() {
           </h1>
 
           <p className="mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            The world&apos;s largest free book aggregator — pulling live from
+            The free book aggregator — pulling live from
             Open Library, Project Gutenberg, Google Books, Internet Archive, PubMed Central, and DOAJ.
           </p>
 
@@ -156,7 +177,7 @@ export default async function HomePage() {
       <section className="bg-[var(--bg-secondary)] py-16 mt-12 border-y border-[var(--border-subtle)]">
         <div className="content-wrapper">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <StatBlock number="5M+" label="Free Books" />
+            <StatBlock number="240+" label="Free Books" />
             <StatBlock number="70K+" label="Gutenberg Titles" />
             <StatBlock number="6" label="Live Sources" />
             <StatBlock number="∞" label="Formats" />
@@ -184,7 +205,7 @@ export default async function HomePage() {
         <div className="max-w-3xl space-y-3">
           {[
             { q: 'Is ANYFREEBOOK really free?', a: 'Yes, 100%. Every book is sourced from legal, open-access repositories like Project Gutenberg, Open Library, and Google Books. No sign-up or credit card required.' },
-            { q: 'How many free books are available?', a: 'We aggregate 5M+ books from Open Library, 70K+ from Project Gutenberg, and thousands of free ebooks from Google Books — all searchable in one place.' },
+            { q: 'How many free books are available?', a: 'We aggregate curated books from Open Library, 70K+ from Project Gutenberg, and thousands of free ebooks from Google Books — all searchable in one place.' },
             { q: 'What formats are available?', a: 'Books come in PDF, EPUB, HTML, and plain text. Available formats depend on the source. Each book links to its original source for download.' },
             { q: 'Where do the books come from?', a: 'ANYFREEBOOK pulls live data from Open Library (Internet Archive), Project Gutenberg, and Google Books. All are legal, open-access sources.' },
             { q: 'Can I download the books?', a: 'Yes! Each book links directly to its source for reading online or downloading. We aggregate and link — the books live on their original platforms.' },

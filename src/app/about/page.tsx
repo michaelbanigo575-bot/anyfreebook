@@ -3,7 +3,7 @@ import { StatBlock } from '@/components/StatBlock';
 
 export const metadata: Metadata = {
   title: 'About ANYFREEBOOK — Our Mission',
-  description: 'ANYFREEBOOK is the world\'s largest free book aggregator. Learn about our mission to make knowledge accessible to everyone.',
+  description: 'ANYFREEBOOK is a free book aggregator that pulls live results from open-access sources. Learn about our mission to make knowledge accessible to everyone.',
 };
 
 export default function AboutPage() {
@@ -22,7 +22,7 @@ export default function AboutPage() {
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-12 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
-          <StatBlock number="1.7M+" label="Free Books" />
+          <StatBlock number="240+" label="Free Books" />
           <StatBlock number="45K+" label="Audiobooks" />
           <StatBlock number="500+" label="Professions" />
           <StatBlock number="40+" label="Sources" />

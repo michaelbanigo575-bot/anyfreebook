@@ -68,7 +68,7 @@ const linkGroups = [
               <span className="font-display font-bold text-lg text-[var(--text)]">ANYFREEBOOK</span>
             </div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-              The world&apos;s largest free book aggregator. 5M+ free books, textbooks & papers from 6 open-access sources.
+              A free book aggregator. 240+ curated free books, textbooks & papers from 7 open-access sources.
             </p>
             <div className="flex gap-3 mt-4">
               {SOCIAL_LINKS.map(social => (

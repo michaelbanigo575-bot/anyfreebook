@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   if (!category) return {};
   return {
     title: `Free ${category.name} Books — ${category.bookCount.toLocaleString()}+ Free Downloads`,
-    description: `Download ${category.bookCount.toLocaleString()}+ free ${category.name.toLowerCase()} books in PDF, EPUB, and more. ${category.description}. 100% free and legal.`,
+    description: `Download ${category.bookCount.toLocaleString()}+ free ${category.name.toLowerCase()} books in PDF, EPUB, and more. ${category.description}. verified free and legal.`,
     openGraph: {
       title: `Free ${category.name} Books — ${category.bookCount.toLocaleString()}+ Downloads`,
       description: `${category.description}. Download free ${category.name.toLowerCase()} books in PDF, EPUB, and more.`,

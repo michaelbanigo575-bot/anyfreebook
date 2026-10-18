@@ -16,7 +16,7 @@ export function SocialShareButtons({ title, url, description }: SocialShareButto
     if (!url) setShareUrl(window.location.href);
   }, [url]);
 
-  const shareText = `Check out "${title}" for FREE on ANYFREEBOOK — the world's largest free book aggregator! 📚`;
+  const shareText = `Check out "${title}" for FREE on ANYFREEBOOK — a free book aggregator! 📚`;
 
   const share = async () => {
     if (navigator.share) {

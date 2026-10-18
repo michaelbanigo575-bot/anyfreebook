@@ -2,10 +2,10 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Free Textbooks for Universities & Students — ANYFREEBOOK',
-  description: 'Partner with ANYFREEBOOK to give your students free access to 5M+ textbooks, academic papers, and course materials from Open Library, Project Gutenberg, and Google Books.',
+  description: 'Partner with ANYFREEBOOK to give your students free access to curated books and academic papers, and course materials from Open Library, Project Gutenberg, and Google Books.',
   openGraph: {
     title: 'Free Textbooks for Universities & Students',
-    description: 'Give your students free access to 5M+ textbooks and course materials.',
+    description: 'Give your students free access to 240+ textbooks and course materials.',
   },
 };
 
@@ -52,7 +52,7 @@ export default function UniversitiesPage() {
           <span className="gradient-text">textbooks and meals</span>
         </h1>
         <p className="mt-6 text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
-          ANYFREEBOOK gives every student free access to 5,000,000+ textbooks, academic papers,
+          ANYFREEBOOK gives every student free access to curated books, academic papers,
           and course materials from the world&apos;s largest open-access repositories.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -69,7 +69,7 @@ export default function UniversitiesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
         {[
           { number: '$1,200', label: 'Avg savings per student/year' },
-          { number: '5M+', label: 'Free books available' },
+          { number: '240+', label: 'Free books available' },
           { number: '50+', label: 'Languages supported' },
           { number: '3', label: 'Major source libraries' },
         ].map(stat => (

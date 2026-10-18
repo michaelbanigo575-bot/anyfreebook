@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Free Textbook Alternatives — Save $1,200+/Year | ANYFREEBOOK',
-  description: 'Find free alternatives to expensive textbooks. Search 5M+ free books from Open Library, Project Gutenberg & Google Books. No sign-up required.',
+  description: 'Find free alternatives to expensive textbooks. Search 240+ curated free books from Open Library, Project Gutenberg & Google Books. No sign-up required.',
   keywords: ['free textbook alternatives', 'free college textbooks', 'open textbook', 'free PDF textbooks', 'textbook savings', 'OER textbooks'],
   openGraph: {
     title: 'Free Textbook Alternatives — Save $1,200+/Year',
@@ -27,7 +27,7 @@ const POPULAR_TEXTBOOKS = [
 ];
 
 const SOURCES = [
-  { name: 'Open Library', books: '5M+', desc: 'Internet Archive\'s lending library with millions of scanned books', url: 'https://openlibrary.org' },
+  { name: 'Open Library', books: '240+', desc: 'Internet Archive\'s lending library with millions of scanned books', url: 'https://openlibrary.org' },
   { name: 'Project Gutenberg', books: '70K+', desc: 'Public domain ebooks, mostly classic literature and older textbooks', url: 'https://gutenberg.org' },
   { name: 'Google Books', books: '10K+', desc: 'Free ebooks from Google\'s book scanning project', url: 'https://books.google.com' },
   { name: 'OpenStax', books: '50+', desc: 'Peer-reviewed, openly licensed textbooks by Rice University', url: 'https://openstax.org' },
@@ -46,7 +46,7 @@ export default function FreeTextbookAlternativesPage() {
           '@context': 'https://schema.org',
           '@type': 'FAQPage',
           mainEntity: [
-            { '@type': 'Question', name: 'Where can I find free textbooks online?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK aggregates 5M+ free books from Open Library, Project Gutenberg, and Google Books. Search any textbook title to find free legal alternatives in PDF, EPUB, and HTML formats.' }},
+            { '@type': 'Question', name: 'Where can I find free textbooks online?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK aggregates 240+ curated free books from Open Library, Project Gutenberg, and Google Books. Search any textbook title to find free legal alternatives in PDF, EPUB, and HTML formats.' }},
             { '@type': 'Question', name: 'Are free textbook alternatives legal?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. All books on ANYFREEBOOK come from legal sources: public domain works, Creative Commons publications, open educational resources (OER), and library lending programs like Internet Archive.' }},
             { '@type': 'Question', name: 'How much can I save on textbooks?', acceptedAnswer: { '@type': 'Answer', text: 'The average college student spends $1,200+ per year on textbooks. By using free alternatives from ANYFREEBOOK, students can save 80-100% of their textbook costs.' }},
           ],
@@ -137,7 +137,7 @@ export default function FreeTextbookAlternativesPage() {
       {/* CTA */}
       <div className="mt-12 text-center py-10 px-6 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
         <h2 className="text-2xl font-display font-bold mb-2">Stop overpaying for textbooks</h2>
-        <p className="opacity-90 mb-6">Search 5,000,000+ free books right now. No sign-up required.</p>
+        <p className="opacity-90 mb-6">Search 240+ curated free books right now. No sign-up required.</p>
         <Link
           href="/search"
           className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-[var(--primary)] font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"

@@ -82,12 +82,12 @@ export function ReferralSystem() {
   };
 
   const shareWhatsApp = () => {
-    const msg = `Hey! I found this amazing site with 5M+ free books — textbooks, novels, everything, all legal and free. Check it out:`;
+    const msg = `Hey! I found this amazing site with 240+ curated free books — textbooks, novels, everything, verified free and legal. Check it out:`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg + '\n' + referralUrl)}`, '_blank');
   };
 
   const shareTwitter = () => {
-    const msg = `I read free books on ANYFREEBOOK — 5M+ titles from Open Library, Gutenberg, Internet Archive & more. No catch.`;
+    const msg = `I read free books on ANYFREEBOOK — 240+ titles from Open Library, Gutenberg, Internet Archive & more. No catch.`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(referralUrl)}`, '_blank');
   };
 

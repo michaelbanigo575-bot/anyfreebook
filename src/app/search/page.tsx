@@ -110,7 +110,7 @@ function SearchResults() {
     <div className="content-wrapper py-8">
       <div className="mb-8 max-w-2xl">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-6">
-          Search 5M+ free books
+          Search 240+ curated free books
         </h1>
         <form onSubmit={handleSubmit} className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -299,7 +299,7 @@ function SearchResults() {
           <p className="text-5xl mb-4">📚</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">Search millions of free books, textbooks & research papers</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">
-            Aggregated live from 6 open-access sources
+            Aggregated live from 7 open-access sources
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 text-xs text-[var(--text-muted)]">
             <span>📖 Open Library</span>

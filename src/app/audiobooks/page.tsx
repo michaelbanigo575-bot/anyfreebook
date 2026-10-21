@@ -7,12 +7,12 @@ import { searchArchiveAudio } from '@/lib/api/archive';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'Free Audiobooks — 45,000+ Free Audiobook Downloads',
-  description: 'Listen to 45,000+ free audiobooks. Bestsellers, classics, and textbooks available as free audiobooks in MP3 format. No sign-up required.',
+  title: 'Free Audiobooks — Public-Domain Audio from LibriVox & Archive',
+  description: 'Listen to free public-domain audiobooks from LibriVox and the Internet Archive. Bestsellers, classics, and textbooks in MP3 format. No sign-up required.',
   openGraph: {
-    title: 'Free Audiobooks — 45,000+ Downloads',
-    description: 'Listen to 45,000+ free audiobooks. Bestsellers, classics, and textbooks in MP3.',
-    images: [{ url: '/api/og?title=Free+Audiobooks&subtitle=45%2C000%2B+Free+Audiobook+Downloads', width: 1200, height: 630 }],
+    title: 'Free Audiobooks — LibriVox & Internet Archive',
+    description: 'Free public-domain audiobooks from LibriVox and the Internet Archive.',
+    images: [{ url: '/api/og?title=Free+Audiobooks&subtitle=Free%20Public-Domain%20Audiobooks', width: 1200, height: 630 }],
   },
 };
 
@@ -45,7 +45,7 @@ export default async function AudiobooksPage() {
             Free Audiobooks
           </h1>
           <p className="mt-3 text-lg text-[var(--text-secondary)] max-w-2xl">
-            Listen to 45,000+ free audiobooks. Bestsellers, classics, and textbooks — all completely free and legal.
+            Listen to free public-domain audiobooks from LibriVox and the Internet Archive. Bestsellers, classics, and textbooks — all legal and free to listen to.
           </p>
         </div>
       </div>

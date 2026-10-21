@@ -19,7 +19,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
           <span className="text-3xl block mb-2">{cat.icon}</span>
           <h3 className="font-semibold text-sm text-[var(--text)]">{cat.name}</h3>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            {cat.bookCount.toLocaleString()} free books
+            Live results
           </p>
           <span className="absolute bottom-2 right-3 text-[var(--primary)] text-sm
             opacity-0 group-hover:opacity-100 transition-opacity">

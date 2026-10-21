@@ -33,6 +33,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Static PWA assets and /.well-known/assetlinks.json must be served
+    // verbatim — the middleware must not sit in front of them.
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icon-|apple-touch-icon|offline\\.html|\\.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

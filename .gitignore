@@ -31,6 +31,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local build log
+.next-build.log
 # env (all)
 .env
 .claude/

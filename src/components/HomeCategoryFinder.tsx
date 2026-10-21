@@ -92,7 +92,6 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
                   >
                     <span className="text-base w-6 text-center flex-shrink-0">{c.icon}</span>
                     <span className="text-sm text-[var(--text)] truncate flex-1">{c.name}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] flex-shrink-0">{(c.bookCount / 1000).toFixed(0)}k</span>
                   </Link>
                 ))}
               </div>

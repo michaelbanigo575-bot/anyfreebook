@@ -8,38 +8,78 @@ import { searchOpenLibrary } from '@/lib/api/openlibrary';
 import { searchArchive } from '@/lib/api/archive';
 import { searchGoogleBooks } from '@/lib/api/googlebooks';
 
-// 234 categories: render on demand, cache each for an hour. Pre-rendering all
-// of them at build time would hammer the source APIs and slow every deploy.
+// Categories render on demand, cache each for an hour. Pre-rendering all of
+// them at build time would hammer the source APIs and slow every deploy.
 export const revalidate = 3600;
 export const dynamicParams = true;
 
-async function fetchLiveCategoryBooks(query: string): Promise<Book[]> {
+type LiveCategory = {
+  books: Book[];
+  /** Titles matching the category query on Open Library (its own numFound). */
+  olTotal: number;
+  /** Titles matching across Open Library + Internet Archive + Google Books. */
+  total: number;
+};
+
+/**
+ * Live results for a category. The counts come from the sources themselves
+ * (numFound / totalItems), never from a hardcoded number.
+ */
+async function fetchLiveCategoryBooks(query: string): Promise<LiveCategory> {
   try {
     const [ol, archive, gb] = await Promise.allSettled([
       searchOpenLibrary(query, 30, 1),
       searchArchive(query, 1, 24),
       searchGoogleBooks(query, 0, 20),
     ]);
-    return [
-      ...(ol.status === 'fulfilled' ? ol.value.books : []),
-      ...(archive.status === 'fulfilled' ? archive.value.books : []),
-      ...(gb.status === 'fulfilled' ? gb.value.books : []),
-    ];
+    const olTotal = ol.status === 'fulfilled' ? ol.value.total : 0;
+    const archiveTotal = archive.status === 'fulfilled' ? archive.value.total : 0;
+    const gbTotal = gb.status === 'fulfilled' ? gb.value.total : 0;
+    return {
+      books: [
+        ...(ol.status === 'fulfilled' ? ol.value.books : []),
+        ...(archive.status === 'fulfilled' ? archive.value.books : []),
+        ...(gb.status === 'fulfilled' ? gb.value.books : []),
+      ],
+      olTotal,
+      total: olTotal + archiveTotal + gbTotal,
+    };
   } catch {
-    return [];
+    return { books: [], olTotal: 0, total: 0 };
   }
 }
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const category = getCategory(params.slug);
   if (!category) return {};
+
+  // Same fetch URLs as the page body, so Next's data cache serves the second
+  // call — the upstream APIs are still hit exactly once per category per hour.
+  const { olTotal } = await fetchLiveCategoryBooks(category.query || category.name);
+  const n = olTotal.toLocaleString();
+  const name = category.name.toLowerCase();
+
   return {
-    title: `Free ${category.name} Books — ${category.bookCount.toLocaleString()}+ Free Downloads`,
-    description: `Download ${category.bookCount.toLocaleString()}+ free ${category.name.toLowerCase()} books in PDF, EPUB, and more. ${category.description}. verified free and legal.`,
+    title:
+      olTotal > 0
+        ? `Free ${category.name} Books — ${n}+ Titles`
+        : `Free ${category.name} Books — Download Free PDF, EPUB & HTML`,
+    description:
+      olTotal > 0
+        ? `Search ${n}+ titles in ${name}. Open Library, Internet Archive and Google Books results stream live — curated picks verified free and legal.`
+        : `Browse free ${name} books streamed live from Open Library, Internet Archive and Google Books. Curated picks verified free and legal.`,
     openGraph: {
-      title: `Free ${category.name} Books — ${category.bookCount.toLocaleString()}+ Downloads`,
-      description: `${category.description}. Download free ${category.name.toLowerCase()} books in PDF, EPUB, and more.`,
-      images: [{ url: `/api/og?title=Free+${encodeURIComponent(category.name)}+Books&subtitle=${encodeURIComponent(`${category.bookCount.toLocaleString()}+ Free Downloads`)}`, width: 1200, height: 630 }],
+      title: olTotal > 0 ? `Free ${category.name} Books — ${n}+ Titles` : `Free ${category.name} Books`,
+      description: `Free ${name} books from Open Library, Internet Archive and Google Books.`,
+      images: [
+        {
+          url: `/api/og?title=Free+${encodeURIComponent(category.name)}+Books&subtitle=${encodeURIComponent(
+            olTotal > 0 ? `${n}+ Titles Live from Open Sources` : 'Free Books for Every Profession'
+          )}`,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
   };
 }
@@ -50,7 +90,8 @@ export default async function CategoryPage({ params }: { params: { slug: string 
 
   // Live books only — every card links to a real, downloadable/readable book
   // at its source. No synthetic filler.
-  const live = await fetchLiveCategoryBooks(category.query || category.name);
+  const query = category.query || category.name;
+  const { books: live, olTotal } = await fetchLiveCategoryBooks(query);
   const seen = new Set<string>();
   const books = live.filter(b => {
     const key = b.title.toLowerCase().trim();
@@ -60,12 +101,15 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   });
 
   const schemas = [
-    faqSchema(category.name, category.bookCount),
+    faqSchema(category.name, olTotal),
     breadcrumbSchema([
       { name: 'Home', path: '/' },
       { name: category.name, path: `/category/${category.slug}` },
     ]),
   ];
+
+  const n = olTotal.toLocaleString();
+  const name = category.name.toLowerCase();
 
   return (
     <>
@@ -88,11 +132,19 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             Free {category.name} Books
           </h1>
           <p className="mt-3 text-lg text-[var(--text-secondary)] max-w-2xl">
-            {category.description}. Browse {category.bookCount.toLocaleString()}+ free books available for immediate download.
+            {category.description}.{' '}
+            {olTotal > 0 ? (
+              <>
+                {n}+ titles matched &ldquo;{query}&rdquo; on Open Library, with more results streamed
+                from the Internet Archive and Google Books.
+              </>
+            ) : (
+              <>Results stream live from Open Library, the Internet Archive and Google Books.</>
+            )}
           </p>
           <div className="flex items-center gap-4 mt-4">
             <span className="text-sm font-medium text-[var(--primary)]">
-              {category.bookCount.toLocaleString()} books
+              {olTotal > 0 ? `${n}+ titles found` : 'Live results'}
             </span>
             <span className="text-sm text-[var(--text-muted)]">PDF, EPUB & more</span>
           </div>
@@ -105,7 +157,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           <div className="text-center py-20">
             <p className="text-5xl mb-4">📚</p>
             <p className="text-lg font-medium text-[var(--text-secondary)]">Books coming soon</p>
-            <p className="text-sm text-[var(--text-muted)] mt-2">We&apos;re adding {category.name.toLowerCase()} books daily.</p>
+            <p className="text-sm text-[var(--text-muted)] mt-2">We&apos;re adding {name} books daily.</p>
           </div>
         )}
 
@@ -123,16 +175,18 @@ export default async function CategoryPage({ params }: { params: { slug: string 
           <div className="space-y-4">
             {[
               {
-                q: `Where can I find free ${category.name.toLowerCase()} books?`,
-                a: `ANYFREEBOOK has ${category.bookCount.toLocaleString()}+ free ${category.name.toLowerCase()} books aggregated from 40+ open-access sources including Open Library, MIT OCW, OpenStax, and Project Gutenberg.`,
+                q: `Where can I find free ${name} books?`,
+                a: `ANYFREEBOOK searches Open Library, the Internet Archive and Google Books live for ${name}. ${
+                  olTotal > 0 ? `${n}+ titles matched on Open Library, ` : ''
+                }and every curated pick links straight to its source with a badge showing whether it is verified free to download.`,
               },
               {
-                q: `Are these ${category.name.toLowerCase()} books really free and legal?`,
+                q: `Are these ${name} books really free and legal?`,
                 a: 'Yes. Every book on ANYFREEBOOK comes from verified legal sources — public domain works, Creative Commons publications, government repositories, and open-access academic libraries.',
               },
               {
-                q: `Can I download free ${category.name.toLowerCase()} books as PDF?`,
-                a: `Most ${category.name.toLowerCase()} books on ANYFREEBOOK are available in multiple formats including PDF, EPUB, and plain text. Some also have free audiobook versions.`,
+                q: `Can I download free ${name} books as PDF?`,
+                a: `Most ${name} books on ANYFREEBOOK are available in multiple formats including PDF, EPUB, and plain text. Some also have free audiobook versions.`,
               },
             ].map(faq => (
               <details

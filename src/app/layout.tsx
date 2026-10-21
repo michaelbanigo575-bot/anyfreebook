@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     siteName: 'ANYFREEBOOK',
     title: 'ANYFREEBOOK — 240+ Free Books & Live Open-Access Results',
     description: "A free book aggregator. Download free books across 230+ categories.",
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'ANYFREEBOOK — Free Books for Every Profession' }],
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'ANYFREEBOOK — Free Books for Every Profession' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ANYFREEBOOK — 240+ Free Books',
     description: "A free book aggregator.",
-    images: ['/og-image.png'],
+    images: ['/api/og'],
     creator: '@anyfreebook',
   },
   robots: {
@@ -55,6 +55,12 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -67,7 +73,12 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#6366f1" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="ANYFREEBOOK" />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async

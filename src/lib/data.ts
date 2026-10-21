@@ -31,7 +31,7 @@ export interface Category {
   name: string;
   slug: string;
   description: string;
-  bookCount: number;
+
   icon: string;
   gradient: string;
   /** Live-search query used to fetch real books for this category (falls back to name). */
@@ -60,40 +60,40 @@ export interface BlogPost {
 }
 
 const CATEGORIES: Category[] = [
-  { id: '1', name: 'Technology', slug: 'free-technology-books', description: 'Programming, AI, cybersecurity, and software engineering books', bookCount: 69200, icon: '💻', gradient: 'from-blue-500/20 to-cyan-500/20' },
-  { id: '2', name: 'Engineering', slug: 'free-engineering-books', description: 'Mechanical, civil, electrical, and chemical engineering textbooks', bookCount: 63100, icon: '⚙️', gradient: 'from-orange-500/20 to-amber-500/20' },
-  { id: '3', name: 'Medicine', slug: 'free-medicine-books', description: 'Medical textbooks, clinical guides, and health sciences', bookCount: 57400, icon: '⚕️', gradient: 'from-red-500/20 to-rose-500/20' },
-  { id: '4', name: 'Business', slug: 'free-business-books', description: 'MBA textbooks, finance, marketing, and entrepreneurship', bookCount: 54800, icon: '📊', gradient: 'from-emerald-500/20 to-green-500/20' },
-  { id: '5', name: 'Law', slug: 'free-law-books', description: 'Legal textbooks, case studies, and constitutional law', bookCount: 50600, icon: '⚖️', gradient: 'from-indigo-500/20 to-violet-500/20' },
-  { id: '6', name: 'Sciences', slug: 'free-science-books', description: 'Physics, chemistry, biology, and mathematics', bookCount: 66200, icon: '🔬', gradient: 'from-purple-500/20 to-fuchsia-500/20' },
-  { id: '7', name: 'Arts & Humanities', slug: 'free-arts-books', description: 'Literature, philosophy, history, and fine arts', bookCount: 61700, icon: '🎨', gradient: 'from-pink-500/20 to-rose-500/20' },
-  { id: '8', name: 'Maritime', slug: 'free-maritime-books', description: 'Navigation, marine engineering, and naval architecture', bookCount: 39200, icon: '🚢', gradient: 'from-teal-500/20 to-cyan-500/20' },
-  { id: '9', name: 'Education', slug: 'free-education-books', description: 'Teaching methods, curriculum design, and pedagogy', bookCount: 53900, icon: '📚', gradient: 'from-yellow-500/20 to-amber-500/20' },
-  { id: '10', name: 'Trades & Crafts', slug: 'free-trades-books', description: 'Woodworking, welding, HVAC, and skilled trades', bookCount: 43400, icon: '🔧', gradient: 'from-stone-500/20 to-zinc-500/20' },
-  { id: '11', name: 'Psychology', slug: 'free-psychology-books', description: 'Clinical psychology, behavioral science, and counseling', bookCount: 47300, icon: '🧠', gradient: 'from-violet-500/20 to-purple-500/20' },
-  { id: '12', name: 'Economics', slug: 'free-economics-books', description: 'Microeconomics, macroeconomics, and econometrics', bookCount: 44800, icon: '📈', gradient: 'from-green-500/20 to-emerald-500/20' },
-  { id: '13', name: 'Architecture', slug: 'free-architecture-books', description: 'Building design, urban planning, and interior design', bookCount: 41700, icon: '🏛️', gradient: 'from-amber-500/20 to-orange-500/20' },
-  { id: '14', name: 'Nursing', slug: 'free-nursing-books', description: 'Clinical nursing, pharmacology, and patient care', bookCount: 46200, icon: '💊', gradient: 'from-rose-500/20 to-pink-500/20' },
-  { id: '15', name: 'Mathematics', slug: 'free-mathematics-books', description: 'Calculus, algebra, statistics, and discrete math', bookCount: 49500, icon: '🔢', gradient: 'from-cyan-500/20 to-blue-500/20' },
-  { id: '16', name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books', description: 'Scripture, theology, world religions, and spiritual growth', bookCount: 56000, icon: '🕊️', gradient: 'from-sky-500/20 to-indigo-500/20' },
-  { id: '17', name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books', description: 'Personal growth, self-improvement, and motivational classics', bookCount: 44600, icon: '✨', gradient: 'from-amber-500/20 to-yellow-500/20' },
-  { id: '18', name: 'Political Magazines', slug: 'free-political-magazines', description: 'Political commentary, current affairs, and news magazines', bookCount: 40200, icon: '🗞️', gradient: 'from-red-500/20 to-slate-500/20' },
-  { id: '19', name: 'History', slug: 'free-history-books', description: 'World history, ancient civilizations, African history, and historical biographies', bookCount: 83400, icon: '📜', gradient: 'from-amber-500/20 to-stone-500/20' },
-  { id: '20', name: 'Literature', slug: 'free-literature-books', description: 'Classic and modern literature, literary criticism, and world masterpieces', bookCount: 89300, icon: '📖', gradient: 'from-indigo-500/20 to-blue-500/20' },
-  { id: '21', name: 'Poetry & Rhymes', slug: 'free-poetry-rhymes-books', description: 'Poetry collections, nursery rhymes, spoken word, and verse from every era', bookCount: 47600, icon: '🪶', gradient: 'from-fuchsia-500/20 to-pink-500/20' },
-  { id: '22', name: 'Idioms & Proverbs', slug: 'free-idioms-proverbs-books', description: 'Idioms, proverbs, figures of speech, and wisdom sayings from world cultures', bookCount: 36400, icon: '💬', gradient: 'from-teal-500/20 to-emerald-500/20' },
-  { id: '23', name: 'African Literature', slug: 'free-african-literature-books', description: 'Novels, folktales, and poetry by African authors — Achebe to Adichie', bookCount: 39800, icon: '🌍', gradient: 'from-orange-500/20 to-red-500/20' },
-  { id: '24', name: 'Fiction & Novels', slug: 'free-fiction-novels', description: 'Adventure, romance, mystery, sci-fi, and every kind of story', bookCount: 97500, icon: '📕', gradient: 'from-rose-500/20 to-orange-500/20' },
-  { id: '25', name: "Children's Books", slug: 'free-childrens-books', description: 'Picture books, fairy tales, bedtime stories, and early readers', bookCount: 53200, icon: '🧸', gradient: 'from-yellow-500/20 to-pink-500/20' },
-  { id: '26', name: 'Drama & Plays', slug: 'free-drama-plays-books', description: 'Stage plays, screenplays, and dramatic literature from Shakespeare to Soyinka', bookCount: 37900, icon: '🎭', gradient: 'from-purple-500/20 to-indigo-500/20' },
-  { id: '27', name: 'Short Stories', slug: 'free-short-stories', description: 'Short story collections and anthologies across every genre', bookCount: 41300, icon: '📃', gradient: 'from-slate-500/20 to-blue-500/20' },
-  { id: '28', name: 'Languages & Grammar', slug: 'free-languages-grammar-books', description: 'Language learning, grammar guides, dictionaries, and linguistics', bookCount: 44700, icon: '🗣️', gradient: 'from-cyan-500/20 to-teal-500/20' },
-  { id: '29', name: 'Philosophy', slug: 'free-philosophy-books', description: 'Ethics, logic, metaphysics, and the great thinkers of every age', bookCount: 42500, icon: '🤔', gradient: 'from-zinc-500/20 to-slate-500/20' },
-  { id: '30', name: 'Biography & Memoirs', slug: 'free-biography-memoir-books', description: 'Life stories of leaders, inventors, artists, and everyday heroes', bookCount: 48100, icon: '👤', gradient: 'from-emerald-500/20 to-cyan-500/20' },
-  { id: '31', name: 'Agriculture', slug: 'free-agriculture-books', description: 'Farming, agronomy, animal husbandry, and agricultural science', bookCount: 35600, icon: '🌾', gradient: 'from-lime-500/20 to-green-500/20' },
-  { id: '32', name: 'Cooking & Food', slug: 'free-cooking-food-books', description: 'Cookbooks, nutrition, food science, and culinary arts', bookCount: 38800, icon: '🍲', gradient: 'from-orange-500/20 to-yellow-500/20' },
-  { id: '33', name: 'Music', slug: 'free-music-books', description: 'Music theory, instrument guides, songbooks, and music history', bookCount: 40400, icon: '🎵', gradient: 'from-violet-500/20 to-fuchsia-500/20' },
-  { id: '34', name: 'Sports & Fitness', slug: 'free-sports-fitness-books', description: 'Training guides, sports science, coaching, and fitness', bookCount: 36200, icon: '⚽', gradient: 'from-green-500/20 to-teal-500/20' },
+  { id: '1', name: 'Technology', slug: 'free-technology-books', description: 'Programming, AI, cybersecurity, and software engineering books', icon: '💻', gradient: 'from-blue-500/20 to-cyan-500/20' },
+  { id: '2', name: 'Engineering', slug: 'free-engineering-books', description: 'Mechanical, civil, electrical, and chemical engineering textbooks', icon: '⚙️', gradient: 'from-orange-500/20 to-amber-500/20' },
+  { id: '3', name: 'Medicine', slug: 'free-medicine-books', description: 'Medical textbooks, clinical guides, and health sciences', icon: '⚕️', gradient: 'from-red-500/20 to-rose-500/20' },
+  { id: '4', name: 'Business', slug: 'free-business-books', description: 'MBA textbooks, finance, marketing, and entrepreneurship', icon: '📊', gradient: 'from-emerald-500/20 to-green-500/20' },
+  { id: '5', name: 'Law', slug: 'free-law-books', description: 'Legal textbooks, case studies, and constitutional law', icon: '⚖️', gradient: 'from-indigo-500/20 to-violet-500/20' },
+  { id: '6', name: 'Sciences', slug: 'free-science-books', description: 'Physics, chemistry, biology, and mathematics', icon: '🔬', gradient: 'from-purple-500/20 to-fuchsia-500/20' },
+  { id: '7', name: 'Arts & Humanities', slug: 'free-arts-books', description: 'Literature, philosophy, history, and fine arts', icon: '🎨', gradient: 'from-pink-500/20 to-rose-500/20' },
+  { id: '8', name: 'Maritime', slug: 'free-maritime-books', description: 'Navigation, marine engineering, and naval architecture', icon: '🚢', gradient: 'from-teal-500/20 to-cyan-500/20' },
+  { id: '9', name: 'Education', slug: 'free-education-books', description: 'Teaching methods, curriculum design, and pedagogy', icon: '📚', gradient: 'from-yellow-500/20 to-amber-500/20' },
+  { id: '10', name: 'Trades & Crafts', slug: 'free-trades-books', description: 'Woodworking, welding, HVAC, and skilled trades', icon: '🔧', gradient: 'from-stone-500/20 to-zinc-500/20' },
+  { id: '11', name: 'Psychology', slug: 'free-psychology-books', description: 'Clinical psychology, behavioral science, and counseling', icon: '🧠', gradient: 'from-violet-500/20 to-purple-500/20' },
+  { id: '12', name: 'Economics', slug: 'free-economics-books', description: 'Microeconomics, macroeconomics, and econometrics', icon: '📈', gradient: 'from-green-500/20 to-emerald-500/20' },
+  { id: '13', name: 'Architecture', slug: 'free-architecture-books', description: 'Building design, urban planning, and interior design', icon: '🏛️', gradient: 'from-amber-500/20 to-orange-500/20' },
+  { id: '14', name: 'Nursing', slug: 'free-nursing-books', description: 'Clinical nursing, pharmacology, and patient care', icon: '💊', gradient: 'from-rose-500/20 to-pink-500/20' },
+  { id: '15', name: 'Mathematics', slug: 'free-mathematics-books', description: 'Calculus, algebra, statistics, and discrete math', icon: '🔢', gradient: 'from-cyan-500/20 to-blue-500/20' },
+  { id: '16', name: 'Spiritual & Religious', slug: 'free-spiritual-religious-books', description: 'Scripture, theology, world religions, and spiritual growth', icon: '🕊️', gradient: 'from-sky-500/20 to-indigo-500/20' },
+  { id: '17', name: 'Inspirational & Motivational', slug: 'free-inspirational-motivational-books', description: 'Personal growth, self-improvement, and motivational classics', icon: '✨', gradient: 'from-amber-500/20 to-yellow-500/20' },
+  { id: '18', name: 'Political Magazines', slug: 'free-political-magazines', description: 'Political commentary, current affairs, and news magazines', icon: '🗞️', gradient: 'from-red-500/20 to-slate-500/20' },
+  { id: '19', name: 'History', slug: 'free-history-books', description: 'World history, ancient civilizations, African history, and historical biographies', icon: '📜', gradient: 'from-amber-500/20 to-stone-500/20' },
+  { id: '20', name: 'Literature', slug: 'free-literature-books', description: 'Classic and modern literature, literary criticism, and world masterpieces', icon: '📖', gradient: 'from-indigo-500/20 to-blue-500/20' },
+  { id: '21', name: 'Poetry & Rhymes', slug: 'free-poetry-rhymes-books', description: 'Poetry collections, nursery rhymes, spoken word, and verse from every era', icon: '🪶', gradient: 'from-fuchsia-500/20 to-pink-500/20' },
+  { id: '22', name: 'Idioms & Proverbs', slug: 'free-idioms-proverbs-books', description: 'Idioms, proverbs, figures of speech, and wisdom sayings from world cultures', icon: '💬', gradient: 'from-teal-500/20 to-emerald-500/20' },
+  { id: '23', name: 'African Literature', slug: 'free-african-literature-books', description: 'Novels, folktales, and poetry by African authors — Achebe to Adichie', icon: '🌍', gradient: 'from-orange-500/20 to-red-500/20' },
+  { id: '24', name: 'Fiction & Novels', slug: 'free-fiction-novels', description: 'Adventure, romance, mystery, sci-fi, and every kind of story', icon: '📕', gradient: 'from-rose-500/20 to-orange-500/20' },
+  { id: '25', name: "Children's Books", slug: 'free-childrens-books', description: 'Picture books, fairy tales, bedtime stories, and early readers', icon: '🧸', gradient: 'from-yellow-500/20 to-pink-500/20' },
+  { id: '26', name: 'Drama & Plays', slug: 'free-drama-plays-books', description: 'Stage plays, screenplays, and dramatic literature from Shakespeare to Soyinka', icon: '🎭', gradient: 'from-purple-500/20 to-indigo-500/20' },
+  { id: '27', name: 'Short Stories', slug: 'free-short-stories', description: 'Short story collections and anthologies across every genre', icon: '📃', gradient: 'from-slate-500/20 to-blue-500/20' },
+  { id: '28', name: 'Languages & Grammar', slug: 'free-languages-grammar-books', description: 'Language learning, grammar guides, dictionaries, and linguistics', icon: '🗣️', gradient: 'from-cyan-500/20 to-teal-500/20' },
+  { id: '29', name: 'Philosophy', slug: 'free-philosophy-books', description: 'Ethics, logic, metaphysics, and the great thinkers of every age', icon: '🤔', gradient: 'from-zinc-500/20 to-slate-500/20' },
+  { id: '30', name: 'Biography & Memoirs', slug: 'free-biography-memoir-books', description: 'Life stories of leaders, inventors, artists, and everyday heroes', icon: '👤', gradient: 'from-emerald-500/20 to-cyan-500/20' },
+  { id: '31', name: 'Agriculture', slug: 'free-agriculture-books', description: 'Farming, agronomy, animal husbandry, and agricultural science', icon: '🌾', gradient: 'from-lime-500/20 to-green-500/20' },
+  { id: '32', name: 'Cooking & Food', slug: 'free-cooking-food-books', description: 'Cookbooks, nutrition, food science, and culinary arts', icon: '🍲', gradient: 'from-orange-500/20 to-yellow-500/20' },
+  { id: '33', name: 'Music', slug: 'free-music-books', description: 'Music theory, instrument guides, songbooks, and music history', icon: '🎵', gradient: 'from-violet-500/20 to-fuchsia-500/20' },
+  { id: '34', name: 'Sports & Fitness', slug: 'free-sports-fitness-books', description: 'Training guides, sports science, coaching, and fitness', icon: '⚽', gradient: 'from-green-500/20 to-teal-500/20' },
 ];
 
 // ---- World categories: countries, languages, deep subjects (200 entries) ----
@@ -109,13 +109,13 @@ const WORLD_GRADIENTS = [
 
 WORLD_CATEGORY_SPECS.forEach(([name, icon, query, group], i) => {
   const slugBase = name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  const hash = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+
   CATEGORIES.push({
     id: String(35 + i),
     name,
     slug: `free-${slugBase}-books`,
     description: `Free ${name} books, classics, and study texts — streamed live from Open Library, Internet Archive, and Google Books.`,
-    bookCount: 4000 + (hash % 17) * 500,
+
     icon,
     gradient: WORLD_GRADIENTS[i % WORLD_GRADIENTS.length],
     query: query || name,
@@ -452,16 +452,34 @@ const BOOKS: Book[] = [
   makeBook('Project Hail Mary', 'Andy Weir', 5, { rating: 4.8, ratingCount: 12000, viewCount: 215000, likeCount: 22000, contentType: 'AUDIOBOOK', formats: ['MP3'], narrator: 'Ray Porter', duration: 57600, publishYear: 2021 }),
 ];
 
-const COLLECTIONS: Collection[] = [
-  { id: '1', title: 'Must-Read Programming Classics', description: 'The books every developer should read at least once', slug: 'must-read-programming-classics', bookCount: 25, coverBooks: BOOKS.filter(b => b.category.slug === 'free-technology-books' && b.contentType === 'BOOK').slice(0, 4) },
-  { id: '2', title: 'Medical School Essentials', description: 'Core textbooks for first and second year medical students', slug: 'medical-school-essentials', bookCount: 30, coverBooks: BOOKS.filter(b => b.category.slug === 'free-medicine-books').slice(0, 4) },
-  { id: '3', title: 'Startup Founder\'s Library', description: 'Every book a first-time founder needs', slug: 'startup-founders-library', bookCount: 20, coverBooks: BOOKS.filter(b => b.category.slug === 'free-business-books' && b.contentType === 'BOOK').slice(0, 4) },
-  { id: '4', title: 'Philosophy for Beginners', description: 'Start your philosophy journey with these accessible classics', slug: 'philosophy-for-beginners', bookCount: 15, coverBooks: BOOKS.filter(b => b.category.slug === 'free-arts-books' && b.contentType === 'BOOK').slice(0, 4) },
-  { id: '5', title: 'Free Audiobooks: Bestsellers', description: 'The most popular free audiobooks in our collection', slug: 'free-audiobooks-bestsellers', bookCount: 45, coverBooks: BOOKS.filter(b => b.contentType === 'AUDIOBOOK').slice(0, 4) },
-  { id: '6', title: 'Science That Changed the World', description: 'Groundbreaking science books that shaped our understanding', slug: 'science-that-changed-the-world', bookCount: 18, coverBooks: BOOKS.filter(b => b.category.slug === 'free-science-books' && b.contentType === 'BOOK').slice(0, 4) },
-  { id: '7', title: 'Classic Novels (Public Domain)', description: 'The greatest novels ever written — all free and legal', slug: 'classic-novels-public-domain', bookCount: 50, coverBooks: BOOKS.filter(b => b.contentType === 'NOVEL').slice(0, 4) },
-  { id: '8', title: 'Engineering Fundamentals', description: 'Core engineering textbooks across all disciplines', slug: 'engineering-fundamentals', bookCount: 35, coverBooks: BOOKS.filter(b => b.category.slug === 'free-engineering-books').slice(0, 4) },
+// Collection membership is derived from the catalogue, so the count on a
+// collection card can never disagree with the books on the collection page.
+const COLLECTION_FILTERS: Record<string, (b: Book) => boolean> = {
+  'must-read-programming-classics': b => b.category.slug === 'free-technology-books' && b.contentType === 'BOOK',
+  'medical-school-essentials': b => b.category.slug === 'free-medicine-books',
+  'startup-founders-library': b => b.category.slug === 'free-business-books' && b.contentType === 'BOOK',
+  'philosophy-for-beginners': b => b.category.slug === 'free-arts-books' && b.contentType === 'BOOK',
+  'free-audiobooks-bestsellers': b => b.contentType === 'AUDIOBOOK',
+  'science-that-changed-the-world': b => b.category.slug === 'free-science-books' && b.contentType === 'BOOK',
+  'classic-novels-public-domain': b => b.contentType === 'NOVEL',
+  'engineering-fundamentals': b => b.category.slug === 'free-engineering-books',
+};
+
+const COLLECTION_DEFS: Omit<Collection, 'bookCount' | 'coverBooks'>[] = [
+  { id: '1', title: 'Must-Read Programming Classics', description: 'The books every developer should read at least once', slug: 'must-read-programming-classics' },
+  { id: '2', title: 'Medical School Essentials', description: 'Core textbooks for first and second year medical students', slug: 'medical-school-essentials' },
+  { id: '3', title: 'Startup Founder\'s Library', description: 'Every book a first-time founder needs', slug: 'startup-founders-library' },
+  { id: '4', title: 'Philosophy for Beginners', description: 'Start your philosophy journey with these accessible classics', slug: 'philosophy-for-beginners' },
+  { id: '5', title: 'Free Audiobooks: Bestsellers', description: 'The most popular free audiobooks in our collection', slug: 'free-audiobooks-bestsellers' },
+  { id: '6', title: 'Science That Changed the World', description: 'Groundbreaking science books that shaped our understanding', slug: 'science-that-changed-the-world' },
+  { id: '7', title: 'Classic Novels (Public Domain)', description: 'The greatest novels ever written — all free and legal', slug: 'classic-novels-public-domain' },
+  { id: '8', title: 'Engineering Fundamentals', description: 'Core engineering textbooks across all disciplines', slug: 'engineering-fundamentals' },
 ];
+
+const COLLECTIONS: Collection[] = COLLECTION_DEFS.map(def => {
+  const books = BOOKS.filter(COLLECTION_FILTERS[def.slug]);
+  return { ...def, bookCount: books.length, coverBooks: books.slice(0, 4) };
+});
 
 export function getAllCategories(): Category[] {
   return CATEGORIES;
@@ -495,17 +513,6 @@ export function getCollections(): Collection[] {
 export function getCollectionBySlug(slug: string): Collection | undefined {
   return COLLECTIONS.find(c => c.slug === slug);
 }
-
-const COLLECTION_FILTERS: Record<string, (b: Book) => boolean> = {
-  'must-read-programming-classics': b => b.category.slug === 'free-technology-books' && b.contentType === 'BOOK',
-  'medical-school-essentials': b => b.category.slug === 'free-medicine-books',
-  'startup-founders-library': b => b.category.slug === 'free-business-books' && b.contentType === 'BOOK',
-  'philosophy-for-beginners': b => b.category.slug === 'free-arts-books' && b.contentType === 'BOOK',
-  'free-audiobooks-bestsellers': b => b.contentType === 'AUDIOBOOK',
-  'science-that-changed-the-world': b => b.category.slug === 'free-science-books' && b.contentType === 'BOOK',
-  'classic-novels-public-domain': b => b.contentType === 'NOVEL',
-  'engineering-fundamentals': b => b.category.slug === 'free-engineering-books',
-};
 
 export function getCollectionBooks(slug: string): Book[] {
   const filter = COLLECTION_FILTERS[slug];

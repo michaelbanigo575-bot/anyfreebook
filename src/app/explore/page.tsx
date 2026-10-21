@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { ExploreCategories } from '@/components/ExploreCategories';
-import { getAllCategories } from '@/lib/data';
+import { getAllCategories, getAllBooks } from '@/lib/data';
 
 export const metadata: Metadata = {
   title: 'Explore All Categories — 230+ Categories',
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ExplorePage() {
   const categories = getAllCategories();
-  const totalBooks = categories.reduce((sum, c) => sum + c.bookCount, 0);
+  const curated = getAllBooks().length;
 
   return (
     <div className="content-wrapper py-8">
@@ -23,7 +23,8 @@ export default function ExplorePage() {
           Browse by profession
         </h1>
         <p className="mt-3 text-lg text-[var(--text-secondary)]">
-          {totalBooks.toLocaleString()}+ free books across {categories.length} categories. Find exactly what you need.
+          {curated} curated free books across {categories.length} categories. Every category streams
+          live results from Open Library, the Internet Archive and Google Books — find exactly what you need.
         </p>
       </div>
 

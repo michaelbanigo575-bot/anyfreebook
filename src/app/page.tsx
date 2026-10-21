@@ -194,7 +194,7 @@ export default async function HomePage() {
             '@type': 'FAQPage',
             mainEntity: [
               { '@type': 'Question', name: 'Is ANYFREEBOOK really free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, 100%. Every book on ANYFREEBOOK is sourced from legal, open-access repositories like Project Gutenberg, Open Library, and Google Books. No sign-up, no credit card required.' }},
-              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK aggregates over 5 million free books from Open Library, 70,000+ from Project Gutenberg, and thousands of free ebooks from Google Books — all searchable in one place.' }},
+              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK curates 240+ free books and searches 7 open-access repositories live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ — so a single search reaches millions of titles.' }},
               { '@type': 'Question', name: 'What formats are available?', acceptedAnswer: { '@type': 'Answer', text: 'Books are available in PDF, EPUB, MOBI, HTML, and plain text formats. Audiobooks come in MP3 format. The available formats depend on the source repository.' }},
               { '@type': 'Question', name: 'Where do the books come from?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK pulls live data from Open Library (Internet Archive), Project Gutenberg, and Google Books free ebooks. All sources are legal, public domain, or Creative Commons.' }},
               { '@type': 'Question', name: 'Can I download the books?', acceptedAnswer: { '@type': 'Answer', text: 'Yes! Each book links directly to its source where you can read online or download in multiple formats. We link you to the official source for the best experience.' }},
@@ -205,7 +205,7 @@ export default async function HomePage() {
         <div className="max-w-3xl space-y-3">
           {[
             { q: 'Is ANYFREEBOOK really free?', a: 'Yes, 100%. Every book is sourced from legal, open-access repositories like Project Gutenberg, Open Library, and Google Books. No sign-up or credit card required.' },
-            { q: 'How many free books are available?', a: 'We aggregate curated books from Open Library, 70K+ from Project Gutenberg, and thousands of free ebooks from Google Books — all searchable in one place.' },
+            { q: 'How many free books are available?', a: 'We curate 240+ free books and search 7 open-access repositories live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ — so one search reaches millions of titles.' },
             { q: 'What formats are available?', a: 'Books come in PDF, EPUB, HTML, and plain text. Available formats depend on the source. Each book links to its original source for download.' },
             { q: 'Where do the books come from?', a: 'ANYFREEBOOK pulls live data from Open Library (Internet Archive), Project Gutenberg, and Google Books. All are legal, open-access sources.' },
             { q: 'Can I download the books?', a: 'Yes! Each book links directly to its source for reading online or downloading. We aggregate and link — the books live on their original platforms.' },
@@ -227,7 +227,7 @@ export default async function HomePage() {
           Start reading for free today
         </h2>
         <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-          No sign-up required. No credit card. Search millions of free books from the world&apos;s best open-access sources.
+          No sign-up required. No credit card. Search millions of titles from the world&apos;s best open-access sources — every result links to its original source.
         </p>
         <a
           href="/search"

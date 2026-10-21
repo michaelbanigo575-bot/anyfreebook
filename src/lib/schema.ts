@@ -93,16 +93,19 @@ export function bookSchema(book: Book, tier: SourceTier = 'download') {
 }
 
 export function faqSchema(category: string, count: number) {
+  const cat = category.toLowerCase();
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [
       {
         '@type': 'Question',
-        name: `Where can I find free ${category.toLowerCase()} books?`,
+        name: `Where can I find free ${cat} books?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `ANYFREEBOOK has ${count.toLocaleString()}+ free ${category.toLowerCase()} books aggregated from 40+ open-access sources including Open Library, MIT OCW, OpenStax, and Project Gutenberg.`,
+          text: `ANYFREEBOOK searches Open Library, the Internet Archive and Google Books live for ${cat}.${
+            count > 0 ? ` ${count.toLocaleString()}+ titles matched on Open Library,` : ''
+          } and every curated pick links straight to its source, with a badge showing whether it is verified free to download.`,
         },
       },
       {

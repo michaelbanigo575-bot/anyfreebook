@@ -37,7 +37,7 @@ const QA = [
   },
   {
     q: 'How many books does ANYFREEBOOK have?',
-    a: "ANYFREEBOOK aggregates 1.7 million+ free books, audiobooks, and textbooks across 234 categories spanning subjects, world literature by country/continent, and languages.",
+    a: "ANYFREEBOOK curates 240+ free books, audiobooks and textbooks across 241 categories spanning subjects, world literature by country/continent, and languages — and searches 7 open-access repositories live on every query.",
   },
 ];
 

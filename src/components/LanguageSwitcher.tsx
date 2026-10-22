@@ -31,6 +31,9 @@ const originals = new WeakMap<Text, string>();    // node -> original English
 let activeLang = '';
 let observer: MutationObserver | null = null;
 let running = false;
+// A language picked while another one is still translating is queued here and
+// applied as soon as the current run finishes.
+let pendingLang: string | null = null;
 
 function collectTextNodes(root: Node): Text[] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -95,12 +98,13 @@ function restoreEnglish(): void {
 }
 
 async function applyLanguage(lang: string): Promise<void> {
+  // A run is in flight — queue the choice instead of dropping it on the floor.
+  if (running) { pendingLang = lang; return; }
   activeLang = lang;
   observer?.disconnect();
   observer = null;
 
   if (!lang) { restoreEnglish(); document.documentElement.lang = 'en'; return; }
-  if (running) return;
   running = true;
   document.documentElement.lang = lang;
 
@@ -123,6 +127,11 @@ async function applyLanguage(lang: string): Promise<void> {
     }, 600);
   });
   observer.observe(document.body, { childList: true, subtree: true });
+
+  // Apply the language that was picked while this run was in flight.
+  const queued = pendingLang;
+  pendingLang = null;
+  if (queued !== null && queued !== activeLang) applyLanguage(queued).catch(() => {});
 }
 
 export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {

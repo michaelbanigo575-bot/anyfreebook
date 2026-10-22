@@ -21,24 +21,33 @@ interface AdUnitProps {
 export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
   const adRef = useRef<HTMLDivElement>(null);
   const { width, height } = AD_DIMENSIONS[size];
+  // The slot we already pushed — AdSense fills one <ins> per push, so the
+  // same slot must never be pushed twice.
+  const pushedSlot = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!slot || !process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID) return;
     try {
-      const adsbygoogle = (window as unknown as { adsbygoogle: unknown[] }).adsbygoogle;
-      if (adsbygoogle) adsbygoogle.push({});
+      const w = window as unknown as { adsbygoogle?: unknown[] };
+      // The AdSense script is loaded async, so the queue may not exist yet.
+      if (!w.adsbygoogle) w.adsbygoogle = [];
+      if (pushedSlot.current === slot) return;
+      w.adsbygoogle.push({});
+      pushedSlot.current = slot;
     } catch {}
-  }, []);
+  }, [slot]);
 
   return (
     <div
       ref={adRef}
-      className={`flex items-center justify-center mx-auto overflow-hidden rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] ${className}`}
+      className={`flex items-center justify-center mx-auto w-full rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] ${className}`}
       style={{ maxWidth: width, minHeight: height }}
     >
       {slot && process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
         <ins
+          key={slot}
           className="adsbygoogle"
-          style={{ display: 'block', width, height }}
+          style={{ display: 'block', width: '100%', maxWidth: width, height }}
           data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}
           data-ad-slot={slot}
           data-ad-format="auto"

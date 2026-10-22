@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { BookCover } from './BookCover';
 import { formatCount, type Book } from '@/lib/data';
+import { cardClass } from '@/lib/ui';
 
 interface BookCardProps {
   book: Book;
@@ -29,10 +30,10 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
         target={isExternal ? '_blank' : undefined}
         rel={isExternal ? 'noopener noreferrer' : undefined}
         className={`
-          block rounded-xl transition-all duration-300
+          block
           ${size === 'featured'
-            ? 'p-5 bg-[var(--surface)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] border border-[var(--border-subtle)] rounded-[var(--radius-lg)]'
-            : 'p-3 hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)]'
+            ? cardClass({ padding: 'p-5' })
+            : 'rounded-xl p-3 hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)] transition-all duration-300'
           }
           ease-[var(--ease-out-expo)]
         `}

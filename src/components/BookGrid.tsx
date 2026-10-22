@@ -36,25 +36,26 @@ export function BookGrid({ books, layout }: BookGridProps) {
           <div className="h-[3px] bg-gradient-to-b from-neutral-200 to-transparent dark:from-neutral-700 rounded-full mx-4" />
         )}
 
-        {/* Scroll arrows */}
+        {/* Fade edges (under the arrows so they stay readable) */}
+        <div className="absolute left-0 top-0 bottom-4 w-6 bg-gradient-to-r from-[var(--bg)] to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-4 w-6 bg-gradient-to-l from-[var(--bg)] to-transparent pointer-events-none" />
+
+        {/* Scroll arrows — revealed on hover, on keyboard focus and on touch
+            devices (where there is no hover at all). 44px hit target. */}
         <button
           onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-10 h-10 rounded-full bg-[var(--surface)] shadow-lg flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:scale-110 border border-[var(--border)]"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-11 h-11 rounded-full bg-[var(--surface)] shadow-lg flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity hover:scale-110 border border-[var(--border)]"
           aria-label="Scroll left"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <button
           onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-10 h-10 rounded-full bg-[var(--surface)] shadow-lg flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:scale-110 border border-[var(--border)]"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-11 h-11 rounded-full bg-[var(--surface)] shadow-lg flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 focus:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 transition-opacity hover:scale-110 border border-[var(--border)]"
           aria-label="Scroll right"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-
-        {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-4 w-6 bg-gradient-to-r from-[var(--bg)] to-transparent pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-4 w-6 bg-gradient-to-l from-[var(--bg)] to-transparent pointer-events-none" />
       </div>
     );
   }

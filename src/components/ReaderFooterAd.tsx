@@ -55,7 +55,9 @@ export function ReaderFooterAd({ slot }: { slot?: string }) {
   if (dismissed || !visible || !slot) return null;
 
   return (
-    <div className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-md animate-fade-in">
+    // --stack-2 sits above the audio player (--stack-1) so the bars stack
+    // instead of overlapping.
+    <div className="fixed bottom-[var(--stack-2)] md:bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-md animate-fade-in">
       <div className="rounded-xl bg-[var(--surface)]/95 backdrop-blur border border-[var(--border)] shadow-lg overflow-hidden">
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border-subtle)]">
           <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)] font-semibold">Sponsored</span>

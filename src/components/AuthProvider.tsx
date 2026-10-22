@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { readPendingRedirect } from '@/lib/redirect';
 
 export interface Profile {
   id: string;
@@ -117,10 +118,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (referralCode) {
       try { localStorage.setItem('afb_referred_by', referralCode); } catch {}
     }
+    // Carry the intended destination through the OAuth round-trip so the
+    // callback can send the user where they were actually heading.
+    const next = readPendingRedirect() ?? '/profile';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
     return { error: error?.message ?? null };

@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 
-const PLACEHOLDER_COLORS = [
+/** Placeholder cover gradients — one source of truth, shared with the search
+ *  dropdown's mini covers so the two can never drift apart. */
+export const PLACEHOLDER_COLORS = [
   'from-blue-600 to-blue-800',
   'from-emerald-600 to-emerald-800',
   'from-purple-600 to-purple-800',
@@ -12,6 +14,12 @@ const PLACEHOLDER_COLORS = [
   'from-indigo-600 to-indigo-800',
   'from-teal-600 to-teal-800',
 ];
+
+/** Deterministic placeholder gradient for a title. */
+export function placeholderGradient(title: string): string {
+  const idx = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % PLACEHOLDER_COLORS.length;
+  return PLACEHOLDER_COLORS[idx];
+}
 
 const SIZES = {
   xs:   { w: 48,  h: 72,  d: 8  },
@@ -39,7 +47,7 @@ function secureUrl(url: string): string {
 export function BookCover({ title, author, size, coverUrl, className = '', flat = false }: BookCoverProps) {
   const dim = SIZES[size];
   const [imgError, setImgError] = useState(false);
-  const colorIndex = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % PLACEHOLDER_COLORS.length;
+  const placeholder = placeholderGradient(title);
   const hasImage = !!coverUrl && !imgError;
 
   const titleSize = size === 'xs' ? 'text-[8px]' : size === 'sm' ? 'text-[10px]' : 'text-xs';
@@ -56,7 +64,7 @@ export function BookCover({ title, author, size, coverUrl, className = '', flat 
       className="w-full h-full object-cover"
     />
   ) : (
-    <div className={`w-full h-full bg-gradient-to-br ${PLACEHOLDER_COLORS[colorIndex]} flex flex-col justify-end`}>
+    <div className={`w-full h-full bg-gradient-to-br ${placeholder} flex flex-col justify-end`}>
       <div className="absolute inset-0 opacity-[0.07]" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M5 0h1L0 5V4zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E")`,
       }} />
@@ -98,13 +106,13 @@ export function BookCover({ title, author, size, coverUrl, className = '', flat 
           <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-r from-black/25 to-transparent pointer-events-none" />
         </div>
         {/* Spine (left side) */}
-        <div className={`book3d-face book3d-spine bg-gradient-to-b ${PLACEHOLDER_COLORS[colorIndex]}`}>
+        <div className={`book3d-face book3d-spine bg-gradient-to-b ${placeholder}`}>
           <div className="w-full h-full bg-black/30" />
         </div>
         {/* Pages (right side) */}
         <div className="book3d-face book3d-pages bg-gradient-to-l from-neutral-200 to-white dark:from-neutral-400 dark:to-neutral-200" />
         {/* Back cover */}
-        <div className={`book3d-face book3d-back bg-gradient-to-br ${PLACEHOLDER_COLORS[colorIndex]}`}>
+        <div className={`book3d-face book3d-back bg-gradient-to-br ${placeholder}`}>
           <div className="w-full h-full bg-black/20 flex items-center justify-center p-2">
             <p className={`text-white/70 text-center leading-tight line-clamp-4 ${authorSize}`}>{title}</p>
           </div>

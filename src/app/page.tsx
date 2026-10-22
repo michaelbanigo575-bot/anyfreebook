@@ -110,7 +110,7 @@ export default async function HomePage() {
 
           <p className="mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
             The free book aggregator — pulling live from
-            Open Library, Project Gutenberg, Google Books, Internet Archive, PubMed Central, and DOAJ.
+            Open Library, Project Gutenberg, Google Books, Internet Archive, LibriVox, PubMed Central, and DOAJ.
           </p>
 
           {/* Main search + Category dropdown side by side */}
@@ -129,11 +129,11 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { icon: '🎓', title: 'Live Classrooms', desc: 'Join free live classes from authors — video, screen share & chat', href: '/classrooms', badge: 'NEW' },
-            { icon: '🤖', title: 'AI Study Aids', desc: 'Instant AI summaries & quizzes on every publication', href: '/creators/discover', badge: 'NEW' },
+            { icon: '🤖', title: 'AI Study Aids', desc: 'On-demand AI summary & self-test quiz for any author-published work', href: '/creators/discover', badge: 'NEW' },
             { icon: '💸', title: 'Publish & Earn', desc: 'Publish your books & notes free — earn from every verified read', href: '/creators', badge: null },
             { icon: '📰', title: 'The Feed', desc: 'New books, live classes & updates from authors you read', href: '/feed', badge: 'NEW' },
             { icon: '📖', title: 'Serialized Books', desc: 'Follow stories chapter by chapter as authors release them', href: '/creators/discover', badge: 'NEW' },
-            { icon: '🎧', title: 'Free Audiobooks', desc: 'Thousands of audiobooks from LibriVox & Internet Archive', href: '/audiobooks', badge: null },
+            { icon: '🎧', title: 'Free Audiobooks', desc: 'Public-domain audio from LibriVox & the Internet Archive', href: '/audiobooks', badge: null },
             { icon: '📝', title: 'WAEC & JAMB Prep', desc: 'Curated official exam-prep resources for Nigerian students', href: '/waec-jamb', badge: 'NEW' },
             { icon: '🌙', title: 'Reader Comfort', desc: 'Fonts, sepia & dark themes, text size — reading your way', href: '/creators/discover', badge: 'NEW' },
           ].map(f => (
@@ -179,7 +179,7 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <StatBlock number="240+" label="Free Books" />
             <StatBlock number="70K+" label="Gutenberg Titles" />
-            <StatBlock number="6" label="Live Sources" />
+            <StatBlock number="7" label="Live Sources" />
             <StatBlock number="∞" label="Formats" />
           </div>
         </div>
@@ -193,22 +193,22 @@ export default async function HomePage() {
             '@context': 'https://schema.org',
             '@type': 'FAQPage',
             mainEntity: [
-              { '@type': 'Question', name: 'Is ANYFREEBOOK really free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, 100%. Every book on ANYFREEBOOK is sourced from legal, open-access repositories like Project Gutenberg, Open Library, and Google Books. No sign-up, no credit card required.' }},
-              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK curates 240+ free books and searches 7 open-access repositories live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ — so a single search reaches millions of titles.' }},
+              { '@type': 'Question', name: 'Is ANYFREEBOOK really free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — browsing, searching and reading are free, with no sign-up and no credit card. Every link goes to a legal, open-access repository. Titles that are still in copyright are marked as such: we link to the publisher or a free library copy instead of calling them free downloads.' }},
+              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK curates 240+ free books and searches 7 open-access sources live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ.' }},
               { '@type': 'Question', name: 'What formats are available?', acceptedAnswer: { '@type': 'Answer', text: 'Books are available in PDF, EPUB, MOBI, HTML, and plain text formats. Audiobooks come in MP3 format. The available formats depend on the source repository.' }},
-              { '@type': 'Question', name: 'Where do the books come from?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK pulls live data from Open Library (Internet Archive), Project Gutenberg, and Google Books free ebooks. All sources are legal, public domain, or Creative Commons.' }},
-              { '@type': 'Question', name: 'Can I download the books?', acceptedAnswer: { '@type': 'Answer', text: 'Yes! Each book links directly to its source where you can read online or download in multiple formats. We link you to the official source for the best experience.' }},
+              { '@type': 'Question', name: 'Where do the books come from?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK pulls live data from 7 open-access sources: Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ. Every source is legal, public domain, or openly licensed.' }},
+              { '@type': 'Question', name: 'Can I download the books?', acceptedAnswer: { '@type': 'Answer', text: 'It depends on the title. Each book page shows where its copy comes from: a verified public-domain copy you can download, a free borrow from the Internet Archive lending library, or — for a title still in copyright — the publisher and library options, plus a genuinely free alternative in the same subject.' }},
             ],
           }) }}
         />
         <h2 className="text-2xl font-display font-bold text-[var(--text)] mb-6">Frequently asked questions</h2>
         <div className="max-w-3xl space-y-3">
           {[
-            { q: 'Is ANYFREEBOOK really free?', a: 'Yes, 100%. Every book is sourced from legal, open-access repositories like Project Gutenberg, Open Library, and Google Books. No sign-up or credit card required.' },
-            { q: 'How many free books are available?', a: 'We curate 240+ free books and search 7 open-access repositories live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ — so one search reaches millions of titles.' },
-            { q: 'What formats are available?', a: 'Books come in PDF, EPUB, HTML, and plain text. Available formats depend on the source. Each book links to its original source for download.' },
-            { q: 'Where do the books come from?', a: 'ANYFREEBOOK pulls live data from Open Library (Internet Archive), Project Gutenberg, and Google Books. All are legal, open-access sources.' },
-            { q: 'Can I download the books?', a: 'Yes! Each book links directly to its source for reading online or downloading. We aggregate and link — the books live on their original platforms.' },
+            { q: 'Is ANYFREEBOOK really free?', a: 'Yes — browsing, searching and reading are free, with no sign-up and no credit card. Every link goes to a legal, open-access repository. Titles still in copyright are marked as such: we link to the publisher or a free library copy instead of calling them free downloads.' },
+            { q: 'How many free books are available?', a: 'We curate 240+ free books and search 7 open-access sources live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ.' },
+            { q: 'What formats are available?', a: 'Books come in PDF, EPUB, HTML, and plain text. Available formats depend on the source. Each book links to its original source.' },
+            { q: 'Where do the books come from?', a: 'ANYFREEBOOK pulls live data from 7 open-access sources: Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ. Every source is legal, public domain, or openly licensed.' },
+            { q: 'Can I download the books?', a: 'It depends on the title. Each book page shows where its copy comes from: a verified public-domain copy you can download, a free borrow from the Internet Archive lending library, or — for a title still in copyright — the publisher and library options, plus a genuinely free alternative in the same subject.' },
           ].map(faq => (
             <details key={faq.q} className="group rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] overflow-hidden">
               <summary className="flex items-center justify-between p-4 cursor-pointer text-sm font-medium text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors">
@@ -227,7 +227,7 @@ export default async function HomePage() {
           Start reading for free today
         </h2>
         <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-          No sign-up required. No credit card. Search millions of titles from the world&apos;s best open-access sources — every result links to its original source.
+          No sign-up required. No credit card. Search 7 open-access sources from one place — every result links to its original source.
         </p>
         <a
           href="/search"

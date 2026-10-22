@@ -2,41 +2,42 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Free Textbooks for Universities & Students — ANYFREEBOOK',
-  description: 'Partner with ANYFREEBOOK to give your students free access to curated books and academic papers, and course materials from Open Library, Project Gutenberg, and Google Books.',
+  description: 'Create a free ANYFREEBOOK institution for your school, university or library: invite members, assign reading plans, publish under your name and run live classes.',
   openGraph: {
     title: 'Free Textbooks for Universities & Students',
-    description: 'Give your students free access to 240+ textbooks and course materials.',
+    description: 'Give your students free access to curated books and course materials — free to set up, no contracts.',
   },
 };
 
+/** What the institutions feature actually does (src/lib/institutions). */
 const PARTNER_FEATURES = [
-  { icon: '📚', title: 'Custom Reading Lists', desc: 'Create course-specific reading lists that link directly to free editions of required textbooks.' },
-  { icon: '🔗', title: 'Library Integration', desc: 'Embed ANYFREEBOOK search on your library website so students find free alternatives instantly.' },
-  { icon: '📊', title: 'Usage Analytics', desc: 'See which books your students access most. Understand reading patterns across departments.' },
-  { icon: '💰', title: 'Student Savings Reports', desc: 'Track how much money your students save each semester. Average: $1,200/student/year.' },
-  { icon: '🎓', title: 'Syllabus Integration', desc: 'Auto-match syllabus book lists with free editions. Import via CSV or direct API.' },
-  { icon: '🌍', title: 'Multi-Language Support', desc: 'Access books in 50+ languages. Perfect for international programs and language courses.' },
+  { icon: '🏛️', title: 'Institution Profile', desc: 'Create a free profile for your school, university, library or NGO — name, logo, country and website.' },
+  { icon: '👥', title: 'Members & Roles', desc: 'Invite staff and students with a link. Owners and admins manage the institution, teachers assign reading, students read.' },
+  { icon: '📚', title: 'Reading List Templates', desc: 'Set a weekly book goal and a focus category once, then assign it to any student in one click.' },
+  { icon: '✍️', title: 'Publish Under Your Name', desc: 'Post books, articles and notes on your institution’s page, so your cohort reads them in one place.' },
+  { icon: '🎓', title: 'Live Classrooms', desc: 'Run a free video class with screen share and chat, and keep the replay for your students.' },
+  { icon: '💬', title: 'Moderated Community', desc: 'Comment threads on your publications, with owner and admin tools to moderate them.' },
 ];
 
-const TESTIMONIALS = [
-  { quote: 'Our students saved over $2.3M in textbook costs last year alone.', name: 'Dr. Adebayo O.', role: 'Dean of Engineering, University of Lagos', country: '🇳🇬' },
-  { quote: 'ANYFREEBOOK leveled the playing field for our low-income students.', name: 'Prof. Sarah Chen', role: 'Library Director, UC Berkeley', country: '🇺🇸' },
-  { quote: 'We integrated it into every first-year course syllabus. Game changer.', name: 'Dr. James Mwangi', role: 'Provost, University of Nairobi', country: '🇰🇪' },
+const GET_STARTED = [
+  { n: '1', title: 'Create your institution', desc: 'Free, self-serve, and no contract — you own the account and the data.' },
+  { n: '2', title: 'Invite your people', desc: 'Send an invite link to staff and students. Everyone joins with a role you choose.' },
+  { n: '3', title: 'Assign reading', desc: 'Publish a reading-list template and push it to the students who need it.' },
 ];
 
 const SUBJECTS = [
-  { name: 'Computer Science', books: '120K+', link: '/search?q=computer+science' },
-  { name: 'Mathematics', books: '85K+', link: '/search?q=mathematics+textbook' },
-  { name: 'Physics', books: '67K+', link: '/search?q=physics+textbook' },
-  { name: 'Biology', books: '54K+', link: '/search?q=biology+textbook' },
-  { name: 'Chemistry', books: '48K+', link: '/search?q=chemistry+textbook' },
-  { name: 'Economics', books: '72K+', link: '/search?q=economics+textbook' },
-  { name: 'Psychology', books: '63K+', link: '/search?q=psychology+textbook' },
-  { name: 'Engineering', books: '95K+', link: '/search?q=engineering+textbook' },
-  { name: 'Medicine', books: '110K+', link: '/search?q=medical+textbook' },
-  { name: 'Law', books: '45K+', link: '/search?q=law+textbook' },
-  { name: 'Business', books: '88K+', link: '/search?q=business+textbook' },
-  { name: 'Literature', books: '200K+', link: '/search?q=literature' },
+  { name: 'Computer Science', link: '/search?q=computer+science' },
+  { name: 'Mathematics', link: '/search?q=mathematics+textbook' },
+  { name: 'Physics', link: '/search?q=physics+textbook' },
+  { name: 'Biology', link: '/search?q=biology+textbook' },
+  { name: 'Chemistry', link: '/search?q=chemistry+textbook' },
+  { name: 'Economics', link: '/search?q=economics+textbook' },
+  { name: 'Psychology', link: '/search?q=psychology+textbook' },
+  { name: 'Engineering', link: '/search?q=engineering+textbook' },
+  { name: 'Medicine', link: '/search?q=medical+textbook' },
+  { name: 'Law', link: '/search?q=law+textbook' },
+  { name: 'Business', link: '/search?q=business+textbook' },
+  { name: 'Literature', link: '/search?q=literature' },
 ];
 
 export default function UniversitiesPage() {
@@ -53,7 +54,8 @@ export default function UniversitiesPage() {
         </h1>
         <p className="mt-6 text-lg text-[var(--text-secondary)] max-w-2xl mx-auto">
           ANYFREEBOOK gives every student free access to curated books, academic papers,
-          and course materials from the world&apos;s largest open-access repositories.
+          and course materials from open-access repositories like Open Library, Project
+          Gutenberg and the Internet Archive.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
           <a href="mailto:partners@anyfreebook.com" className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
@@ -68,10 +70,10 @@ export default function UniversitiesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
         {[
-          { number: '$1,200', label: 'Avg savings per student/year' },
-          { number: '240+', label: 'Free books available' },
-          { number: '50+', label: 'Languages supported' },
-          { number: '3', label: 'Major source libraries' },
+          { number: '240+', label: 'Curated free books' },
+          { number: '7', label: 'Open-access sources searched live' },
+          { number: '241', label: 'Subject categories to explore' },
+          { number: '0', label: 'Cost to run an institution' },
         ].map(stat => (
           <div key={stat.label} className="text-center p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)]">
             <p className="text-3xl font-bold gradient-text">{stat.number}</p>
@@ -110,42 +112,43 @@ export default function UniversitiesPage() {
               className="flex items-center justify-between p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] hover:border-[var(--primary)] hover:shadow-md transition-all group"
             >
               <span className="text-sm font-medium text-[var(--text)] group-hover:text-[var(--primary)]">{s.name}</span>
-              <span className="text-xs text-[var(--text-muted)] font-mono">{s.books}</span>
+              <span className="text-xs text-[var(--text-muted)] font-mono">Search →</span>
             </a>
           ))}
         </div>
       </div>
 
-      {/* Testimonials */}
+      {/* How to get started */}
       <div className="mb-16">
         <h2 className="text-2xl font-display font-bold text-[var(--text)] text-center mb-8">
-          Trusted by educators worldwide
+          Set up in three steps
         </h2>
         <div className="grid md:grid-cols-3 gap-4">
-          {TESTIMONIALS.map((t, i) => (
-            <div key={i} className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)]">
-              <p className="text-sm text-[var(--text)] italic leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-              <div className="mt-4 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-xs font-bold">
-                  {t.name[0]}
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-[var(--text)]">{t.country} {t.name}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{t.role}</p>
-                </div>
+          {GET_STARTED.map(s => (
+            <div key={s.n} className="p-6 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)]">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-bold flex items-center justify-center mb-3">
+                {s.n}
               </div>
+              <h3 className="text-sm font-bold text-[var(--text)]">{s.title}</h3>
+              <p className="text-xs text-[var(--text-muted)] mt-1.5 leading-relaxed">{s.desc}</p>
             </div>
           ))}
+        </div>
+        <div className="text-center mt-6">
+          <a href="/institutions/new" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--surface)] text-[var(--text)] text-sm font-semibold border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all">
+            Create an institution →
+          </a>
         </div>
       </div>
 
       {/* CTA */}
       <div className="text-center py-12 px-8 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
         <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
-          Ready to save your students thousands?
+          Ready to bring free reading to your students?
         </h2>
         <p className="opacity-90 max-w-lg mx-auto mb-6">
-          Join 200+ universities already using ANYFREEBOOK. Free forever, no contracts.
+          Create an institution in minutes — free, no contracts. Or email us if you would
+          rather talk it through first.
         </p>
         <a
           href="mailto:partners@anyfreebook.com"

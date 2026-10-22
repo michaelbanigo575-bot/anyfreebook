@@ -32,6 +32,10 @@ export interface CustomGradientTheme {
   text: string;
   accent: string;
   surface: string;
+  surfaceHover?: string;
+  border?: string;
+  borderSubtle?: string;
+  gradientEnd?: string;
 }
 
 export const THEMES: Theme[] = [
@@ -152,46 +156,122 @@ export const THEMES: Theme[] = [
   },
 ];
 
-export function getThemeById(id: string): Theme | undefined {
-  return THEMES.find(t => t.id === id);
+/** CSS custom property that carries each theme colour. */
+const VAR_MAP: Record<keyof ThemeColors, string> = {
+  bg: '--bg',
+  bgSecondary: '--bg-secondary',
+  surface: '--surface',
+  surfaceHover: '--surface-hover',
+  border: '--border',
+  borderSubtle: '--border-subtle',
+  text: '--text',
+  textSecondary: '--text-secondary',
+  textMuted: '--text-muted',
+  primary: '--primary',
+  primaryHover: '--primary-hover',
+  primaryLight: '--primary-light',
+  accent: '--accent',
+  accentLight: '--accent-light',
+  gradientStart: '--gradient-start',
+  gradientEnd: '--gradient-end',
+};
+
+const HEX_RE = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i;
+
+/** Perceived lightness of a #rrggbb colour: 0 = black, 1 = white. */
+export function colorLightness(hex: string): number {
+  const m = HEX_RE.exec((hex || '').trim());
+  if (!m) return 0.5;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
 }
 
-export function applyTheme(colors: ThemeColors) {
+/** Nudge a #rrggbb colour lighter or darker. */
+function shiftLightness(hex: string, delta: number): string {
+  const m = HEX_RE.exec((hex || '').trim());
+  if (!m) return hex;
+  const channels = [m[1], m[2], m[3]].map(c => {
+    const next = Math.max(0, Math.min(255, Math.round(parseInt(c, 16) + delta * 255)));
+    return next.toString(16).padStart(2, '0');
+  });
+  return '#' + channels.join('');
+}
+
+/** Append an alpha suffix to a hex colour; non-hex colours pass through. */
+function withAlpha(color: string, alpha: string): string {
+  return HEX_RE.test((color || '').trim()) ? color.trim() + alpha : color.trim();
+}
+
+/**
+ * A second gradient stop guaranteed to differ from the first. The custom
+ * theme used to set --gradient-start and --gradient-end to the same accent,
+ * which collapsed the sitewide flowing gradient into a flat colour.
+ */
+export function gradientEndFor(accent: string): string {
+  return shiftLightness(accent, colorLightness(accent) > 0.55 ? -0.22 : 0.22);
+}
+
+/**
+ * The full colour set for a custom theme. The custom builder only asks for
+ * six colours, so borders, hover states and the gradient's second stop are
+ * derived from them — previously they were left unset, so a custom theme
+ * inherited the borders and accents of whichever built-in theme ran last.
+ */
+export function customThemeColors(custom: CustomGradientTheme): ThemeColors {
+  const accent = custom.accent || '#c084fc';
+  return {
+    bg: custom.bgFrom,
+    bgSecondary: custom.bgTo,
+    surface: custom.surface,
+    surfaceHover: custom.surfaceHover || shiftLightness(custom.surface, 0.07),
+    border: custom.border || shiftLightness(custom.surface, 0.16),
+    borderSubtle: custom.borderSubtle || shiftLightness(custom.surface, 0.08),
+    text: custom.text,
+    textSecondary: withAlpha(custom.text, 'cc'),
+    textMuted: withAlpha(custom.text, '88'),
+    primary: accent,
+    primaryHover: shiftLightness(accent, colorLightness(accent) > 0.55 ? -0.12 : 0.12),
+    primaryLight: withAlpha(accent, '22'),
+    accent,
+    accentLight: withAlpha(accent, '22'),
+    gradientStart: accent,
+    gradientEnd: custom.gradientEnd || gradientEndFor(accent),
+  };
+}
+
+/** The body background gradient for a custom theme. */
+export function customBackgroundImage(custom: CustomGradientTheme): string {
+  return custom.bgVia
+    ? `linear-gradient(${custom.bgAngle}deg, ${custom.bgFrom}, ${custom.bgVia}, ${custom.bgTo})`
+    : `linear-gradient(${custom.bgAngle}deg, ${custom.bgFrom}, ${custom.bgTo})`;
+}
+
+function writeVars(colors: ThemeColors) {
   const root = document.documentElement;
-  root.style.setProperty('--bg', colors.bg);
-  root.style.setProperty('--bg-secondary', colors.bgSecondary);
-  root.style.setProperty('--surface', colors.surface);
-  root.style.setProperty('--surface-hover', colors.surfaceHover);
-  root.style.setProperty('--border', colors.border);
-  root.style.setProperty('--border-subtle', colors.borderSubtle);
-  root.style.setProperty('--text', colors.text);
-  root.style.setProperty('--text-secondary', colors.textSecondary);
-  root.style.setProperty('--text-muted', colors.textMuted);
-  root.style.setProperty('--primary', colors.primary);
-  root.style.setProperty('--primary-hover', colors.primaryHover);
-  root.style.setProperty('--primary-light', colors.primaryLight);
-  root.style.setProperty('--accent', colors.accent);
-  root.style.setProperty('--accent-light', colors.accentLight);
-  root.style.setProperty('--gradient-start', colors.gradientStart);
-  root.style.setProperty('--gradient-end', colors.gradientEnd);
+  (Object.keys(VAR_MAP) as (keyof ThemeColors)[]).forEach(key => {
+    root.style.setProperty(VAR_MAP[key], colors[key]);
+  });
+}
+
+/**
+ * Apply a built-in theme.
+ *
+ * This also owns the `dark` class on <html>. The class drives the shadow
+ * scale, the glass header tint and the scrollbar colours; it used to be
+ * toggled independently by the navbar, so a light theme still got the dark
+ * header treatment (a near-black bar with near-black text).
+ */
+export function applyTheme(colors: ThemeColors) {
+  writeVars(colors);
+  document.documentElement.classList.toggle('dark', colorLightness(colors.bg) < 0.5);
 }
 
 export function applyCustomGradient(custom: CustomGradientTheme) {
-  const root = document.documentElement;
-  const bgGradient = custom.bgVia
-    ? `linear-gradient(${custom.bgAngle}deg, ${custom.bgFrom}, ${custom.bgVia}, ${custom.bgTo})`
-    : `linear-gradient(${custom.bgAngle}deg, ${custom.bgFrom}, ${custom.bgTo})`;
-  root.style.setProperty('--bg', custom.bgFrom);
-  root.style.setProperty('--bg-secondary', custom.bgTo);
-  root.style.setProperty('--surface', custom.surface);
-  root.style.setProperty('--surface-hover', custom.surface);
-  root.style.setProperty('--text', custom.text);
-  root.style.setProperty('--text-secondary', custom.text + 'cc');
-  root.style.setProperty('--text-muted', custom.text + '88');
-  root.style.setProperty('--primary', custom.accent);
-  root.style.setProperty('--gradient-start', custom.accent);
-  root.style.setProperty('--gradient-end', custom.accent);
-  document.body.style.backgroundImage = bgGradient;
+  writeVars(customThemeColors(custom));
+  document.documentElement.classList.toggle('dark', colorLightness(custom.bgFrom) < 0.5);
+  document.body.style.backgroundImage = customBackgroundImage(custom);
 }
 
 export function clearCustomGradient() {
@@ -220,4 +300,36 @@ export function loadCustomGradient(): CustomGradientTheme | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Inline script that applies the saved theme before the first paint.
+ *
+ * Without it the page renders with the light `:root` defaults and then
+ * repaints dark once ThemeProvider hydrates — a white flash on every load
+ * for the ~70% of visitors who use the default dark theme.
+ *
+ * The data comes from the same THEMES/VAR_MAP constants the React path uses,
+ * so the two can never drift apart.
+ */
+export function themeBootstrapScript(): string {
+  return `(function(){try{
+var T=${JSON.stringify(THEMES)},V=${JSON.stringify(VAR_MAP)},r=document.documentElement,s=r.style;
+function L(h){var m=/^#?([a-f\\d]{2})([a-f\\d]{2})([a-f\\d]{2})$/i.exec((h||'').trim());if(!m)return .5;return (0.2126*parseInt(m[1],16)+0.7152*parseInt(m[2],16)+0.0722*parseInt(m[3],16))/255}
+function A(c,a){return /^#?[a-f\\d]{6}$/i.test((c||'').trim())?c.trim()+a:c.trim()}
+function set(o){for(var k in V){if(o[k]!=null)s.setProperty(V[k],o[k])}}
+var id=localStorage.getItem('anyfreebook-theme')||'dark';
+var c=null;try{c=JSON.parse(localStorage.getItem('anyfreebook-custom-gradient')||'null')}catch(e){}
+if(id==='custom'&&c){
+var ac=c.accent||'#c084fc',tx=c.text||'#f1f5f9',sf=c.surface||'#1e1b4b';
+var ge=c.gradientEnd||ac;
+set({bg:c.bgFrom,bgSecondary:c.bgTo,surface:sf,surfaceHover:sf,border:sf,borderSubtle:sf,text:tx,textSecondary:A(tx,'cc'),textMuted:A(tx,'88'),primary:ac,primaryHover:ac,primaryLight:A(ac,'22'),accent:ac,accentLight:A(ac,'22'),gradientStart:ac,gradientEnd:ge});
+r.classList.toggle('dark',L(c.bgFrom)<.5);
+if(document.body){document.body.style.backgroundImage=c.bgVia?('linear-gradient('+c.bgAngle+'deg,'+c.bgFrom+','+c.bgVia+','+c.bgTo+')'):('linear-gradient('+c.bgAngle+'deg,'+c.bgFrom+','+c.bgTo+')')}
+}else{
+var t=T.find(function(x){return x.id===id})||T[1];
+set(t.colors);
+r.classList.toggle('dark',L(t.colors.bg)<.5);
+}
+}catch(e){}})();`;
 }

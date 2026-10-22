@@ -1,11 +1,16 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useState, useCallback } from 'react';
 import {
   THEMES, applyTheme, applyCustomGradient, clearCustomGradient,
   saveThemePreference, loadThemePreference, saveCustomGradient, loadCustomGradient,
-  type Theme, type ThemeColors, type CustomGradientTheme,
+  colorLightness, type Theme, type ThemeColors, type CustomGradientTheme,
 } from '@/lib/themes';
+
+// useLayoutEffect on the client (applies the theme before the browser paints
+// the hydrated tree) and useEffect on the server (React warns otherwise).
+const useIsomorphicLayoutEffect =
+  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 interface ThemeContextType {
   currentTheme: Theme;
@@ -13,6 +18,8 @@ interface ThemeContextType {
   customGradient: CustomGradientTheme | null;
   setCustomGradient: (gradient: CustomGradientTheme | null) => void;
   isCustom: boolean;
+  /** True when the active theme has a dark background. */
+  isDark: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -21,6 +28,7 @@ const ThemeContext = createContext<ThemeContextType>({
   customGradient: null,
   setCustomGradient: () => {},
   isCustom: false,
+  isDark: true,
 });
 
 export function useTheme() {
@@ -32,8 +40,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [customGradient, setCustomGradientState] = useState<CustomGradientTheme | null>(null);
   const [isCustom, setIsCustom] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // Kept false until mount so the server HTML and the first client render
+  // agree — the theme itself is applied by the inline bootstrap script in
+  // layout.tsx before the first paint.
+  const [isDark, setIsDark] = useState(false);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     setMounted(true);
     const savedId = loadThemePreference();
     const theme = THEMES.find(t => t.id === savedId) || THEMES[1];
@@ -45,6 +57,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setCustomGradientState(savedCustom);
       setIsCustom(true);
       applyCustomGradient(savedCustom);
+      setIsDark(colorLightness(savedCustom.bgFrom) < 0.5);
+    } else {
+      setIsDark(colorLightness(theme.colors.bg) < 0.5);
     }
   }, []);
 
@@ -55,6 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setIsCustom(false);
     clearCustomGradient();
     applyTheme(theme.colors);
+    setIsDark(colorLightness(theme.colors.bg) < 0.5);
     saveThemePreference(id);
   }, []);
 
@@ -63,6 +79,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setCustomGradientState(gradient);
       setIsCustom(true);
       applyCustomGradient(gradient);
+      setIsDark(colorLightness(gradient.bgFrom) < 0.5);
       saveCustomGradient(gradient);
       saveThemePreference('custom');
     } else {
@@ -70,6 +87,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setIsCustom(false);
       clearCustomGradient();
       applyTheme(currentTheme.colors);
+      setIsDark(colorLightness(currentTheme.colors.bg) < 0.5);
       saveThemePreference(currentTheme.id);
     }
   }, [currentTheme]);
@@ -79,7 +97,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, setTheme, customGradient, setCustomGradient, isCustom }}>
+    <ThemeContext.Provider value={{ currentTheme, setTheme, customGradient, setCustomGradient, isCustom, isDark }}>
       {children}
     </ThemeContext.Provider>
   );

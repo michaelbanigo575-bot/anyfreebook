@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { fetchComments, postComment, deleteComment, type Comment } from '@/lib/creators/social';
@@ -26,27 +26,60 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [postError, setPostError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const now = useNow();
 
-  useEffect(() => {
-    fetchComments(publicationId).then(c => { setComments(c); setLoading(false); });
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const c = await fetchComments(publicationId);
+      setComments(c);
+    } catch {
+      setLoadError('Could not load comments.');
+    } finally {
+      setLoading(false);
+    }
   }, [publicationId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const submit = async () => {
     if (!user) { router.push('/login?redirect=' + encodeURIComponent(window.location.pathname)); return; }
     if (!text.trim() || posting) return;
     setPosting(true);
-    const { error, comment } = await postComment(publicationId, text);
-    setPosting(false);
-    if (!error && comment) {
-      setComments(c => [comment, ...c]);
-      setText('');
+    setPostError(null);
+    try {
+      const { error, comment } = await postComment(publicationId, text);
+      if (!error && comment) {
+        setComments(c => [comment, ...c]);
+        setText('');
+      } else {
+        // Keep the typed text so the user can retry without retyping it.
+        setPostError('Your comment could not be posted. Please try again.');
+      }
+    } catch {
+      setPostError('Your comment could not be posted. Please try again.');
+    } finally {
+      setPosting(false);
     }
   };
 
   const remove = async (id: string) => {
-    await deleteComment(id);
-    setComments(c => c.filter(x => x.id !== id));
+    setConfirmDeleteId(null);
+    setActionError(null);
+    try {
+      const { error } = await deleteComment(id);
+      if (error) { setActionError('That comment could not be deleted.'); return; }
+      setComments(c => c.filter(x => x.id !== id));
+    } catch {
+      setActionError('That comment could not be deleted.');
+    }
   };
 
   return (
@@ -55,19 +88,28 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
         Comments {comments.length > 0 && <span className="text-[var(--text-muted)] font-normal">({comments.length})</span>}
       </h2>
 
+      {actionError && (
+        <p role="alert" className="mb-3 text-xs text-red-500">{actionError}</p>
+      )}
+
       {/* Composer */}
       <div className="flex gap-3 mb-6">
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
           {(user?.email || '?').slice(0, 1).toUpperCase()}
         </div>
         <div className="flex-1">
+          <label htmlFor="comment-body" className="sr-only">Your comment</label>
           <textarea
+            id="comment-body"
             value={text}
             onChange={e => setText(e.target.value)}
             placeholder={user ? 'Share your thoughts…' : 'Sign in to comment'}
             rows={2}
             className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--primary)] resize-none"
           />
+          {postError && (
+            <p role="alert" className="mt-1 text-xs text-red-500">{postError}</p>
+          )}
           <div className="flex justify-end mt-2">
             <button
               onClick={submit}
@@ -83,6 +125,11 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
       {/* List */}
       {loading ? (
         <p className="text-sm text-[var(--text-muted)]">Loading comments…</p>
+      ) : loadError ? (
+        <div className="flex items-center gap-2 text-sm text-red-500">
+          <span>{loadError}</span>
+          <button onClick={load} className="text-xs font-semibold underline">Retry</button>
+        </div>
       ) : comments.length === 0 ? (
         <p className="text-sm text-[var(--text-muted)]">No comments yet. Be the first to respond.</p>
       ) : (
@@ -97,7 +144,15 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
                   <span className="text-sm font-semibold text-[var(--text)]">{c.authorName}</span>
                   <span className="text-[11px] text-[var(--text-muted)]">{relTime(c.created_at, now)}</span>
                   {user?.id === c.user_id && (
-                    <button onClick={() => remove(c.id)} className="text-[11px] text-red-500 hover:underline ml-auto">Delete</button>
+                    confirmDeleteId === c.id ? (
+                      <span className="ml-auto flex items-center gap-2">
+                        <span className="text-[11px] text-[var(--text-muted)]">Delete this comment?</span>
+                        <button onClick={() => remove(c.id)} className="text-[11px] font-semibold text-red-500 hover:underline">Yes, delete</button>
+                        <button onClick={() => setConfirmDeleteId(null)} className="text-[11px] text-[var(--text-muted)] hover:underline">Cancel</button>
+                      </span>
+                    ) : (
+                      <button onClick={() => setConfirmDeleteId(c.id)} className="text-[11px] text-red-500 hover:underline ml-auto">Delete</button>
+                    )
                   )}
                 </div>
                 <p className="text-sm text-[var(--text-secondary)] mt-0.5 whitespace-pre-line">{c.body}</p>

@@ -64,6 +64,7 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
   }, [handleKey]);
 
   const panelRef = useRef<HTMLDivElement>(null);
+  const backdropDownRef = useRef<EventTarget | null>(null);
 
   // Move focus into the dialog on open and keep Tab inside it. Without this a
   // keyboard user tabs straight through the overlay into the page behind.
@@ -78,16 +79,27 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
         )
       ).filter(el => el.offsetParent !== null || el.tagName === 'IFRAME');
 
-    focusables()[0]?.focus();
+    const initial = focusables();
+    (initial[0] ?? panel).focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const items = focusables();
-      if (items.length === 0) return;
+      if (items.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
       const first = items[0];
       const last = items[items.length - 1];
       const active = document.activeElement;
-      if (e.shiftKey && (active === first || !panel.contains(active))) {
+      // Focus drifted outside the dialog (or never made it in) — pull it back.
+      if (!panel.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && active === first) {
         e.preventDefault();
         last.focus();
       } else if (!e.shiftKey && active === last) {
@@ -96,9 +108,11 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
       }
     };
 
-    panel.addEventListener('keydown', onKeyDown);
+    // On the document, not on the panel: the trap has to hold even when focus
+    // sits outside the dialog.
+    document.addEventListener('keydown', onKeyDown);
     return () => {
-      panel.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keydown', onKeyDown);
       previouslyFocused?.focus?.();
     };
   }, []);
@@ -106,13 +120,15 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/70 backdrop-blur-sm animate-fade-in"
-      onClick={onClose}
+      onMouseDown={e => { backdropDownRef.current = e.target; }}
+      onClick={e => { if (backdropDownRef.current === e.currentTarget) onClose(); }}
     >
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={`Preview of ${book.title}`}
+        tabIndex={-1}
         className="relative w-full max-w-4xl h-[90vh] bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >

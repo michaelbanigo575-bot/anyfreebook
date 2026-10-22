@@ -10,6 +10,8 @@ import { ReadingReminderProvider } from '@/components/ReadingReminderProvider';
 import { AuthProvider } from '@/components/AuthProvider';
 import { BackButton } from '@/components/BackButton';
 import { PublicOnly } from '@/components/PublicChrome';
+import { themeBootstrapScript } from '@/lib/themes';
+import { preferencesBootstrapScript } from '@/lib/preferences';
 import { Analytics } from '@vercel/analytics/react';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
 
@@ -79,6 +81,15 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ANYFREEBOOK" />
+        {/* Webfonts: a <link> in the head, not an @import inside the stylesheet.
+            An @import after other rules is invalid CSS and browsers drop it —
+            the site was silently rendering in system fonts. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async
@@ -95,6 +106,13 @@ export default function RootLayout({
         ))}
       </head>
       <body className="min-h-screen flex flex-col antialiased">
+        {/* Applies the saved theme before the first paint. Without it the page
+            paints with the light :root defaults and then repaints dark once
+            ThemeProvider hydrates — a white flash on every load. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript() }} />
+        {/* Applies the saved appearance preferences (font size, animations) before
+            the first paint, so the page never renders at the wrong size and jumps. */}
+        <script dangerouslySetInnerHTML={{ __html: preferencesBootstrapScript() }} />
         <AuthProvider>
           <ThemeProvider>
             <AudioProvider>

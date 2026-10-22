@@ -14,6 +14,25 @@ export interface StudyPlan {
 }
 
 const STUDY_PLAN_KEY = 'afb_study_plan';
+/** How often we look for the reminder. Minute-level resolution is enough. */
+const CHECK_INTERVAL_MS = 60_000;
+/**
+ * Fire within this many minutes AFTER the target time: background tabs
+ * throttle timers, so landing exactly on the target minute is unlikely.
+ */
+const TOLERANCE_MINUTES = 10;
+
+/** yyyy-mm-dd in LOCAL time — the time-of-day check is local, so the marker must be too. */
+function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Minutes since local midnight for a "HH:MM" string; -1 when it can't be parsed. */
+function minutesOfDay(hhmm: string): number {
+  const [h, m] = (hhmm || '').split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return -1;
+  return h * 60 + m;
+}
 
 function getLocalStudyPlan(): StudyPlan | null {
   if (typeof window === 'undefined') return null;
@@ -93,11 +112,15 @@ export function ReadingReminderProvider() {
 
       const now = new Date();
       const day = now.getDay();
-      const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const today = now.toISOString().slice(0, 10);
+      const today = localDateKey(now);
+      const minutesNow = now.getHours() * 60 + now.getMinutes();
 
       if (!plan.reminderDays.includes(day)) return;
-      if (hhmm !== plan.reminderTime) return;
+      const target = minutesOfDay(plan.reminderTime);
+      if (target < 0) return;
+      // Fire any time inside the target minute plus the tolerance window.
+      if (minutesNow < target || minutesNow > target + TOLERANCE_MINUTES) return;
+      // Already fired today — the marker keeps it to one notification a day.
       if (plan.lastNotifiedDate === today) return;
 
       const notification = new Notification('📚 Time to read!', {
@@ -116,8 +139,8 @@ export function ReadingReminderProvider() {
       await saveStudyPlan({ ...plan, lastNotifiedDate: today }, userIdRef.current);
     };
 
-    checkAndFireReminder();
-    const interval = setInterval(checkAndFireReminder, 20000);
+    checkAndFireReminder().catch(() => {});
+    const interval = setInterval(() => { checkAndFireReminder().catch(() => {}); }, CHECK_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchBooks, type Book } from '@/lib/data';
+import { placeholderGradient } from './BookCover';
 
 interface SearchBarProps {
   compact?: boolean;
@@ -144,17 +145,10 @@ export function SearchBar({ compact }: SearchBarProps) {
 }
 
 function BookCoverMini({ title }: { title: string }) {
-  const colors = [
-    'from-blue-500 to-blue-700',
-    'from-emerald-500 to-emerald-700',
-    'from-purple-500 to-purple-700',
-    'from-amber-500 to-amber-700',
-    'from-rose-500 to-rose-700',
-    'from-cyan-500 to-cyan-700',
-  ];
-  const idx = title.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
+  // Same palette as the real covers — see BookCover's placeholderGradient.
+  const gradient = placeholderGradient(title);
   return (
-    <div className={`w-8 h-12 rounded flex-shrink-0 bg-gradient-to-br ${colors[idx]} shadow-sm flex items-end p-1`}>
+    <div className={`w-8 h-12 rounded flex-shrink-0 bg-gradient-to-br ${gradient} shadow-sm flex items-end p-1`}>
       <div className="w-full h-[1px] bg-white/30" />
     </div>
   );

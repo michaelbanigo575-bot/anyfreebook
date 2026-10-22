@@ -87,15 +87,21 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         ? [{ src: track.coverUrl, sizes: '512x512', type: 'image/png' }]
         : [],
     });
-    navigator.mediaSession.setActionHandler('play', () => audioRef.current?.play());
-    navigator.mediaSession.setActionHandler('pause', () => audioRef.current?.pause());
-    navigator.mediaSession.setActionHandler('seekbackward', () => {
+    // Safari rejects action handlers it doesn't implement (notably 'seekto')
+    // with a NotSupportedError. An uncaught throw here would abort the rest
+    // of the media-session setup, so every handler is registered defensively.
+    const setHandler = (action: MediaSessionAction, handler: MediaSessionActionHandler) => {
+      try { navigator.mediaSession.setActionHandler(action, handler); } catch {}
+    };
+    setHandler('play', () => { audioRef.current?.play().catch(() => {}); });
+    setHandler('pause', () => audioRef.current?.pause());
+    setHandler('seekbackward', () => {
       if (audioRef.current) audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 15);
     });
-    navigator.mediaSession.setActionHandler('seekforward', () => {
+    setHandler('seekforward', () => {
       if (audioRef.current) audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 30);
     });
-    navigator.mediaSession.setActionHandler('seekto', (details) => {
+    setHandler('seekto', (details) => {
       if (audioRef.current && details.seekTime != null) audioRef.current.currentTime = details.seekTime;
     });
   }, []);
@@ -174,20 +180,29 @@ export function AudioPlayerBar() {
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-40 glass border-t border-[var(--border)] shadow-xl">
-      {/* Progress bar */}
-      <div className="h-1 bg-[var(--bg-secondary)] cursor-pointer group"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const pct = (e.clientX - rect.left) / rect.width;
-          seek(pct * duration);
-        }}
-      >
-        <div className="h-full bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] transition-all relative"
+    // --stack-1 is the shared bottom offset that clears the mobile bottom nav.
+    <div className="fixed bottom-[var(--stack-1)] md:bottom-0 left-0 right-0 z-40 glass border-t border-[var(--border)] shadow-xl">
+      {/* Progress bar — a real range input sits on top of the drawn bar so it
+          is keyboard operable, announces its position, and still seeks on
+          click / drag / touch. Disabled until the track has a duration. */}
+      <div className="relative h-1 bg-[var(--bg-secondary)] group focus-within:ring-2 focus-within:ring-[var(--primary)]">
+        <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] transition-all pointer-events-none"
           style={{ width: `${progress}%` }}
         >
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-[var(--primary)] opacity-0 group-hover:opacity-100 transition-opacity shadow" />
         </div>
+        <input
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={1}
+          value={Math.min(currentTime, duration || 0)}
+          onChange={e => seek(+e.target.value)}
+          disabled={duration <= 0}
+          aria-label="Seek position"
+          aria-valuetext={`${formatTime(currentTime)} of ${formatTime(duration)}`}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-default"
+        />
       </div>
 
       <div className="content-wrapper flex items-center gap-3 h-16">

@@ -40,7 +40,7 @@ export function BecomeCreator({ config }: { config: { pool_percentage: number; m
       <div className="text-center mb-8">
         <p className="text-5xl mb-3">🚀</p>
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Become an ANYFREEBOOK author</h1>
-        <p className="text-[var(--text-muted)] mt-2">Publish your work, reach millions of readers, and earn from the creator pool.</p>
+        <p className="text-[var(--text-muted)] mt-2">Publish your work free, reach readers across ANYFREEBOOK, and earn from the creator pool.</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-8">

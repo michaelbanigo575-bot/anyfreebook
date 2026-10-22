@@ -59,6 +59,10 @@ interface Props {
 
 export function LiveStage({ classroomId, isHost }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // False once the component unmounts. getDisplayMedia() can resolve long
+  // after the user has left the class — the screen-share picker sits open —
+  // so the late stream has to be stopped instead of left running.
+  const mountedRef = useRef(true);
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [sharing, setSharing] = useState(false);
@@ -85,6 +89,10 @@ export function LiveStage({ classroomId, isHost }: Props) {
 
   useEffect(() => {
     const p = plumbing.current;
+    // Set when the effect is torn down. getUserMedia() can resolve long after
+    // that (the permission prompt outlives the page), so every async step
+    // below has to check it before touching state or the camera.
+    let cancelled = false;
     const sb = createClient();
     const channel = sb.channel(`rtc-${classroomId}`, { config: { broadcast: { self: false } } });
     p.channel = channel;
@@ -93,17 +101,26 @@ export function LiveStage({ classroomId, isHost }: Props) {
 
     // ---------- HOST: publish to every viewer that says "join" ----------
     const runHost = async () => {
+      let stream: MediaStream;
       try {
-        p.stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: { echoCancellation: true, noiseSuppression: true },
         });
       } catch {
-        setStatus('error');
+        if (!cancelled) setStatus('error');
         return;
       }
+      // The permission prompt can outlive the component — the user answers it
+      // after leaving the class. Stop the tracks straight away, otherwise the
+      // browser's camera indicator stays lit for the rest of the session.
+      if (cancelled) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
+      p.stream = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = p.stream;
+        videoRef.current.srcObject = stream;
         videoRef.current.muted = true; // never monitor your own mic
         videoRef.current.play().catch(() => {});
       }
@@ -206,6 +223,8 @@ export function LiveStage({ classroomId, isHost }: Props) {
     if (isHost) runHost(); else runViewer();
 
     return () => {
+      cancelled = true;
+      mountedRef.current = false;
       if (p.joinTimer) { clearInterval(p.joinTimer); p.joinTimer = null; }
       // The viewer's PC lives outside p.pcs, so close it explicitly —
       // otherwise it survives unmount holding the remote stream open.
@@ -214,7 +233,11 @@ export function LiveStage({ classroomId, isHost }: Props) {
       p.pcs.forEach(pc => pc.close());
       p.pcs.clear();
       p.screenTrack?.stop();
+      p.screenTrack = null;
+      // Release the camera/mic and drop the reference so a later cleanup can
+      // never stop the same tracks twice.
       p.stream?.getTracks().forEach(t => t.stop());
+      p.stream = null;
       sb.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -248,6 +271,12 @@ export function LiveStage({ classroomId, isHost }: Props) {
     if (p.screenTrack) { stopShare(); return; }
     try {
       const display = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      // The picker can outlive the component — stop the late stream rather
+      // than leaving the screen share running after the class is gone.
+      if (!mountedRef.current) {
+        display.getTracks().forEach(t => t.stop());
+        return;
+      }
       const track = display.getVideoTracks()[0];
       p.screenTrack = track;
       track.onended = stopShare; // browser's own "Stop sharing" button

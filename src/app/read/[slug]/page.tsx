@@ -14,8 +14,34 @@ import { FollowButton } from '@/components/FollowButton';
 import { ReaderSurface } from '@/components/ReaderSurface';
 import { AiStudyAids } from '@/components/AiStudyAids';
 import { DocumentReader } from '@/components/DocumentReader';
+import { primaryButtonClass } from '@/lib/ui';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Publication bodies are HTML — a downloadable copy is the plain text of what
+ * is published on this page.
+ */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|blockquote|tr|pre)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)))
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** Data-URL downloads get unwieldy on very long works — keep the file small. */
+const TEXT_DOWNLOAD_LIMIT = 150_000;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const data = await getPublicationBySlug(params.slug);
@@ -56,6 +82,15 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
     datePublished: pub.published_at,
     publisher: { '@type': 'Organization', name: 'ANYFREEBOOK' },
   };
+
+  // The whole work as plain text — the body for a single-piece publication,
+  // every chapter for a serialised one.
+  const plainText = pub.body
+    ? htmlToText(pub.body)
+    : chapters.map(c => `${c.title}\n\n${htmlToText(c.body || '')}`).join('\n\n').trim();
+  const textDownload = plainText.length > 0 && plainText.length <= TEXT_DOWNLOAD_LIMIT
+    ? `data:text/plain;charset=utf-8,${encodeURIComponent(plainText)}`
+    : null;
 
   return (
     <article className="content-wrapper py-8 max-w-3xl mx-auto">
@@ -203,6 +238,41 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
           <DocumentReader url={pub.external_url} title={pub.title} height="75vh" />
         </div>
       )}
+
+      {/* Download a copy — this work is published on ANYFREEBOOK to read free */}
+      <div className="mt-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <h2 className="text-sm font-bold text-[var(--text)] mb-1">Download</h2>
+        <p className="text-xs text-[var(--text-muted)] mb-4">
+          {author?.display_name
+            ? `Published by ${author.display_name} on ANYFREEBOOK — free to read.`
+            : 'Published on ANYFREEBOOK — free to read.'}{' '}
+          Take a copy with you.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          {textDownload && (
+            <a href={textDownload} download={`${pub.slug}.txt`} className={primaryButtonClass()}>
+              ⬇ Save as plain text (.txt)
+            </a>
+          )}
+          {pub.external_url && (
+            <a
+              href={pub.external_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[var(--radius-lg)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all"
+            >
+              📎 Open the attached file
+            </a>
+          )}
+          {!textDownload && !pub.external_url && (
+            <p className="text-xs text-[var(--text-muted)]">
+              {plainText
+                ? 'This work is too long to save as a single text file here — use your browser’s print → Save as PDF instead.'
+                : 'There is no downloadable file for this work yet.'}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* AI study aids */}
       <AiStudyAids slug={pub.slug} title={pub.title} />

@@ -86,16 +86,26 @@ export function PWAInstallPrompt() {
 
   const install = async () => {
     if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setDeferredPrompt(null);
+    const promptEvent = deferredPrompt;
+    try {
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+    } catch {
+      // prompt() may only be called once per event: if the user dismissed the
+      // native dialog earlier, the second call rejects. Swallow it instead of
+      // leaving an unhandled rejection behind.
+    } finally {
+      // The event is spent either way — never offer it again, so the button
+      // can never be clicked into a dead state.
+      setDeferredPrompt(null);
+    }
   };
 
   if (!ready || dismissed) return null;
   if (!deferredPrompt && !showIOS) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-6 md:w-80 z-40 animate-slide-up">
+    <div className="fixed bottom-[var(--stack-3,9rem)] left-4 right-4 md:left-auto md:right-6 md:w-80 z-40 animate-slide-up">
       <div className={cardClass({ hover: false, padding: 'p-4' }) + ' shadow-2xl'}>
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center flex-shrink-0">

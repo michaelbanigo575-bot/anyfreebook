@@ -53,7 +53,7 @@ export function NotificationsBell() {
   // Initial load + live inserts
   useEffect(() => {
     if (!user) return;
-    load();
+    load().catch(() => {});
     const sb = createClient();
     const channel = sb
       .channel(`notif-${user.id}`)
@@ -80,11 +80,16 @@ export function NotificationsBell() {
     const next = !open;
     setOpen(next);
     if (next && unread > 0 && user) {
-      // Mark all read
-      const sb = createClient();
-      await sb.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null).eq('user_id', user.id);
-      setUnread(0);
-      setItems(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
+      // Mark all read. Wrapped so a failure can never surface as an
+      // unhandled rejection from this click handler.
+      try {
+        const sb = createClient();
+        await sb.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null).eq('user_id', user.id);
+        setUnread(0);
+        setItems(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
+      } catch {
+        // Leave the unread badge as-is; the next open retries the write.
+      }
     }
   };
 

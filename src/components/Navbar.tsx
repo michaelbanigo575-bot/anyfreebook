@@ -8,30 +8,28 @@ import { useAuth } from './AuthProvider';
 import { NotificationsBell } from './NotificationsBell';
 import { CategoryMenu } from './CategoryMenu';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { useTheme } from './ThemeProvider';
 
 export function Navbar() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, setTheme, isCustom } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    const dark = document.documentElement.classList.contains('dark') ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDark(dark);
-    if (dark) document.documentElement.classList.add('dark');
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle('dark', next);
+    // A custom gradient has no light/dark pair — fall back to the light theme.
+    if (isCustom) {
+      setTheme('light');
+      return;
+    }
+    setTheme(isDark ? 'light' : 'dark');
   };
 
   if (pathname?.startsWith('/admin')) return null;
@@ -62,7 +60,7 @@ export function Navbar() {
         `}
       >
         <div className="content-wrapper">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center shadow-sm">
@@ -231,7 +229,7 @@ export function Navbar() {
       </nav>
 
       {/* Spacer for fixed navbar */}
-      <div className="h-16 md:h-18" />
+      <div className="h-16 md:h-20" />
     </>
   );
 }

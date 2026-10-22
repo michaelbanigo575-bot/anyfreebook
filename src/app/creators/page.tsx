@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Creator Program — Get paid to publish on ANYFREEBOOK',
-  description: 'Publish your books, stories and guides on ANYFREEBOOK, reach millions of readers, and earn a share of ad revenue every time people read your work.',
+  description: 'Publish your books, stories and guides on ANYFREEBOOK, reach readers who come here for free books, and earn a share of ad revenue every time people read your work.',
 };
 
 export default async function CreatorProgramPage() {
@@ -43,7 +43,7 @@ export default async function CreatorProgramPage() {
             Get paid every time<br />someone reads <span className="gradient-text">your</span> book.
           </h1>
           <p className="mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto">
-            Publish your writing on ANYFREEBOOK, reach millions of readers who come here for free books, and earn a share of the revenue your work generates — just like creators do on YouTube and TikTok.
+            Publish your writing on ANYFREEBOOK, reach readers who come here for free books, and earn a share of the revenue your work generates — just like creators do on YouTube and TikTok.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/creators/dashboard" className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
@@ -79,7 +79,7 @@ export default async function CreatorProgramPage() {
         <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] text-center mb-10">How you get paid</h2>
         <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {[
-            { n: '1', title: 'Publish', desc: 'Post your book, story or guide in minutes. It goes live to millions of readers.' },
+            { n: '1', title: 'Publish', desc: 'Post your book, story or guide in minutes. It goes live on your author page and in the feed.' },
             { n: '2', title: 'Get read', desc: 'Readers discover and read your work. We count genuine, verified reads — not empty clicks.' },
             { n: '3', title: 'Earn your share', desc: `${config.pool_percentage}% of the ad revenue your content generates goes into the creator pool, split by how much people read your work.` },
             { n: '4', title: 'Cash out', desc: `Once you pass ${config.monthly_read_threshold.toLocaleString()} verified reads, ${config.monthly_follower_threshold.toLocaleString()} readers and reach $${config.min_payout_usd}, request a payout.` },
@@ -147,7 +147,7 @@ export default async function CreatorProgramPage() {
 
       {/* FINAL CTA */}
       <section className="content-wrapper py-16 text-center">
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-3">Your readers are already here.</h2>
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-3">Publish free. Earn from every verified read.</h2>
         <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">Join the Creator Program free and start earning from your writing today.</p>
         <Link href="/creators/dashboard" className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
           Become an author — free

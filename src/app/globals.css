@@ -2,7 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* The webfonts are loaded with a <link> in src/app/layout.tsx. An @import here
+   was emitted after thousands of Tailwind rules, where the CSS spec requires
+   @import to appear first — browsers drop it, so the site silently rendered
+   in system fonts. */
 
 @layer base {
   :root {
@@ -15,13 +18,23 @@
     --text: #0f172a;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
-    --primary: #338dff;
-    --primary-hover: #1a6df5;
-    --primary-light: #eef7ff;
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-light: #eff6ff;
     --accent: #10b981;
     --accent-light: #ecfdf5;
-    --gradient-start: #338dff;
+    --gradient-start: #3b82f6;
     --gradient-end: #10b981;
+
+    /* Mobile chrome stacking. The bottom nav is 4rem tall; anything that
+       floats above it uses --stack-1, and the next bar up uses --stack-2.
+       Without this the reader ad, the audio player and the install prompt
+       each picked their own offset and overlapped on phones. */
+    --nav-h: 4rem;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --stack-1: calc(var(--nav-h) + var(--safe-bottom));
+    --stack-2: calc(var(--stack-1) + 4rem);
+    --stack-3: calc(var(--stack-2) + 4rem);
 
     --space-1: 4px;
     --space-2: 8px;
@@ -100,10 +113,23 @@
   }
 
   .gradient-text {
+    /* Fallback colour first: if background-clip:text is unavailable the text
+       must still be readable rather than invisible. */
+    color: var(--gradient-start);
     background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Windows High Contrast / forced-colors: the transparent fill would make
+     the text disappear, so paint it with the system colour instead. */
+  @media (forced-colors: active) {
+    .gradient-text {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      color: CanvasText;
+    }
   }
 
   .glass {
@@ -170,11 +196,36 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Pads a fixed bottom bar clear of the iPhone home indicator. The mobile
+     nav referenced this class but it was never defined. */
+  .safe-area-bottom {
+    padding-bottom: var(--safe-bottom);
+  }
+}
+
+/* Users can turn animations off in Settings. */
+html[data-animations='off'] *,
+html[data-animations='off'] *::before,
+html[data-animations='off'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
 }
 
 ::selection {
-  background-color: rgba(51, 141, 255, 0.2);
+  background-color: rgba(59, 130, 246, 0.22);
+  background-color: color-mix(in srgb, var(--primary) 25%, transparent);
   color: var(--text);
+}
+
+/* Visible keyboard focus everywhere. The site had no focus-visible styles at
+   all, so keyboard users could not tell where they were. This sits outside
+   the Tailwind layers on purpose, so it still wins over `outline-none`. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* ---- 3D interactive book cover (hover to spin) ---- */
@@ -233,16 +284,19 @@ body { top: 0 !important; }
 }
 
 /* 1. Gradient CTAs ("Publish now", "Join classroom", "Sign In"...): the
-      gradient now flows continuously instead of sitting still */
-button[class*="from-[var(--gradient-start)]"],
-a[class*="from-[var(--gradient-start)]"] {
+      gradient now flows continuously instead of sitting still.
+      :not([class*="animate-"]) keeps an element's own Tailwind `animate-*`
+      utility from being clobbered by the `animation` shorthand. */
+button[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]),
+a[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]) {
   background-image: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
   background-size: 200% auto;
   animation: gradient-flow 3.5s linear infinite;
 }
 
 /* 2. Solid primary buttons ("Show it", "Attach", tab pills...) upgrade to
-      the same flowing gradient. Leading space keeps hover:bg-* variants out. */
+      the same flowing gradient. The trailing space keeps hover:bg-* variants
+      and small toggle switches (which end the class list with the token) out. */
 button[class*=" bg-[var(--primary)] "],
 a[class*=" bg-[var(--primary)] "] {
   background-image: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
@@ -251,27 +305,45 @@ a[class*=" bg-[var(--primary)] "] {
 }
 
 /* 3. Outline buttons ("Read in ANYFREEBOOK Reader", "Re-check", chips...):
-      animated gradient BORDER, surface fill preserved */
-button[class*="border-[var(--primary)]"],
-a[class*="border-[var(--primary)]"] {
-  border-color: transparent !important;
-  background-image:
-    linear-gradient(var(--surface), var(--surface)),
-    linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-  background-size: 100% 100%, 200% auto;
-  animation: gradient-flow 3.5s linear infinite;
+      animated gradient BORDER with the button's own background preserved, so
+      hover:bg-* is actually visible. The old version painted an opaque
+      surface-coloured layer over the padding box, which hid the hover state.
+      Drawn as a masked pseudo-element rather than a background layer, so only
+      the 1px ring is painted. */
+@supports (mask: linear-gradient(#fff 0 0)) or (-webkit-mask: linear-gradient(#fff 0 0)) {
+  button[class*="border-[var(--primary)]"],
+  a[class*="border-[var(--primary)]"] {
+    position: relative;
+    border-color: transparent !important;
+  }
+  button[class*="border-[var(--primary)]"]::before,
+  a[class*="border-[var(--primary)]"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end), var(--gradient-start));
+    background-size: 200% auto;
+    animation: gradient-flow 3.5s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
 }
 
 /* Respect reduced-motion: gradients render but stay still */
 @media (prefers-reduced-motion: reduce) {
-  button[class*="from-[var(--gradient-start)]"],
-  a[class*="from-[var(--gradient-start)]"],
+  button[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]),
+  a[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]),
   button[class*=" bg-[var(--primary)] "],
-  a[class*=" bg-[var(--primary)] "],
-  button[class*="border-[var(--primary)]"],
-  a[class*="border-[var(--primary)]"] {
+  a[class*=" bg-[var(--primary)] "] {
+    animation: none;
+  }
+  button[class*="border-[var(--primary)]"]::before,
+  a[class*="border-[var(--primary)]"]::before {
     animation: none;
   }
 }

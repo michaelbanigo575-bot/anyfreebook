@@ -4,6 +4,22 @@ import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
+import { safeRedirectPath, PENDING_REDIRECT_KEY } from '@/lib/redirect';
+
+/**
+ * Where the user wanted to go before they were asked to sign in. The Google
+ * path keeps the destination here too, so the auth provider can carry it
+ * through the OAuth round-trip.
+ */
+
+/**
+ * Only same-site paths are allowed as a post-sign-in destination. "//evil.com"
+ * and "/\evil.com" are protocol-relative and would bounce the user off the
+ * site, so anything that is not a plain "/path" falls back to /profile.
+ */
+function safeRedirect(raw: string | null): string {
+  return safeRedirectPath(raw);
+}
 
 function LoginForm() {
   const router = useRouter();
@@ -17,10 +33,18 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const referralCode = searchParams.get('ref') || undefined;
+  // Where to land after a successful sign-in — /profile unless the caller asked
+  // for a safe internal path.
+  const redirectTo = safeRedirect(searchParams.get('redirect'));
 
   const handleGoogle = async () => {
     setError(null);
     setGoogleLoading(true);
+    // The Google callback always returns to /profile, so keep the intended
+    // destination for the profile page to continue to.
+    try {
+      localStorage.setItem(PENDING_REDIRECT_KEY, JSON.stringify({ path: redirectTo, at: Date.now() }));
+    } catch {}
     const result = await signInWithGoogle(referralCode);
     if (result.error) {
       setError(result.error);
@@ -30,8 +54,8 @@ function LoginForm() {
   };
 
   useEffect(() => {
-    if (user) router.push('/profile');
-  }, [user, router]);
+    if (user) router.push(redirectTo);
+  }, [user, router, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +70,8 @@ function LoginForm() {
       } else if (result.needsConfirmation) {
         setAwaitingConfirmation(true);
       } else {
-        router.push('/profile');
+        try { localStorage.removeItem(PENDING_REDIRECT_KEY); } catch {}
+        router.push(redirectTo);
       }
       return;
     }
@@ -57,7 +82,8 @@ function LoginForm() {
     if (result.error) {
       setError(result.error);
     } else {
-      router.push('/profile');
+      try { localStorage.removeItem(PENDING_REDIRECT_KEY); } catch {}
+      router.push(redirectTo);
     }
   };
 

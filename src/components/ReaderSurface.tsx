@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useId } from 'react';
 
 interface ReaderPrefs {
   font: 'serif' | 'sans' | 'mono';
@@ -12,6 +12,10 @@ interface ReaderPrefs {
 
 const DEFAULTS: ReaderPrefs = { font: 'serif', size: 18, lineHeight: 1.8, theme: 'default', width: 'normal' };
 const KEY = 'afb_reader_prefs';
+
+// useLayoutEffect does nothing on the server (and warns there) — fall back to
+// useEffect when there is no window.
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const THEMES: Record<ReaderPrefs['theme'], { bg: string; text: string; muted: string; label: string; swatch: string }> = {
   default: { bg: 'transparent', text: '', muted: '', label: 'Site', swatch: 'linear-gradient(135deg,#6366f1,#10b981)' },
@@ -31,14 +35,18 @@ const WIDTHS: Record<ReaderPrefs['width'], string> = { narrow: '34rem', normal: 
 export function ReaderSurface({ children }: { children: React.ReactNode }) {
   const [prefs, setPrefs] = useState<ReaderPrefs>(DEFAULTS);
   const [open, setOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const sizeId = useId();
+  const lineHeightId = useId();
 
-  useEffect(() => {
+  // Read the saved preferences before the first paint, otherwise the article
+  // visibly jumps (font, size, colour) once the effect lands.
+  useIsomorphicLayoutEffect(() => {
     try {
       const saved = localStorage.getItem(KEY);
       if (saved) setPrefs({ ...DEFAULTS, ...JSON.parse(saved) });
     } catch {}
-    setLoaded(true);
   }, []);
 
   const update = useCallback(<K extends keyof ReaderPrefs>(k: K, v: ReaderPrefs[K]) => {
@@ -48,6 +56,40 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
       return next;
     });
   }, []);
+
+  const close = useCallback((returnFocus = true) => {
+    setOpen(false);
+    if (returnFocus) triggerRef.current?.focus();
+  }, []);
+
+  // Escape closes the panel, a click outside it closes it too, and the focus
+  // goes back to the trigger.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    };
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+      if (panelRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
+      // Don't steal the focus from whatever the reader actually clicked.
+      const focusable = target.closest('a, button, input, select, textarea, [tabindex]');
+      close(!focusable);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open, close]);
+
+  // Move the focus into the panel when it opens so it is keyboard operable.
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current?.querySelector<HTMLElement>('button, input')?.focus();
+  }, [open]);
 
   const t = THEMES[prefs.theme];
   const custom = prefs.theme !== 'default';
@@ -63,20 +105,32 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
       backgroundColor: t.bg,
       color: t.text,
       borderRadius: '1rem',
-      padding: '1.5rem 1.75rem',
+      // Right padding comes from the gutter class below, so it can widen
+      // while the settings panel is open.
+      paddingTop: '1.5rem',
+      paddingBottom: '1.5rem',
+      paddingLeft: '1.75rem',
       ['--text' as string]: t.text,
       ['--text-secondary' as string]: t.text,
       ['--text-muted' as string]: t.muted,
     } : {}),
   };
 
+  // The "Aa" control is pinned to the right edge of the column, so the article
+  // keeps a right gutter for it — the control never covers a line of text.
+  // While the settings panel is open the gutter widens so the text also
+  // clears the panel itself.
+  const gutterClass = open ? 'pr-12 lg:pr-[19rem]' : 'pr-12 lg:pr-14';
+
   return (
     <div className="relative">
       {/* Aa trigger */}
       <div className="sticky top-20 z-30 flex justify-end -mb-10 pointer-events-none">
         <button
+          ref={triggerRef}
           onClick={() => setOpen(o => !o)}
           aria-label="Reading settings"
+          aria-expanded={open}
           className="pointer-events-auto w-11 h-11 rounded-full bg-[var(--surface)] border border-[var(--border)] shadow-lg flex items-center justify-center text-[var(--text)] font-serif font-bold hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors"
         >
           Aa
@@ -85,8 +139,8 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
 
       {/* Settings panel */}
       {open && (
-        <div className="sticky top-32 z-30 flex justify-end -mb-4">
-          <div className="w-72 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl p-4 space-y-4">
+        <div className="sticky top-32 z-40 flex justify-end -mb-4">
+          <div ref={panelRef} className="w-72 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl p-4 space-y-4">
             {/* Theme */}
             <div>
               <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Theme</div>
@@ -124,9 +178,9 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
             {/* Size */}
             <div>
               <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">
-                <span>Text size</span><span className="font-mono">{prefs.size}px</span>
+                <label htmlFor={sizeId}>Text size</label><span className="font-mono">{prefs.size}px</span>
               </div>
-              <input type="range" min={14} max={24} step={1} value={prefs.size}
+              <input id={sizeId} type="range" min={14} max={24} step={1} value={prefs.size}
                 onChange={e => update('size', +e.target.value)}
                 className="w-full accent-[var(--primary)]" />
             </div>
@@ -134,9 +188,9 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
             {/* Line spacing */}
             <div>
               <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">
-                <span>Line spacing</span><span className="font-mono">{prefs.lineHeight.toFixed(1)}</span>
+                <label htmlFor={lineHeightId}>Line spacing</label><span className="font-mono">{prefs.lineHeight.toFixed(1)}</span>
               </div>
-              <input type="range" min={1.4} max={2.2} step={0.1} value={prefs.lineHeight}
+              <input id={lineHeightId} type="range" min={1.4} max={2.2} step={0.1} value={prefs.lineHeight}
                 onChange={e => update('lineHeight', +e.target.value)}
                 className="w-full accent-[var(--primary)]" />
             </div>
@@ -168,7 +222,7 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Themed reading surface */}
-      <div style={loaded ? surfaceStyle : undefined}>
+      <div className={gutterClass} style={surfaceStyle}>
         {children}
       </div>
     </div>

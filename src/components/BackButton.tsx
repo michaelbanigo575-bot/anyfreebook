@@ -18,25 +18,31 @@ function getFallbackPath(pathname: string): string {
 export function BackButton() {
   const router = useRouter();
   const pathname = usePathname();
-  const [canGoBack, setCanGoBack] = useState(false);
+  const [navCount, setNavCount] = useState(0);
   const lastPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     let count = parseInt(sessionStorage.getItem(NAV_COUNT_KEY) || '0', 10);
+    if (!Number.isFinite(count) || count < 0) count = 0;
 
     if (lastPathRef.current !== null && lastPathRef.current !== pathname) {
       count += 1;
       sessionStorage.setItem(NAV_COUNT_KEY, String(count));
     }
     lastPathRef.current = pathname;
-    setCanGoBack(count > 0);
+    setNavCount(count);
   }, [pathname]);
 
   if (pathname === '/') return null;
 
   const handleBack = () => {
-    if (canGoBack) {
+    if (navCount > 0) {
+      // Consume one in-app history entry. Without this the counter only ever
+      // grows, so a second Back would walk out of the site via the referrer.
+      const remaining = navCount - 1;
+      sessionStorage.setItem(NAV_COUNT_KEY, String(remaining));
+      setNavCount(remaining);
       router.back();
     } else {
       router.push(getFallbackPath(pathname));

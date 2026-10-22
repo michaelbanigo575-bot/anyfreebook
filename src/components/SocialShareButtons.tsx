@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface SocialShareButtonsProps {
   title: string;
@@ -10,11 +11,19 @@ interface SocialShareButtonsProps {
 
 export function SocialShareButtons({ title, url, description }: SocialShareButtonsProps) {
   const [copied, setCopied] = useState(false);
-  const [shareUrl, setShareUrl] = useState(url || '');
+  const [mounted, setMounted] = useState(false);
+  const [origin, setOrigin] = useState('');
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!url) setShareUrl(window.location.href);
-  }, [url]);
+    setMounted(true);
+    setOrigin(window.location.origin);
+  }, []);
+
+  // Prefer an explicit url; otherwise build it from the CURRENT location so a
+  // client-side navigation can't leave the share links pointing at the
+  // previous page.
+  const shareUrl = url || (origin && pathname ? `${origin}${pathname}` : '');
 
   const shareText = `Check out "${title}" for FREE on ANYFREEBOOK — a free book aggregator! 📚`;
 
@@ -94,8 +103,9 @@ export function SocialShareButtons({ title, url, description }: SocialShareButto
         )}
       </button>
 
-      {/* Native share (mobile) */}
-      {typeof navigator !== 'undefined' && 'share' in navigator && (
+      {/* Native share (mobile) — only after mount, so the server HTML and the
+          first client render agree (no hydration mismatch / layout shift). */}
+      {mounted && typeof navigator !== 'undefined' && 'share' in navigator && (
         <button
           onClick={share}
           className="w-8 h-8 rounded-lg bg-[var(--primary)] text-white flex items-center justify-center hover:opacity-80 transition-opacity"

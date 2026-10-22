@@ -15,7 +15,28 @@ interface StoredInteraction {
   book_author: string | null;
   book_slug: string | null;
   action: string;
+  created_at: string;
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * A readable date built from UTC parts only. toLocaleDateString() and
+ * getFullYear() depend on the viewer's timezone, so the server and the browser
+ * can render different strings for the same value — this never does.
+ */
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+/**
+ * A Google sign-in comes back to /profile (the OAuth callback URL is fixed to
+ * ?next=/profile), so the login page stashes the intended destination here.
+ */
+const PENDING_REDIRECT_KEY = 'afb_login_redirect';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -38,11 +59,31 @@ export default function ProfilePage() {
     if (!user) return;
     supabase
       .from('book_interactions')
-      .select('book_id, book_title, book_author, book_slug, action')
+      .select('book_id, book_title, book_author, book_slug, action, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setInteractions(data || []));
   }, [user, supabase]);
+
+  useEffect(() => {
+    if (!user) return;
+    let target: string | null = null;
+    try {
+      const raw = localStorage.getItem(PENDING_REDIRECT_KEY);
+      if (raw) {
+        localStorage.removeItem(PENDING_REDIRECT_KEY);
+        const saved = JSON.parse(raw);
+        // Only a fresh, plain internal path is honoured — never an off-site URL.
+        if (saved && typeof saved.path === 'string' && Date.now() - Number(saved.at) < 15 * 60 * 1000) {
+          const path = saved.path.trim();
+          if (path.startsWith('/') && !path.startsWith('//') && !path.startsWith('/\\') && !path.includes('://')) {
+            target = path;
+          }
+        }
+      }
+    } catch {}
+    if (target) router.replace(target);
+  }, [user, router]);
 
   if (loading || !user) {
     return (
@@ -195,7 +236,7 @@ export default function ProfilePage() {
             { label: 'Books read', value: String(liked.length), icon: '📖' },
             { label: 'Wishlisted', value: String(wishlisted.length), icon: '📚' },
             { label: 'Favorites', value: String(favorited.length), icon: '⭐' },
-            { label: 'Member since', value: profile?.created_at ? new Date(profile.created_at).getFullYear().toString() : '—', icon: '🗓️' },
+            { label: 'Member since', value: formatDate(profile?.created_at), icon: '🗓️' },
           ].map(stat => (
             <div key={stat.label} className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-subtle)] text-center">
               <span className="text-2xl block mb-1">{stat.icon}</span>
@@ -214,6 +255,7 @@ export default function ProfilePage() {
             >
               <p className="text-sm font-semibold text-[var(--text)] line-clamp-2">{item.book_title || 'Untitled'}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1 line-clamp-1">{item.book_author}</p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1">{formatDate(item.created_at)}</p>
             </a>
           ))}
         </div>

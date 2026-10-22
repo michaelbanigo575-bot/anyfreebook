@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { BookPreviewModal } from './BookPreviewModal';
+import { primaryButtonClass } from '@/lib/ui';
 import type { Book } from '@/lib/data';
 
 interface BookReadActionsProps {
@@ -20,7 +21,10 @@ export function BookReadActions({ book, formats }: BookReadActionsProps) {
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={() => setPreviewOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary-light)] transition-all"
+          // The sitewide animated-gradient rule paints an opaque surface layer
+          // over outline buttons, so a hover:bg-* tint is invisible here —
+          // the lift and shadow are what the user actually sees.
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary-light)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
           Read in ANYFREEBOOK Reader
@@ -31,10 +35,7 @@ export function BookReadActions({ book, formats }: BookReadActionsProps) {
             href={primaryLink.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold
-              bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)]
-              text-white shadow-md hover:shadow-lg hover:-translate-y-0.5
-              transition-all duration-300"
+            className={primaryButtonClass() + ' inline-flex items-center gap-2 shadow-md hover:-translate-y-0.5'}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { SETTINGS_STORAGE_KEY, applyAppearance } from '@/lib/preferences';
 
 interface Settings {
   appearance: { animations: boolean; fontSize: 'small' | 'medium' | 'large' };
@@ -21,11 +22,55 @@ const DEFAULT_SETTINGS: Settings = {
   content: { language: 'en', enabledTypes: ['BOOK', 'AUDIOBOOK', 'NOVEL', 'COMIC', 'MAGAZINE', 'RESEARCH_PAPER', 'MANUAL', 'NEWSLETTER'], professions: [] },
 };
 
+const STORAGE_KEY = SETTINGS_STORAGE_KEY;
+const READER_PREFS_KEY = 'afb_reader_prefs';
+const LANG_KEY = 'afb_lang';
+
+/** Every localStorage key this app owns — "Clear local data" removes exactly these. */
+const APP_LOCAL_KEYS = [
+  STORAGE_KEY,
+  'anyfreebook-theme',
+  'anyfreebook-custom-gradient',
+  'anyfreebook-interactions',
+  READER_PREFS_KEY,
+  LANG_KEY,
+  'afb_study_plan',
+  'afb_reader_ad_dismissed',
+  'afb_savings',
+  'afb_reading_challenge',
+  'afb_session_key',
+  'afb_referred_by',
+  'pwa-dismissed',
+  'afb_login_redirect',
+];
+
+/** The languages the site's own translator offers (src/components/LanguageSwitcher.tsx). */
+const LANGUAGES = [
+  { value: 'en', label: 'English (original)' },
+  { value: 'fr', label: 'Français' },
+  { value: 'es', label: 'Español' },
+  { value: 'pt', label: 'Português' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'zh-CN', label: '中文' },
+  { value: 'ar', label: 'العربية' },
+  { value: 'hi', label: 'हिन्दी' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ru', label: 'Русский' },
+];
+
+/** The reader keeps its own preferences under a separate key — write ours into it. */
+function saveReaderPrefs(patch: Record<string, unknown>) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(READER_PREFS_KEY) || '{}');
+    localStorage.setItem(READER_PREFS_KEY, JSON.stringify({ ...saved, ...patch }));
+  } catch { /* corrupted prefs — leave the reader's defaults alone */ }
+}
+
 function loadSettings(): Settings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
   try {
-    const saved = JSON.parse(localStorage.getItem('anyfreebook-settings') || '{}');
-    return {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    const settings: Settings = {
       appearance: { ...DEFAULT_SETTINGS.appearance, ...saved.appearance },
       reader: { ...DEFAULT_SETTINGS.reader, ...saved.reader },
       audio: { ...DEFAULT_SETTINGS.audio, ...saved.audio },
@@ -33,21 +78,73 @@ function loadSettings(): Settings {
       notifications: { ...DEFAULT_SETTINGS.notifications, ...saved.notifications },
       content: { ...DEFAULT_SETTINGS.content, ...saved.content },
     };
+    // The interface language lives in its own key — show the one actually in use.
+    const lang = localStorage.getItem(LANG_KEY);
+    if (lang) settings.content.language = lang;
+    return settings;
   } catch { return DEFAULT_SETTINGS; }
 }
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [activeSection, setActiveSection] = useState('appearance');
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => { setSettings(loadSettings()); }, []);
+
+  // Appearance preferences are applied to the page as soon as they change.
+  useEffect(() => { applyAppearance(settings.appearance); }, [settings.appearance]);
 
   const update = <S extends keyof Settings, K extends keyof Settings[S]>(section: S, key: K, value: Settings[S][K]) => {
     setSettings(prev => {
       const next = { ...prev, [section]: { ...prev[section], [key]: value } };
-      localStorage.setItem('anyfreebook-settings', JSON.stringify(next));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
+  };
+
+  /** The site translator applies its choice when the page loads, so reload after saving. */
+  const setLanguage = (code: string) => {
+    const next = { ...settings, content: { ...settings.content, language: code } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setSettings(next);
+    try { localStorage.setItem(LANG_KEY, code === 'en' ? '' : code); } catch {}
+    window.location.reload();
+  };
+
+  /** A JSON copy of everything this site stores on this device. */
+  const exportData = () => {
+    const payload: Record<string, unknown> = {
+      app: 'ANYFREEBOOK',
+      exported_at: new Date().toISOString(),
+      settings,
+    };
+    for (const key of APP_LOCAL_KEYS) {
+      const raw = localStorage.getItem(key);
+      if (raw === null) continue;
+      try { payload[key] = JSON.parse(raw); } catch { payload[key] = raw; }
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `anyfreebook-data-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setNotice('Downloaded a JSON copy of the data this site stores on this device.');
+  };
+
+  /** Removes this app's own local keys — the account and its saved library are untouched. */
+  const clearLocalData = () => {
+    if (!confirm('Remove the settings and preferences this site stores on this device? Your account and saved library are not affected.')) return;
+    for (const key of APP_LOCAL_KEYS) {
+      try { localStorage.removeItem(key); } catch {}
+    }
+    setSettings(DEFAULT_SETTINGS);
+    setNotice('Local data cleared — reloading to reset everything on this device.');
+    setTimeout(() => window.location.reload(), 400);
   };
 
   const sections = [
@@ -102,6 +199,7 @@ export default function SettingsPage() {
               <SelectSetting label="Font size" value={settings.appearance.fontSize}
                 options={[{ value: 'small', label: 'Small' }, { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }]}
                 onChange={v => update('appearance', 'fontSize', v as 'small' | 'medium' | 'large')} />
+              <Note>Animations and font size are applied to this page straight away and saved on this device.</Note>
             </SettingsSection>
           )}
 
@@ -110,60 +208,65 @@ export default function SettingsPage() {
               <SelectSetting label="Default font" value={settings.reader.defaultFont}
                 options={[
                   { value: 'serif', label: 'Serif (Georgia)' }, { value: 'sans', label: 'Sans-Serif (Inter)' },
-                  { value: 'mono', label: 'Monospace' }, { value: 'palatino', label: 'Palatino' },
-                  { value: 'dyslexic', label: 'OpenDyslexic' },
+                  { value: 'mono', label: 'Monospace' },
                 ]}
-                onChange={v => update('reader', 'defaultFont', v)} />
-              <RangeSetting label="Line spacing" value={settings.reader.lineSpacing} min={1.2} max={2.4} step={0.1}
-                display={v => v.toFixed(1)} onChange={v => update('reader', 'lineSpacing', v)} />
+                onChange={v => { update('reader', 'defaultFont', v); saveReaderPrefs({ font: v }); }} />
+              <RangeSetting label="Line spacing" value={settings.reader.lineSpacing} min={1.4} max={2.2} step={0.1}
+                display={v => v.toFixed(1)}
+                onChange={v => { update('reader', 'lineSpacing', v); saveReaderPrefs({ lineHeight: v }); }} />
               <SelectSetting label="Page mode" value={settings.reader.pageMode}
                 options={[{ value: 'scroll', label: 'Continuous scroll' }, { value: 'paginated', label: 'Paginated' }]}
-                onChange={v => update('reader', 'pageMode', v as 'scroll' | 'paginated')} />
+                onChange={v => update('reader', 'pageMode', v as 'scroll' | 'paginated')} disabled />
               <ToggleSetting label="Keep screen on while reading" value={settings.reader.keepScreenOn}
-                onChange={v => update('reader', 'keepScreenOn', v)} />
+                onChange={v => update('reader', 'keepScreenOn', v)} disabled />
+              <Note>Font and line spacing are used by the ANYFREEBOOK Reader when it opens. It also has its own Aa panel for theme, text size and page width.</Note>
             </SettingsSection>
           )}
 
           {activeSection === 'audio' && (
             <SettingsSection title="Audio & TTS">
               <RangeSetting label="Reading speed" value={settings.audio.readingSpeed} min={0.5} max={2} step={0.25}
-                display={v => `${v}x`} onChange={v => update('audio', 'readingSpeed', v)} />
+                display={v => `${v}x`} onChange={v => update('audio', 'readingSpeed', v)} disabled />
               <ToggleSetting label="Auto-play next chapter" value={settings.audio.autoPlayNext}
-                onChange={v => update('audio', 'autoPlayNext', v)} />
+                onChange={v => update('audio', 'autoPlayNext', v)} disabled />
               <ToggleSetting label="Background playback" value={settings.audio.backgroundPlay}
-                onChange={v => update('audio', 'backgroundPlay', v)} />
+                onChange={v => update('audio', 'backgroundPlay', v)} disabled />
+              <Note>The audiobook player keeps its own speed and sleep timer — it does not read these settings yet, so they are shown as unavailable rather than pretending to work.</Note>
             </SettingsSection>
           )}
 
           {activeSection === 'downloads' && (
             <SettingsSection title="Downloads">
               <ToggleSetting label="Download on Wi-Fi only" value={settings.downloads.wifiOnly}
-                onChange={v => update('downloads', 'wifiOnly', v)} />
+                onChange={v => update('downloads', 'wifiOnly', v)} disabled />
               <ToggleSetting label="Auto-download wishlist items" value={settings.downloads.autoDownloadWishlist}
-                onChange={v => update('downloads', 'autoDownloadWishlist', v)} />
+                onChange={v => update('downloads', 'autoDownloadWishlist', v)} disabled />
+              <Note>Books are downloaded straight from the source repository, so there is no download manager to configure yet.</Note>
             </SettingsSection>
           )}
 
           {activeSection === 'notifications' && (
             <SettingsSection title="Notifications">
               <ToggleSetting label="New books in your categories" value={settings.notifications.newBooks}
-                onChange={v => update('notifications', 'newBooks', v)} />
+                onChange={v => update('notifications', 'newBooks', v)} disabled />
               <ToggleSetting label="Weekly reading digest" value={settings.notifications.weeklyDigest}
-                onChange={v => update('notifications', 'weeklyDigest', v)} />
+                onChange={v => update('notifications', 'weeklyDigest', v)} disabled />
               <ToggleSetting label="Trending books" value={settings.notifications.trending}
-                onChange={v => update('notifications', 'trending', v)} />
+                onChange={v => update('notifications', 'trending', v)} disabled />
               <ToggleSetting label="Reading reminders" value={settings.notifications.readingReminders}
-                onChange={v => update('notifications', 'readingReminders', v)} />
+                onChange={v => update('notifications', 'readingReminders', v)} disabled />
+              <Note>Notification preferences are not stored anywhere yet — reading reminders are set on the study plan page instead.</Note>
             </SettingsSection>
           )}
 
           {activeSection === 'content' && (
             <SettingsSection title="Content Preferences">
-              <SelectSetting label="Language" value={settings.content.language}
-                options={[{ value: 'en', label: 'English' }, { value: 'es', label: 'Spanish' }, { value: 'fr', label: 'French' }, { value: 'de', label: 'German' }, { value: 'zh', label: 'Chinese' }]}
-                onChange={v => update('content', 'language', v)} />
+              <SelectSetting label="Interface language" value={settings.content.language}
+                options={LANGUAGES}
+                onChange={v => setLanguage(v)} />
+              <Note>The page is translated by the site&apos;s own translator and reloads when you pick a language.</Note>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[var(--text)]">Enabled content types</label>
+                <label className="text-sm font-medium text-[var(--text)]">Enabled content types <ComingSoon /></label>
                 {CONTENT_TYPES.map(ct => (
                   <ToggleSetting key={ct.id} label={ct.label}
                     value={settings.content.enabledTypes.includes(ct.id)}
@@ -173,28 +276,35 @@ export default function SettingsPage() {
                         : settings.content.enabledTypes.filter(t => t !== ct.id);
                       update('content', 'enabledTypes', types);
                     }}
+                    disabled
                   />
                 ))}
               </div>
+              <Note>Filtering the catalogue by content type is not implemented yet, so these switches are unavailable.</Note>
             </SettingsSection>
           )}
 
           {activeSection === 'account' && (
             <SettingsSection title="Account">
               <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-center">
-                <p className="text-sm text-[var(--text-secondary)] mb-3">Sign in to sync settings and reading progress across devices.</p>
+                <p className="text-sm text-[var(--text-secondary)] mb-3">Sign in to sync your library and reading progress across devices. The preferences on this page are stored on this device only.</p>
                 <a href="/login" className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                   Sign in
                 </a>
               </div>
               <div className="mt-4 space-y-2">
-                <button className="w-full text-left px-4 py-3 rounded-xl border border-[var(--border-subtle)] text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">
+                <button onClick={exportData} className="w-full text-left px-4 py-3 rounded-xl border border-[var(--border-subtle)] text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">
                   Export my data
                 </button>
-                <button className="w-full text-left px-4 py-3 rounded-xl border border-red-200 dark:border-red-900 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
-                  Delete account
+                <button onClick={clearLocalData} className="w-full text-left px-4 py-3 rounded-xl border border-[var(--border-subtle)] text-sm text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors">
+                  Clear local data
+                </button>
+                <button disabled className="w-full text-left px-4 py-3 rounded-xl border border-red-200 dark:border-red-900 text-sm text-red-600 dark:text-red-400 opacity-60 cursor-not-allowed">
+                  Delete account <ComingSoon />
                 </button>
               </div>
+              {notice && <p className="text-xs text-[var(--text-muted)]">{notice}</p>}
+              <Note>Account deletion is not available yet, so the button is disabled.</Note>
             </SettingsSection>
           )}
 
@@ -230,13 +340,31 @@ function SettingsSection({ title, children }: { title: string; children: React.R
   );
 }
 
-function ToggleSetting({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function ComingSoon() {
+  return (
+    <span className="ml-2 align-middle text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)]">
+      Coming soon
+    </span>
+  );
+}
+
+function Note({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs text-[var(--text-muted)] leading-relaxed">{children}</p>;
+}
+
+function ToggleSetting({ label, value, onChange, disabled }: {
+  label: string; value: boolean; onChange: (v: boolean) => void; disabled?: boolean;
+}) {
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+      <span className={`text-sm ${disabled ? 'text-[var(--text-muted)]' : 'text-[var(--text-secondary)]'}`}>
+        {label}{disabled && <ComingSoon />}
+      </span>
       <button
         onClick={() => onChange(!value)}
-        className={`w-11 h-6 rounded-full transition-colors relative ${value ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'}`}
+        disabled={disabled}
+        aria-disabled={disabled}
+        className={`w-11 h-6 rounded-full transition-colors relative ${value ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${value ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
       </button>
@@ -244,16 +372,19 @@ function ToggleSetting({ label, value, onChange }: { label: string; value: boole
   );
 }
 
-function SelectSetting({ label, value, options, onChange }: {
-  label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void;
+function SelectSetting({ label, value, options, onChange, disabled }: {
+  label: string; value: string; options: { value: string; label: string }[]; onChange: (v: string) => void; disabled?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+      <span className={`text-sm ${disabled ? 'text-[var(--text-muted)]' : 'text-[var(--text-secondary)]'}`}>
+        {label}{disabled && <ComingSoon />}
+      </span>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="text-sm px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] outline-none focus:ring-1 focus:ring-[var(--primary)]"
+        disabled={disabled}
+        className="text-sm px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] outline-none focus:ring-1 focus:ring-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {options.map(o => (
           <option key={o.value} value={o.value}>{o.label}</option>
@@ -263,14 +394,16 @@ function SelectSetting({ label, value, options, onChange }: {
   );
 }
 
-function RangeSetting({ label, value, min, max, step, display, onChange }: {
+function RangeSetting({ label, value, min, max, step, display, onChange, disabled }: {
   label: string; value: number; min: number; max: number; step?: number;
-  display: (v: number) => string; onChange: (v: number) => void;
+  display: (v: number) => string; onChange: (v: number) => void; disabled?: boolean;
 }) {
   return (
     <div className="py-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+        <span className={`text-sm ${disabled ? 'text-[var(--text-muted)]' : 'text-[var(--text-secondary)]'}`}>
+          {label}{disabled && <ComingSoon />}
+        </span>
         <span className="text-sm font-mono text-[var(--text)]">{display(value)}</span>
       </div>
       <input
@@ -278,7 +411,8 @@ function RangeSetting({ label, value, min, max, step, display, onChange }: {
         min={min} max={max} step={step || 1}
         value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
-        className="w-full accent-[var(--primary)]"
+        disabled={disabled}
+        className="w-full accent-[var(--primary)] disabled:opacity-50"
       />
     </div>
   );

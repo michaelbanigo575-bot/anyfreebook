@@ -47,6 +47,7 @@ export function BookInteractionButtons({ bookId, likeCount, bookTitle, bookAutho
   const supabase = createClient();
   const [interactions, setInteractions] = useState<Interactions>({ liked: new Set(), wishlisted: new Set(), favorited: new Set() });
   const [animating, setAnimating] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -77,19 +78,27 @@ export function BookInteractionButtons({ bookId, likeCount, bookTitle, bookAutho
       setTimeout(() => setAnimating(null), 600);
     }
 
-    setInteractions(prev => {
-      const next = { liked: new Set(prev.liked), wishlisted: new Set(prev.wishlisted), favorited: new Set(prev.favorited) };
-      if (next[type].has(bookId)) next[type].delete(bookId); else next[type].add(bookId);
-      if (!user) saveLocalInteractions(next);
-      return next;
-    });
+    // Optimistic update. The localStorage write stays OUT of the state
+    // updater — React may run an updater more than once (StrictMode), which
+    // would duplicate the write.
+    const next: Interactions = {
+      liked: new Set(interactions.liked),
+      wishlisted: new Set(interactions.wishlisted),
+      favorited: new Set(interactions.favorited),
+    };
+    if (next[type].has(bookId)) next[type].delete(bookId); else next[type].add(bookId);
+    setInteractions(next);
+    if (!user) saveLocalInteractions(next);
 
     if (user) {
+      setError(null);
+      let failed = false;
       if (isActive) {
-        await supabase.from('book_interactions').delete()
+        const { error: writeError } = await supabase.from('book_interactions').delete()
           .eq('user_id', user.id).eq('book_id', bookId).eq('action', action);
+        failed = !!writeError;
       } else {
-        await supabase.from('book_interactions').insert({
+        const { error: writeError } = await supabase.from('book_interactions').insert({
           user_id: user.id,
           book_id: bookId,
           book_title: bookTitle,
@@ -97,6 +106,12 @@ export function BookInteractionButtons({ bookId, likeCount, bookTitle, bookAutho
           book_slug: bookSlug,
           action,
         });
+        failed = !!writeError;
+      }
+      if (failed) {
+        // The write failed — undo the optimistic state and say so.
+        setInteractions(interactions);
+        setError('Could not update. Please try again.');
       }
     }
   }, [interactions, bookId, user, supabase, bookTitle, bookAuthor, bookSlug]);
@@ -164,6 +179,10 @@ export function BookInteractionButtons({ bookId, likeCount, bookTitle, bookAutho
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
         </svg>
       </button>
+
+      {error && (
+        <span role="alert" className="text-xs text-red-500">{error}</span>
+      )}
     </div>
   );
 }

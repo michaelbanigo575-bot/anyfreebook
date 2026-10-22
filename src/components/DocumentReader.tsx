@@ -206,12 +206,16 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
   const scrollerRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
-  const renderedAtZoom = useRef<Map<number, number>>(new Map()); // page -> zoom it was last rendered at
+  const renderedAtZoom = useRef<Map<number, string>>(new Map()); // page -> zoom/fit key it was last rendered at
   const docRef = useRef<PdfDoc | null>(null);
 
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
+  // Bumped when the viewport changes: the fit scale is derived from the
+  // section size, so a cached page render is letterboxed at the old size
+  // until the cache is invalidated.
+  const [fitRevision, setFitRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -251,7 +255,8 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     const canvas = canvasRefs.current[pageNum - 1];
     const section = sectionRefs.current[pageNum - 1];
     if (!doc || !canvas || !section) return;
-    if (renderedAtZoom.current.get(pageNum) === zoom) return; // already current
+    const renderKey = `${zoom}:${fitRevision}`;
+    if (renderedAtZoom.current.get(pageNum) === renderKey) return; // already current
     const pdfPage = await doc.getPage(pageNum);
     const base = pdfPage.getViewport({ scale: 1 });
     const fitScale = Math.min((section.clientWidth - 24) / base.width, (section.clientHeight - 24) / base.height);
@@ -265,8 +270,8 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-    renderedAtZoom.current.set(pageNum, zoom);
-  }, [zoom]);
+    renderedAtZoom.current.set(pageNum, renderKey);
+  }, [zoom, fitRevision]);
 
   // Track the current page and lazy-render nearby pages from scroll position
   // directly — deterministic (scrollTop / section height), so it works the
@@ -299,6 +304,7 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
   }, [loading, numPages, renderPageAt]);
 
   // Re-render the currently visible page (and its neighbors) when zoom changes
+  // or when the viewport resizes (the render key carries the fit revision)
   useEffect(() => {
     if (loading) return;
     [page - 1, page, page + 1].forEach(p => { if (p >= 1 && p <= numPages) renderPageAt(p); });
@@ -310,16 +316,43 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     return () => document.removeEventListener('fullscreenchange', onFsChange);
   }, []);
 
+  // The fit scale is derived from the section size, so a rotation or a window
+  // resize leaves the cached page rendered at the old size (letterboxed).
+  // Bumping the revision invalidates the cache; the render effect below then
+  // re-draws the visible pages at the new fit scale.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onViewportChange = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => setFitRevision(r => r + 1), 150);
+    };
+    window.addEventListener('resize', onViewportChange);
+    window.addEventListener('orientationchange', onViewportChange);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('resize', onViewportChange);
+      window.removeEventListener('orientationchange', onViewportChange);
+    };
+  }, []);
+
   const goToPage = useCallback((target: number) => {
     const clamped = Math.max(1, Math.min(numPages, target));
     sectionRefs.current[clamped - 1]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [numPages]);
 
-  // Swipe is native (CSS scroll-snap) on touch; arrow keys/PageUp/PageDown for desktop
+  // Swipe is native (CSS scroll-snap) on touch; arrow keys/PageUp/PageDown for desktop.
+  // The reader only takes the keyboard while it actually has the focus: an
+  // embedded reader must not stop the host page from being scrolled with the
+  // keyboard, so the handler is scoped to the reader's own scroller.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const active = document.activeElement as HTMLElement | null;
+      const scroller = scrollerRef.current;
+      const container = containerRef.current;
+      const insideReader = !!active && (active === container || !!scroller?.contains(active));
+      if (!insideReader) return;
+      const tag = active?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || active?.isContentEditable) return;
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); goToPage(page + 1); }
       if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goToPage(page - 1); }
     };
@@ -357,7 +390,10 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
                 percentage heights don't reliably resolve against an auto-height ancestor. */}
             <div
               ref={scrollerRef}
-              className="w-full overflow-y-auto overscroll-contain"
+              tabIndex={0}
+              role="region"
+              aria-label="Document pages — use the arrow keys, Page Up or Page Down to turn pages"
+              className="w-full overflow-y-auto overscroll-contain focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               style={{ height: isFullscreen ? '100%' : height, scrollSnapType: 'y mandatory' }}
             >
               {Array.from({ length: numPages }, (_, i) => (

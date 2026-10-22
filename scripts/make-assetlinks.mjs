@@ -12,6 +12,11 @@
  *
  * The file must be served from https://anyfreebook.com/.well-known/assetlinks.json
  * (same origin as the TWA's start URL) with Content-Type application/json.
+ *
+ * The fingerprints are written in UPPERCASE. Google's Digital Asset Links
+ * validator parses them with the same pattern Bubblewrap uses —
+ * /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/ — and rejects a lowercase fingerprint as
+ * "malformed cert fingerprint", even though the bytes are identical.
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -37,11 +42,11 @@ if (!packageName || fingerprints.length === 0) {
   process.exit(1);
 }
 
-const cleaned = fingerprints.map((f) => f.trim().replace(/^SHA256\s*/i, ''));
+const cleaned = fingerprints.map((f) => f.trim().replace(/^SHA256\s*/i, '').toUpperCase());
 
-const invalid = cleaned.filter((f) => !/^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){31}$/.test(f));
+const invalid = cleaned.filter((f) => !/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(f));
 if (invalid.length > 0) {
-  console.error('These do not look like SHA-256 fingerprints (expected 32 hex octets):');
+  console.error('These do not look like SHA-256 fingerprints (expected 32 uppercase hex octets):');
   for (const f of invalid) console.error('  ' + f);
   process.exit(1);
 }

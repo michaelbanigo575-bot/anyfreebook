@@ -21,6 +21,12 @@
   "minSdkVersion": 24,
   "appVersion": "1",
   "appVersionCode": 1,
+  "fingerprints": [
+    {
+      "name": "upload",
+      "value": "A6:76:B1:D9:64:9E:4F:5A:34:4D:EB:06:9B:31:64:00:15:F4:6E:76:79:96:C6:FA:13:56:BE:FA:D6:F7:90:C2"
+    }
+  ],
   "signingKey": {
     "path": "D:\\Android\\keys\\anyfreebook-upload.jks",
     "alias": "upload"

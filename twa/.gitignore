@@ -12,6 +12,7 @@ settings.gradle
 gradle.properties
 manifest-checksum.txt
 store_icon.png
+assetlinks.json
 
 # Signing material never belongs in the repo.
 *.jks

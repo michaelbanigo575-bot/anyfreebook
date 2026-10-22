@@ -1,0 +1,12 @@
+{
+  "name": "anyfreebook-twa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trusted Web Activity wrapper for ANYFREEBOOK. Builds the Android App Bundle uploaded to Google Play.",
+  "scripts": {
+    "build": "bubblewrap build --manifest twa-manifest.json"
+  },
+  "devDependencies": {
+    "@bubblewrap/cli": "^1.27.0"
+  }
+}

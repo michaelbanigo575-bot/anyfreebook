@@ -1,0 +1,28 @@
+{
+  "packageId": "com.anyfreebook.app",
+  "host": "anyfreebook.com",
+  "name": "ANYFREEBOOK",
+  "launcherName": "ANYFREEBOOK",
+  "display": "standalone",
+  "orientation": "any",
+  "themeColor": "#6366f1",
+  "themeColorDark": "#0a0f1a",
+  "navigationColor": "#6366f1",
+  "navigationColorDark": "#0a0f1a",
+  "navigationDividerColor": "#00000000",
+  "navigationDividerColorDark": "#00000000",
+  "backgroundColor": "#ffffff",
+  "iconUrl": "https://anyfreebook.com/icon-512.png",
+  "maskableIconUrl": "https://anyfreebook.com/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "enableNotifications": true,
+  "startUrl": "/",
+  "fullScopeUrl": "https://anyfreebook.com/",
+  "minSdkVersion": 24,
+  "appVersion": "1",
+  "appVersionCode": 1,
+  "signingKey": {
+    "path": "D:\\Android\\keys\\anyfreebook-upload.jks",
+    "alias": "upload"
+  }
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.anyfreebook.app",
+      "sha256_cert_fingerprints": [
+        "a6:76:b1:d9:64:9e:4f:5a:34:4d:eb:06:9b:31:64:00:15:f4:6e:76:79:96:c6:fa:13:56:be:fa:d6:f7:90:c2"
+      ]
+    }
+  }
+]

@@ -72,6 +72,18 @@ That needs `https://anyfreebook.com/.well-known/assetlinks.json` containing the
    node scripts/make-assetlinks.mjs com.anyfreebook.app <SHA256:...>
    ```
 
+   The script uppercases the fingerprints. Google's Digital Asset Links
+   validator parses them with the same pattern Bubblewrap uses —
+   `/^([0-9A-F]{2}:){31}[0-9A-F]{2}$/` — and rejects a lowercase fingerprint
+   as "malformed cert fingerprint" even though the bytes are identical.
+   Verify with:
+
+   ```
+   https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://anyfreebook.com
+   ```
+
+   It should return a statement for `com.anyfreebook.app` and no error.
+
 4. Commit it, deploy, then confirm at:
 
    ```

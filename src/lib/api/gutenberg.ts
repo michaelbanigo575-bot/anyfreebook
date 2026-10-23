@@ -45,7 +45,9 @@ function getFormats(formats: Record<string, string>): { name: string; url: strin
   for (const [mime, url] of Object.entries(formats)) {
     if (mime.includes('epub') && !mime.includes('noimages')) result.push({ name: 'EPUB', url });
     else if (mime === 'application/pdf') result.push({ name: 'PDF', url });
-    else if (mime.includes('plain') && url.endsWith('.txt')) result.push({ name: 'TXT', url });
+    // Gutendex reports the plain text as `text/plain; charset=utf-8` pointing at
+    // `<id>.txt.utf-8`, so the URL does not end in `.txt`.
+    else if (mime.includes('plain') && /\.txt(\.utf-8)?$/.test(url)) result.push({ name: 'TXT', url });
     else if (mime === 'text/html' && !url.includes('zip')) result.push({ name: 'HTML', url });
   }
   return result;

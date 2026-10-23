@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { resolveBookSource } from '@/lib/api/resolveSource';
-import { gutenbergFiles, type PublicFile } from '@/lib/api/publicRecords';
+import { gutenbergFiles, fetchArchiveItem, type PublicFile } from '@/lib/api/publicRecords';
 import { guard, json, meta, handlePreflight } from '@/lib/api/v1';
 
 /**
@@ -58,11 +58,28 @@ export async function GET(request: NextRequest) {
     }
 
     // A Gutenberg match already carries a verified ebook id, so offer the
-    // real files rather than only a link to the catalogue page.
+    // real files rather than only a link to the catalogue page. An Internet
+    // Archive match carries the item identifier, and the item's own metadata
+    // says which files can be downloaded and whether the copy is loan-only.
     const files: PublicFile[] = [];
+    let license: string | null = resolved.tier === 'download' ? 'Public domain' : null;
     if (resolved.sourceType === 'gutenberg') {
       const ebookId = parseInt((resolved.sourceUrl.match(/ebooks\/(\d+)/) || [])[1] || '', 10);
       if (Number.isFinite(ebookId) && ebookId > 0) files.push(...gutenbergFiles(ebookId));
+    } else if (resolved.sourceType === 'archive') {
+      const identifier = (resolved.sourceUrl.match(/archive\.org\/details\/([^/?#]+)/) || [])[1];
+      if (identifier) {
+        const item = await fetchArchiveItem(decodeURIComponent(identifier));
+        if (item) {
+          if (item.restricted) {
+            resolved.tier = 'borrow';
+            license = null;
+          } else {
+            files.push(...item.files);
+          }
+          if (item.rights) license = item.rights;
+        }
+      }
     }
 
     const tierReason =
@@ -81,7 +98,7 @@ export async function GET(request: NextRequest) {
       tierReason,
       sourceType: resolved.sourceType,
       sourceUrl: resolved.sourceUrl,
-      license: resolved.tier === 'download' ? 'Public domain' : null,
+      license,
       files,
       links: resolved.downloadLinks,
       meta: meta({ caller: key?.label }),

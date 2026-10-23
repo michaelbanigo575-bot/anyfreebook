@@ -137,15 +137,39 @@ interface IaMetadata {
   files?: IaFile[];
 }
 
-const IA_FORMAT_MAP: { match: RegExp; format: PublicFormat }[] = [
-  { match: /epub/i, format: 'epub' },
-  { match: /pdf/i, format: 'pdf' },
-  { match: /text|txt/i, format: 'txt' },
-  { match: /html/i, format: 'html' },
-  { match: /zip/i, format: 'zip' },
-  { match: /mobi/i, format: 'mobi' },
-  { match: /mp3|audio|vbr|ogg/i, format: 'audio' },
+/**
+ * Internet Archive file labels are exact strings, and several of them look
+ * like a document format but are not one:
+ *
+ *   "OCR Search Text"  -> a gzipped search index, not the book
+ *   "chOCR"            -> a gzipped OCR dump
+ *   "Single Page Processed JP2 ZIP" -> 100+ MB of page images
+ *   "Single Page Original JP2 Tar"  -> 700+ MB of page images
+ *
+ * So the label is matched exactly, and the file name is checked as well.
+ */
+const IA_FORMAT_MAP: { label: string; format: PublicFormat }[] = [
+  { label: 'epub', format: 'epub' },
+  { label: 'text pdf', format: 'pdf' },
+  { label: 'pdf', format: 'pdf' },
+  { label: 'djvutxt', format: 'txt' },
+  { label: 'text', format: 'txt' },
+  { label: 'hocr', format: 'html' },
+  { label: 'html', format: 'html' },
+  { label: 'single page html', format: 'html' },
 ];
+
+/** File names that are never a readable document. */
+const IA_REJECT_NAME = /\.(?:gz|tar|torrent|sqlite|xml|json|log|meta\.json)$|_jp2\.zip$|_orig_jp2\.tar$/i;
+
+function iaFormatFor(formatLabel: string, name: string): PublicFormat | null {
+  if (IA_REJECT_NAME.test(name)) return null;
+  const label = (formatLabel || '').trim().toLowerCase();
+  for (const entry of IA_FORMAT_MAP) {
+    if (label === entry.label) return entry.format;
+  }
+  return null;
+}
 
 export interface IaItem {
   identifier: string;
@@ -182,12 +206,11 @@ export async function fetchArchiveItem(identifier: string): Promise<IaItem | nul
       const name = file.name;
       if (!name || file.source === 'metadata') continue;
       // Skip the derivative noise (thumbnails, logs, metadata sidecars).
-      if (/^(__ia_|.*\.(?:gif|jpg|jpeg|png|svg|xml|log|sqlite|torrent|meta\.json)$)/i.test(name)) continue;
-      const formatLabel = file.format || '';
-      const hit = IA_FORMAT_MAP.find(f => f.match.test(formatLabel) || f.match.test(name));
-      if (!hit) continue;
+      if (/^(__ia_|.*\.(?:gif|jpg|jpeg|png|svg)$)/i.test(name)) continue;
+      const format = iaFormatFor(file.format || '', name);
+      if (!format) continue;
       files.push({
-        format: hit.format,
+        format,
         url: `https://archive.org/download/${encodeURIComponent(identifier)}/${encodeURIComponent(name)}`,
         bytes: file.size ? parseInt(file.size, 10) || null : null,
         label: name,

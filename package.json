@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "reddit:discover": "node scripts/reddit-discover.mjs",
+    "reddit:policy": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/reddit-policy-check.ts",
+    "reddit:sample": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/reddit-draft-sample.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

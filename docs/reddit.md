@@ -51,10 +51,10 @@ Reddit credential and it grants no ability to post.
 ### 3. Run discovery
 
 ```bash
-node scripts/reddit-discover.mjs --dry-run     # show what it would read
-node scripts/reddit-discover.mjs                # read and ingest
-node scripts/reddit-discover.mjs --product anyfreebook
-node scripts/reddit-discover.mjs --subreddit freebooks
+npm run reddit:discover -- --dry-run     # show what it would read
+npm run reddit:discover                  # read and ingest
+npm run reddit:discover -- --product anyfreebook
+npm run reddit:discover -- --subreddit freebooks
 ```
 
 The script waits at least a minute between subreddits and reads at most five a
@@ -66,6 +66,21 @@ database, so restarting the process does not reset them.
 Open `/admin/reddit`. Each draft shows the reply, the value ratio, and the
 list of checks to do before you post. Copy it, paste it into Reddit, click
 "I posted this".
+
+## Reading the output
+
+PowerShell paints anything a native program writes to stderr in red, so a
+warning looks exactly like a failure. It is not one. Two things to know:
+
+- **`$LASTEXITCODE` is the truth.** `0` means it worked, whatever colour the
+  text was.
+- **Do not pipe native output through `2>&1`** if you want to read it. That
+  is what turns stderr into red error records. Run the command on its own.
+
+The `npm run reddit:*` scripts exist for this reason. The TypeScript ones
+carry `--disable-warning=MODULE_TYPELESS_PACKAGE_JSON`, which silences a
+Node warning that this CommonJS package is not marked as a module. Without
+the flag the script still works; it just looks alarming.
 
 ## The rules the code enforces
 
@@ -88,7 +103,7 @@ action, not left to whoever runs it today.
 `scripts/reddit-policy-check.ts` tests these. Run it with:
 
 ```bash
-node --experimental-strip-types scripts/reddit-policy-check.ts
+npm run reddit:policy
 ```
 
 ## The reply format

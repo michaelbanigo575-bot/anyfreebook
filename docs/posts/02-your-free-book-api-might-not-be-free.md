@@ -26,7 +26,6 @@ const restricted =
 If the metadata call fails, the resolver falls back to `unverified` rather than assuming the best. A record we could not read is never promoted to `download`.
 
 For Project Gutenberg, the title and the author both have to match. `src/lib/api/resolveSource.ts` checks the author, because a title alone is not enough — a book by one Austen must never resolve to a different book that shares the surname:
-
 ```ts
 function authorMatches(author: string, authors: { name: string }[] | undefined): boolean {
   if (!authors || authors.length === 0) return false;
@@ -36,11 +35,12 @@ function authorMatches(author: string, authors: { name: string }[] | undefined):
 }
 ```
 
-Only when a match survives that check does the resolver claim a tier at all:
+Only when a match survives both checks does the resolver claim a tier:
 
 ```ts
-const match = data.results?.find((r: { authors?: { name: string }[] }) =>
-  authorMatches(author, r.authors)
+const match = data.results?.find(
+  (r: { title?: string; authors?: { name: string }[] }) =>
+    titleMatches(title, r.title) && authorMatches(author, r.authors)
 );
 if (match) {
   const readUrl =
@@ -113,7 +113,7 @@ So a machine client should check two things. `tier === 'download'` says the copy
 
 For `borrow` and `unverified`, `files[]` is empty and `links[]` points at the real source. That is not an oversight in the payload — it is the payload making the distinction impossible to miss.
 
-When a source offers only a landing page, the tier is `unverified` and the links are search URLs for the exact title and author. We would rather send a reader to a real search page than pretend it is a download.
+When `/resolve` cannot find a copy it can confirm, the tier is `unverified` and the links are search URLs for the exact title and author. We would rather send a reader to a real search page than pretend it is a download.
 
 One more wrinkle: the file list contains things that look like documents and are not. Labels are matched exactly against a small allowlist of real formats, and the file name is checked too, because "OCR Search Text" is a gzipped search index and "Single Page Original JP2 Tar" is a several-hundred-megabyte dump of page images. Matching labels loosely is how a downloader ends up fetching a 700 MB tarball thinking it fetched a book.
 

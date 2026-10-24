@@ -14,13 +14,14 @@ import { themeBootstrapScript } from '@/lib/themes';
 import { preferencesBootstrapScript } from '@/lib/preferences';
 import { Analytics } from '@vercel/analytics/react';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
+import { CATALOGUE } from '@/lib/catalogueStats';
 
 export const metadata: Metadata = {
   title: {
-    default: 'ANYFREEBOOK — 240+ Free Books & Live Open-Access Results',
+    default: `ANYFREEBOOK — ${CATALOGUE.liveBooksShort} Free Books & Live Open-Access Results`,
     template: '%s | ANYFREEBOOK',
   },
-  description: "A free book aggregator. Curated books plus live results from 7 open-access sources. Download PDF, EPUB, and more — verified free and legal.",
+  description: `A free book aggregator. ${CATALOGUE.liveBooks} free books and papers from ${CATALOGUE.fields} fields, searched live across ${CATALOGUE.sources} open-access sources. Download PDF, EPUB, and more — verified free and legal.`,
   keywords: ['free books', 'free textbooks', 'free ebooks', 'free audiobooks', 'free PDF books', 'download free books', 'open access books', 'free college textbooks'],
   authors: [{ name: 'ANYFREEBOOK' }],
   creator: 'ANYFREEBOOK',
@@ -30,13 +31,13 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://anyfreebook.com',
     siteName: 'ANYFREEBOOK',
-    title: 'ANYFREEBOOK — 240+ Free Books & Live Open-Access Results',
-    description: "A free book aggregator. Download free books across 230+ categories.",
+    title: `ANYFREEBOOK — ${CATALOGUE.liveBooksShort} Free Books & Live Open-Access Results`,
+    description: `A free book aggregator. Download free books across ${CATALOGUE.categories} categories.`,
     images: [{ url: '/api/og', width: 1200, height: 630, alt: 'ANYFREEBOOK — Free Books for Every Profession' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ANYFREEBOOK — 240+ Free Books',
+    title: `ANYFREEBOOK — ${CATALOGUE.liveBooksShort} Free Books`,
     description: "A free book aggregator.",
     images: ['/api/og'],
     creator: '@anyfreebook',

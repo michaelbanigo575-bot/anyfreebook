@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchBooks, type Book } from '@/lib/data';
 import { placeholderGradient } from './BookCover';
+import { CATALOGUE } from '@/lib/catalogueStats';
 
 interface SearchBarProps {
   compact?: boolean;
@@ -85,7 +86,7 @@ export function SearchBar({ compact }: SearchBarProps) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={compact ? 'Search books...' : 'Search 240+ curated free books, audiobooks...'}
+          placeholder={compact ? 'Search books...' : `Search ${CATALOGUE.liveBooks} free books, audiobooks...`}
           className={`
             w-full bg-transparent outline-none text-[var(--text)] placeholder:text-[var(--text-muted)]
             ${compact ? 'px-2 text-sm' : 'px-3 text-base'}

@@ -136,7 +136,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </div>
 
       <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-center">
-        <h2 className="text-lg font-bold">Search 240+ curated free books</h2>
+        <h2 className="text-lg font-bold">Search 5 million+ free books</h2>
         <p className="text-sm opacity-90 mt-1 mb-4">Every book in this article — and millions more — free and legal.</p>
         <Link href="/search" className="inline-flex px-6 py-2.5 rounded-xl bg-white text-[var(--primary)] text-sm font-bold hover:shadow-lg transition-all">
           Start searching

@@ -4,7 +4,7 @@ ANYFREEBOOK searches Project Gutenberg, Open Library, the Internet Archive, Goog
 
 ## There is no search index
 
-Start with the constraint, because it dictates everything else. ANYFREEBOOK does not maintain a search index. We keep a curated catalogue of 240+ books across 241 categories in `src/lib/data.ts`, and that catalogue powers the category pages and the per-title detail pages. But a search query is not answered out of that catalogue. It is fanned out, live, to seven separate upstream APIs — each with its own index, its own rate limits, its own idea of what a result is, and its own bad days.
+Start with the constraint, because it dictates everything else. ANYFREEBOOK does not maintain a search index. We keep a curated catalogue of 258 books across 241 categories in `src/lib/data.ts`, and that catalogue powers the category pages and the per-title detail pages. But a search query is not answered out of that catalogue. It is fanned out, live, to seven separate upstream APIs — each with its own index, its own rate limits, its own idea of what a result is, and its own bad days.
 
 There is no replica of those indexes in our database and we do not crawl and re-store. Every search is seven outbound HTTP requests in parallel, and the answer is the union of whatever they returned.
 

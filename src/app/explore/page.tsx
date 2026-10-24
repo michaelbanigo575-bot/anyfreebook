@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
 import { ExploreCategories } from '@/components/ExploreCategories';
 import { getAllCategories, getAllBooks } from '@/lib/data';
+import { CATALOGUE } from '@/lib/catalogueStats';
 
 export const metadata: Metadata = {
-  title: 'Explore All Categories — 230+ Categories',
-  description: 'Browse free books by category. 240+ curated free books across 230+ categories including technology, medicine, engineering, business, law, and more.',
+  title: `Explore All Categories — ${CATALOGUE.categories} Categories`,
+  description: `Browse free books by category. Search ${CATALOGUE.liveBooks} free books and papers across ${CATALOGUE.categories} categories including technology, medicine, engineering, business, law, and more.`,
   openGraph: {
-    title: 'Explore 230+ Categories — Free Books by Subject',
-    description: 'Browse 240+ curated free books across 230+ categories.',
-    images: [{ url: '/api/og?title=Explore+All+Categories&subtitle=240%2B+Curated+Books+%E2%80%A2+230%2B+Categories', width: 1200, height: 630 }],
+    title: `Explore ${CATALOGUE.categories} Categories — Free Books by Subject`,
+    description: `Browse ${CATALOGUE.liveBooks} free books and papers across ${CATALOGUE.categories} categories.`,
+    images: [{ url: '/api/og?title=Explore+All+Categories&subtitle=5M%2B+Free+Books+%E2%80%A2+241+Categories', width: 1200, height: 630 }],
   },
 };
 

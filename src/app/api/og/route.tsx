@@ -1,12 +1,13 @@
 import { ImageResponse } from 'next/og';
 import { type NextRequest } from 'next/server';
+import { CATALOGUE } from '@/lib/catalogueStats';
 
 export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const title = searchParams.get('title') || 'ANYFREEBOOK';
-  const subtitle = searchParams.get('subtitle') || '240+ Free Books for Every Profession';
+  const subtitle = searchParams.get('subtitle') || `${CATALOGUE.liveBooksShort} Free Books From ${CATALOGUE.fields} Fields`;
   const type = searchParams.get('type') || 'website';
 
   return new ImageResponse(

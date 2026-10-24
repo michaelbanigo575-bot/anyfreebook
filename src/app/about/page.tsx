@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { StatBlock } from '@/components/StatBlock';
+import { CATALOGUE } from '@/lib/catalogueStats';
 
 export const metadata: Metadata = {
   title: 'About ANYFREEBOOK — Our Mission',
@@ -16,16 +17,16 @@ export default function AboutPage() {
         </h1>
 
         <p className="mt-6 text-lg text-[var(--text-secondary)] text-center leading-relaxed">
-          ANYFREEBOOK aggregates free, legal books from 40+ open-access sources worldwide and
-          organizes them by profession. Our mission is simple: no one should be priced out
-          of knowledge.
+          ANYFREEBOOK aggregates free, legal books from {CATALOGUE.sources} open-access sources
+          worldwide — {CATALOGUE.liveBooks} books and papers across {CATALOGUE.fields} fields and
+          professions. Our mission is simple: no one should be priced out of knowledge.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-12 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
-          <StatBlock number="240+" label="Free Books" />
-          <StatBlock number="45K+" label="Audiobooks" />
-          <StatBlock number="500+" label="Professions" />
-          <StatBlock number="40+" label="Sources" />
+          <StatBlock number={CATALOGUE.liveBooksShort} label="Free Books & Papers" />
+          <StatBlock number={CATALOGUE.gutenbergTitles} label="Gutenberg Titles" />
+          <StatBlock number={CATALOGUE.categories} label="Categories" />
+          <StatBlock number={CATALOGUE.fields} label="Fields & professions" />
         </div>
 
         <div className="space-y-8">

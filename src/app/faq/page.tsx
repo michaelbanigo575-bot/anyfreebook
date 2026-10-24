@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { siteFaqSchema, breadcrumbSchema } from '@/lib/schema';
+import { CATALOGUE, CATALOGUE_SENTENCE } from '@/lib/catalogueStats';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions — ANYFREEBOOK',
@@ -37,7 +38,7 @@ const QA = [
   },
   {
     q: 'How many books does ANYFREEBOOK have?',
-    a: "ANYFREEBOOK curates 240+ free books, audiobooks and textbooks across 241 categories spanning subjects, world literature by country/continent, and languages — and searches 7 open-access repositories live on every query.",
+    a: `ANYFREEBOOK ${CATALOGUE_SENTENCE} Categories span 50+ fields and professions, world literature by country/continent, and languages.`,
   },
 ];
 

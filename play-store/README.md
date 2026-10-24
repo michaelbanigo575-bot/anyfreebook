@@ -69,7 +69,7 @@ node scripts/generate-feature-graphic.mjs
    Declare 13+ — the app has no child-directed features, and AdSense
    advertising is not permitted in child-directed apps.
 5. **App name / short description** — use the canonical claim:
-   "240+ curated free books plus live results from 7 open-access sources".
+   "5 million+ free books and papers from 50+ fields, plus live results from 7 open-access sources".
 6. **Personal developer account** — Google requires 12 testers on the closed
    testing track for 14 continuous days before publishing. Start the clock as
    soon as the first `.aab` is uploaded; the 14 days cannot be shortened.

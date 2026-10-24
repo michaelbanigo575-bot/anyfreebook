@@ -12,6 +12,7 @@ import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchArchive } from '@/lib/api/archive';
 import { LiveTrendingSection } from '@/components/LiveTrendingSection';
 import { cardClass } from '@/lib/ui';
+import { CATALOGUE, CATALOGUE_SENTENCE } from '@/lib/catalogueStats';
 
 // Serve the homepage from cache instead of hitting 5 external book APIs on
 // every visitor — critical under a traffic spike (a launch post, etc.), where
@@ -98,7 +99,7 @@ export default async function HomePage() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--primary)] font-mono text-xs tracking-widest font-semibold">
-              240+ CURATED BOOKS FROM 7 OPEN SOURCES
+              {CATALOGUE.liveBooksShort} FREE BOOKS & PAPERS FROM {CATALOGUE.fields} FIELDS
             </span>
           </div>
 
@@ -177,8 +178,8 @@ export default async function HomePage() {
       <section className="bg-[var(--bg-secondary)] py-16 mt-12 border-y border-[var(--border-subtle)]">
         <div className="content-wrapper">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <StatBlock number="240+" label="Free Books" />
-            <StatBlock number="70K+" label="Gutenberg Titles" />
+            <StatBlock number={CATALOGUE.liveBooksShort} label="Free Books & Papers" />
+            <StatBlock number={CATALOGUE.gutenbergTitles} label="Gutenberg Titles" />
             <StatBlock number="7" label="Live Sources" />
             <StatBlock number="∞" label="Formats" />
           </div>
@@ -194,7 +195,7 @@ export default async function HomePage() {
             '@type': 'FAQPage',
             mainEntity: [
               { '@type': 'Question', name: 'Is ANYFREEBOOK really free?', acceptedAnswer: { '@type': 'Answer', text: 'Yes — browsing, searching and reading are free, with no sign-up and no credit card. Every link goes to a legal, open-access repository. Titles that are still in copyright are marked as such: we link to the publisher or a free library copy instead of calling them free downloads.' }},
-              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK curates 240+ free books and searches 7 open-access sources live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ.' }},
+              { '@type': 'Question', name: 'How many free books does ANYFREEBOOK have?', acceptedAnswer: { '@type': 'Answer', text: `ANYFREEBOOK ${CATALOGUE_SENTENCE}` }},
               { '@type': 'Question', name: 'What formats are available?', acceptedAnswer: { '@type': 'Answer', text: 'Books are available in PDF, EPUB, MOBI, HTML, and plain text formats. Audiobooks come in MP3 format. The available formats depend on the source repository.' }},
               { '@type': 'Question', name: 'Where do the books come from?', acceptedAnswer: { '@type': 'Answer', text: 'ANYFREEBOOK pulls live data from 7 open-access sources: Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ. Every source is legal, public domain, or openly licensed.' }},
               { '@type': 'Question', name: 'Can I download the books?', acceptedAnswer: { '@type': 'Answer', text: 'It depends on the title. Each book page shows where its copy comes from: a verified public-domain copy you can download, a free borrow from the Internet Archive lending library, or — for a title still in copyright — the publisher and library options, plus a genuinely free alternative in the same subject.' }},
@@ -205,7 +206,7 @@ export default async function HomePage() {
         <div className="max-w-3xl space-y-3">
           {[
             { q: 'Is ANYFREEBOOK really free?', a: 'Yes — browsing, searching and reading are free, with no sign-up and no credit card. Every link goes to a legal, open-access repository. Titles still in copyright are marked as such: we link to the publisher or a free library copy instead of calling them free downloads.' },
-            { q: 'How many free books are available?', a: 'We curate 240+ free books and search 7 open-access sources live — Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ.' },
+            { q: 'How many free books are available?', a: `ANYFREEBOOK ${CATALOGUE_SENTENCE}` },
             { q: 'What formats are available?', a: 'Books come in PDF, EPUB, HTML, and plain text. Available formats depend on the source. Each book links to its original source.' },
             { q: 'Where do the books come from?', a: 'ANYFREEBOOK pulls live data from 7 open-access sources: Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ. Every source is legal, public domain, or openly licensed.' },
             { q: 'Can I download the books?', a: 'It depends on the title. Each book page shows where its copy comes from: a verified public-domain copy you can download, a free borrow from the Internet Archive lending library, or — for a title still in copyright — the publisher and library options, plus a genuinely free alternative in the same subject.' },

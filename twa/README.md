@@ -87,8 +87,11 @@ That needs `https://anyfreebook.com/.well-known/assetlinks.json` containing the
 4. Commit it, deploy, then confirm at:
 
    ```
-   https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://anyfreebook.com&source.android.app_id=com.anyfreebook.app
+   https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https%3A%2F%2Fanyfreebook.com
    ```
+
+   The site parameter is enough — the response lists every app the domain is
+   associated with. Adding `source.android.app_id` to narrow it returns a 400.
 
 5. In the Play Console: Release → Setup → App integrity → turn on
    **Digital Asset Links verification**.

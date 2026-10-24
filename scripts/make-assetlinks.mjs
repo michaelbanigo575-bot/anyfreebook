@@ -74,4 +74,6 @@ writeFileSync(outFile, json);
 console.log('wrote public/.well-known/assetlinks.json');
 console.log(json);
 console.log('Next: commit it, deploy, then verify at');
-console.log('  https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://anyfreebook.com&source.android.app_id=' + packageName);
+console.log('  https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https%3A%2F%2Fanyfreebook.com');
+console.log('The site parameter is enough - the response lists every app the domain is');
+console.log('associated with. Adding source.android.app_id returns a 400.');

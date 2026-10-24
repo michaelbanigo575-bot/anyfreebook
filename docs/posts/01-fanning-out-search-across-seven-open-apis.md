@@ -167,7 +167,7 @@ The `on conflict ... do update` is the load-bearing part. It takes a row lock on
 
 Two details around it are easy to get wrong. First, the function is `security definer`, and Postgres functions are executable by `PUBLIC` by default; without an explicit revoke, anyone holding the anon key could call it with a limit of a billion and reset everyone's counters. We revoke execute from `public`, `anon` and `authenticated`, granting it to `service_role` only. Second, it is created with `set search_path = public`, so a caller who can create objects in a schema they control cannot hijack name resolution inside it.
 
-We apply the per-minute and per-day windows in parallel and fail on the window the caller can retry soonest. And if the migration has not been applied yet, the RPC errors; rather than breaking the API outright we fall back to the per-instance limiter and report which scope answered, so the degradation is visible instead of silent.
+We apply the per-minute and per-day windows in parallel, so the two counters cost one round trip of latency, and report the window the caller actually has to wait out — the minute window when that is the one that was exceeded, the day window when that is. And if the migration has not been applied yet, the RPC errors; rather than breaking the API outright we fall back to the per-instance limiter and report which scope answered, so the degradation is visible instead of silent.
 
 ## The part I keep coming back to
 

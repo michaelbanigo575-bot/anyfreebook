@@ -54,13 +54,16 @@ function librivoxToBook(b: LibrivoxBook): Book | null {
 
 export async function searchLibrivox(query: string, limit = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://librivox.org/api/feed/audiobooks/?title=^${encodeURIComponent(query)}&format=json&limit=${limit}`;
-  try {
-    const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-    if (!res.ok) return { books: [], total: 0 };
-    const data: LibrivoxResponse = await res.json();
-    const books = (data.books || []).filter(b => b.title).map(librivoxToBook).filter((b): b is Book => b !== null);
-    return { books, total: books.length };
-  } catch {
-    return { books: [], total: 0 };
+  // Failures are thrown, not swallowed. A caller that reports `partial` needs to
+  // be able to tell "LibriVox has no matches for this query" apart from "LibriVox
+  // did not answer" — returning an empty list for both would make a broken
+  // upstream look like a complete answer.
+  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
+  if (!res.ok) {
+    console.error(`[librivox] request failed: ${res.status} ${res.statusText}`);
+    throw new Error(`librivox: upstream responded ${res.status}`);
   }
+  const data: LibrivoxResponse = await res.json();
+  const books = (data.books || []).filter(b => b.title).map(librivoxToBook).filter((b): b is Book => b !== null);
+  return { books, total: books.length };
 }

@@ -97,7 +97,10 @@ async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ boo
   const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
   if (!res.ok) {
     console.error(`[gutenberg] archive fallback failed: ${res.status} ${res.statusText}`);
-    return { books: [], total: 0 };
+    // Throw rather than return an empty list: an empty list would be
+    // indistinguishable from "Gutenberg has no matches", and the caller would
+    // report a complete result set when in fact both upstreams failed.
+    throw new Error(`gutenberg: archive.org fallback responded ${res.status}`);
   }
   const data = await res.json();
   const docs: { identifier: string; title?: string; creator?: string | string[]; year?: string; downloads?: number; subject?: string | string[] }[] = data.response?.docs || [];

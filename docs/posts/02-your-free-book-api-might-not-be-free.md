@@ -1,12 +1,12 @@
 # Your "free" book API might not be free
 
-A book-search API hands you a URL, and usually the word "free" printed next to it. That URL is a black box. Behind it there can be a public-domain full text, a borrow-only lending copy, or a catalogue record for a book that is still in copyright. If your client links to it and calls it free, it is making a claim about the law that it cannot support — on your users' behalf.
+A book-search API hands you a URL, and usually the word "free" printed next to it. That URL is a black box. Behind it there can be a public-domain full text, a borrow-only lending copy, or a catalogue record for a book still in copyright. If your client calls it free, it is making a claim about the law it cannot support — on your users' behalf.
 
 ## Three tiers, and what each one actually means
 
 ANYFREEBOOK returns a tier with every result. The three tiers are deliberately narrow:
 
-- **`download`** — a verified, public-domain full text for this exact title, author-matched, with a real file URL behind it. This is the only tier that permits the words "free download" anywhere in the product.
+- **`download`** — a free, legally readable copy of this exact title, resolved from the source's own metadata. This is the only tier that permits the words "free download" anywhere in the product.
 - **`borrow`** — a real Internet Archive copy that the Archive's own metadata says is loan-only. Controlled Digital Lending: a free Internet Archive account plus a loan. There is no file to fetch.
 - **`unverified`** — a catalogue record, or a search-results page for this title. We could not confirm a free, legally readable copy of *this exact title*.
 
@@ -25,7 +25,7 @@ const restricted =
 
 If the metadata call fails or the item cannot be read, the resolver falls back to `unverified` rather than assuming the best. A record we could not read is never promoted to `download`.
 
-For Project Gutenberg, the ebook id has to resolve to a real file, and the author has to match. `src/lib/api/resolveSource.ts` does the author check first, because a title alone is not enough — a book by one Austen must never resolve to a different book that shares the surname:
+For Project Gutenberg, the title and the author both have to match. `src/lib/api/resolveSource.ts` checks the author, because a title alone is not enough — a book by one Austen must never resolve to a different book that shares the surname:
 
 ```ts
 function authorMatches(author: string, authors: { name: string }[] | undefined): boolean {
@@ -58,6 +58,18 @@ if (match) {
 
 And the rule that matters most: **a catalogue record is not a copy.** Open Library holding an entry for a book tells you the book exists and where it can be bought. It says nothing about whether the text is free to read today. Treating "we found the title" as "the title is free" is the single most common bug in this category of API, and the one that ends up in front of a rights holder.
 
+The title has to be checked too, and this is a bug we hit ourselves. Gutendex and Open Library both rank by relevance, so taking the top hit returns whatever scored highest — not necessarily the book in the request. Our resolver asked Open Library for one result and checked the author; a request for *Fairy Circles* by William James Hudson came back with a downloadable copy of *Alice's Adventures in Wonderland*, labelled `tier: download`. The fix is to fetch several candidates, ask for their title and author fields, and accept the first one that is actually the title that was asked for:
+
+```ts
+const doc = docs.find((d) => {
+  if (!titleMatches(title, d.title)) return false;
+  if (!author || !d.author_name || d.author_name.length === 0) return true;
+  return authorMatches(author, d.author_name.map((name) => ({ name })));
+});
+```
+
+`titleMatches` allows a subtitle ("Fairy Circles: Tales and Legends of …") but not a different book that merely starts with the same words. When nothing matches, the resolver returns `unverified` with links to real search pages — the honest answer: we cannot confirm a free copy of *that* book.
+
 ## Borrow is not download
 
 Controlled Digital Lending is easy to misdescribe. The Internet Archive holds a real copy of the book. The reader gets a real copy of the book. But the copy is only accessible through the Archive's lending interface: you need a free account, and you need to take out a loan, and the loan is time-limited and renewed through a queue.
@@ -66,9 +78,9 @@ None of that is a file. A link to a borrow-only item is not something a download
 
 That is why the tiers are separate values rather than a boolean `isFree`. `borrow` is a real, useful answer — this copy is genuinely free to read, under conditions — but it is a different answer from "you may fetch this file now".
 
-## The rule: a download tier comes with a file URL
+## The rule: never claim a download you cannot point at
 
-Our resolver never returns `download` for a landing page. The tier is tied to a real file, and the API's `files[]` array carries it:
+Our resolver never returns `download` for a search-results page. Where the source exposes a file, the API's `files[]` array carries it:
 
 ```json
 {
@@ -84,6 +96,10 @@ Our resolver never returns `download` for a landing page. The tier is tied to a 
   ]
 }
 ```
+
+There is one case where `download` comes back with an empty `files[]`: the copy is genuinely free to read, but the source exposes no file you can fetch in one request. A DOAJ article and a PubMed Central paper are free full text at the publisher's page; a LibriVox recording is free as chapter files; an Internet Archive item whose only derivatives are DRM-encrypted has no fetchable file. Those records carry `links[]` instead, pointing at the real free copy.
+
+So a machine client should check two things. `tier === 'download'` says the copy is free without payment or an account. `files.length > 0` says you can fetch it right now. A downloader that only checks the tier will sometimes find nothing to download; one that only checks `files[]` will miss the cases where the tier matters.
 
 For `borrow` and `unverified`, `files[]` is empty and `links[]` points at the real source. That is not an oversight in the payload — it is the payload making the distinction impossible to miss.
 
@@ -123,7 +139,7 @@ async function download(title: string) {
 }
 ```
 
-The difference between throwing and skipping is the whole point. A silent skip produces a run that looks successful and quietly contains fewer books than it should. A refusal with the tier attached tells the user something true: this title is borrow-only, or it is a catalogue record, and here is why.
+The difference between throwing and skipping is the whole point. A silent skip produces a run that looks successful and quietly contains fewer books than it should. A refusal with the tier attached tells the user something true: this title is borrow-only, or it is a catalogue record.
 
 ## The tier is the single source of truth
 

@@ -25,6 +25,8 @@ interface OLDoc {
   key: string;
   ia?: string[];
   edition_key?: string[];
+  title?: string;
+  author_name?: string[];
 }
 
 /** True if `authors` (as returned by Gutendex, "Lastname, Firstname") plausibly names the same person as `author`. */
@@ -35,13 +37,50 @@ function authorMatches(author: string, authors: { name: string }[] | undefined):
   return tokens.some(t => combined.includes(t));
 }
 
+/** Lowercase, alphanumeric-only, single-spaced. Used to compare titles. */
+function normaliseTitle(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/**
+ * True when a catalogue record is plausibly the title that was asked for.
+ *
+ * Both Open Library's search and Gutendex's are fuzzy, and a search that takes
+ * the top hit returns whatever ranked first — not necessarily the book in the
+ * request. Without this check a request for one book resolves to a completely
+ * different one, and that other book is then reported as a verified free
+ * download, which is exactly the failure this resolver exists to prevent.
+ *
+ * A record title may carry a subtitle ("Fairy Circles: Tales and Legends…"),
+ * so the requested title followed by a subtitle separator still matches. It may
+ * not be a different book that merely starts with the same words
+ * ("Fairy Circles" must not match "Fairy Circles of the Moon").
+ */
+function titleMatches(requested: string, record: string | undefined): boolean {
+  if (!record) return false;
+  const want = requested.trim();
+  if (!want) return false;
+  if (normaliseTitle(want) === normaliseTitle(record)) return true;
+  const lower = record.toLowerCase().trim();
+  const wantLower = want.toLowerCase();
+  if (!lower.startsWith(wantLower)) return false;
+  return /^[:\-–—(\[]/.test(lower.slice(wantLower.length));
+}
+
 /** Asks Internet Archive's own metadata API whether an item is open or a Controlled-Digital-Lending "borrow" record. */
 async function isArchiveItemRestricted(identifier: string): Promise<boolean> {
   try {
     const res = await fetch(`https://archive.org/metadata/${encodeURIComponent(identifier)}`, { next: { revalidate: 86400 }, signal: UPSTREAM_TIMEOUT() });
     if (!res.ok) return true; // unknown → treat conservatively as restricted
     const data = await res.json();
-    return data?.metadata?.['access-restricted-item'] === 'true' || !!data?.metadata?.lending_identifier_lending;
+    const metadata = data?.metadata || {};
+    // The same three signals publicRecords.ts reads, so both resolvers reach
+    // the same verdict about the same item.
+    return (
+      metadata['access-restricted-item'] === 'true' ||
+      !!metadata['lending_identifier'] ||
+      !!metadata['lendinginfo']
+    );
   } catch {
     return true;
   }
@@ -62,7 +101,13 @@ export async function resolveBookSource(title: string, author: string): Promise<
     );
     if (res.ok) {
       const data = await res.json();
-      const match = data.results?.find((r: { authors?: { name: string }[] }) => authorMatches(author, r.authors));
+      // The title has to match as well as the author: Gutendex's search is
+      // fuzzy, and matching on the author alone can pick a different book
+      // that happens to share a surname.
+      const match = data.results?.find(
+        (r: { title?: string; authors?: { name: string }[] }) =>
+          titleMatches(title, r.title) && authorMatches(author, r.authors)
+      );
       if (match) {
         const readUrl = match.formats?.['text/html'] || match.formats?.['application/epub+zip'] || `https://www.gutenberg.org/ebooks/${match.id}`;
         return {
@@ -76,14 +121,24 @@ export async function resolveBookSource(title: string, author: string): Promise<
   } catch {}
 
   try {
-    const q = encodeURIComponent(`${title} ${author}`);
+    const q = encodeURIComponent(`${title} ${author}`.trim());
+    // Ask for enough documents to find the right one, and for the title and
+    // author fields so the match can actually be verified.
     const res = await fetch(
-      `https://openlibrary.org/search.json?q=${q}&limit=1&fields=key,ia,edition_key`,
+      `https://openlibrary.org/search.json?q=${q}&limit=10&fields=key,ia,edition_key,title,author_name`,
       { next: { revalidate: 86400 }, signal: UPSTREAM_TIMEOUT() }
     );
     if (res.ok) {
       const data = await res.json();
-      const doc: OLDoc | undefined = data.docs?.[0];
+      const docs: OLDoc[] = data.docs || [];
+      // Open Library's search is relevance-ranked, not exact. Take the first
+      // document that is actually the title we were asked about — and, when
+      // both sides name an author, that the author matches too.
+      const doc = docs.find((d) => {
+        if (!titleMatches(title, d.title)) return false;
+        if (!author || !d.author_name || d.author_name.length === 0) return true;
+        return authorMatches(author, d.author_name.map((name) => ({ name })));
+      });
       if (doc?.key) {
         const olUrl = `https://openlibrary.org${doc.key}`;
         const links = [{ label: 'View on Open Library', url: olUrl, source: 'Open Library' }];

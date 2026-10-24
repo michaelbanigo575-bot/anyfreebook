@@ -43,6 +43,7 @@ function SearchResults() {
   const [results, setResults] = useState<Book[]>([]);
   const [total, setTotal] = useState(0);
   const [sources, setSources] = useState<Record<string, number>>({});
+  const [failedSources, setFailedSources] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState(query);
   const [activeSource, setActiveSource] = useState('all');
@@ -50,7 +51,7 @@ function SearchResults() {
   const abortRef = useRef<AbortController | null>(null);
 
   const doSearch = useCallback(async (q: string, source = 'all') => {
-    if (!q.trim()) { setResults([]); setTotal(0); setSources({}); return; }
+    if (!q.trim()) { setResults([]); setTotal(0); setSources({}); setFailedSources([]); return; }
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -59,6 +60,7 @@ function SearchResults() {
     setResults([]);
     setTotal(0);
     setSources({});
+    setFailedSources([]);
     setLoading(true);
 
     try {
@@ -83,6 +85,13 @@ function SearchResults() {
           if (!line.trim()) continue;
           const msg = JSON.parse(line);
           if (msg.type === 'source') {
+            // The stream marks a source that threw with `error: true`. It is
+            // recorded rather than swallowed, because a truncated list must
+            // never be presented as the complete answer.
+            if (msg.error) {
+              setFailedSources(prev => (prev.includes(msg.label) ? prev : [...prev, msg.label]));
+              return;
+            }
             setResults(prev => [...prev, ...msg.books]);
             setSources(prev => ({ ...prev, [msg.label]: msg.total }));
             setTotal(prev => prev + (msg.total || 0));
@@ -158,8 +167,23 @@ function SearchResults() {
           <p className="text-sm text-[var(--text-muted)] mb-4">
             {loading
               ? `Finding results... ${results.length > 0 ? `(${results.length.toLocaleString()} so far)` : ''}`
-              : `${total.toLocaleString()}+ results for "${query}"`}
+              : `${total.toLocaleString()}${failedSources.length === 0 ? '+' : ''} results for "${query}"`}
           </p>
+
+          {!loading && failedSources.length > 0 && (
+            <div
+              role="status"
+              className="mb-6 rounded-[var(--radius-lg)] border border-amber-500/40 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-900 dark:text-amber-200"
+            >
+              <p className="font-semibold">
+                Partial results — {failedSources.length} source{failedSources.length === 1 ? '' : 's'} did not answer.
+              </p>
+              <p className="mt-1 text-amber-800/90 dark:text-amber-200/80">
+                {failedSources.join(', ')} did not respond for this search, so the list below is incomplete.
+                Try again in a moment, or pick a single source above.
+              </p>
+            </div>
+          )}
         </>
       )}
 

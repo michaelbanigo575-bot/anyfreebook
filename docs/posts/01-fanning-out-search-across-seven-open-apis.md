@@ -1,6 +1,6 @@
 # Fanning out a search across seven APIs, and telling the user when one of them fails
 
-ANYFREEBOOK searches Project Gutenberg, Open Library, the Internet Archive, Google Books, PubMed Central, DOAJ and LibriVox at the same time. The parallelism is the easy part. The part that took real thought was deciding what to do when one of the seven does not answer — because the default behaviour of most multi-source search code is to quietly return a shorter list, and a shorter list is indistinguishable from "that is everything there is".
+ANYFREEBOOK searches Project Gutenberg, Open Library, the Internet Archive, Google Books, PubMed Central, DOAJ and LibriVox at the same time. (The public API fans out to all seven. The website's own search page leaves LibriVox out, because an audiobook is usually not what someone typing a book title is after — that source has its own page.) The parallelism is the easy part. The part that took real thought was deciding what to do when one of the seven does not answer — because the default behaviour of most multi-source search code is to quietly return a shorter list, and a shorter list is indistinguishable from "that is everything there is".
 
 ## There is no search index
 
@@ -12,7 +12,7 @@ That design is cheap to start and awkward to operate, because the failure modes 
 
 ## One source failing must not cost you the other six
 
-The first version looked like this:
+The obvious version looks like this:
 
 ```ts
 const [gutenberg, openLibrary, googleBooks, archive, pubmed, doaj, librivox] =
@@ -94,21 +94,32 @@ The other half of the story is timeouts. An upstream that never responds is wors
 
 ## The contract: failedSources and partial
 
-A failure record is only useful if it reaches the client. The public API (`https://anyfreebook.com/api/v1/search`) returns it:
+A failure record is only useful if it reaches the client. The public API (`https://anyfreebook.com/api/v1/search`) returns it. This is a real response, captured from the live API:
 
 ```json
 {
   "query": "python",
   "page": 1,
-  "limit": 20,
-  "total": 22537,
-  "count": 20,
-  "sources": { "Project Gutenberg": 120, "Open Library": 22417 },
-  "failedSources": ["DOAJ"],
-  "partial": true,
+  "limit": 2,
+  "total": 23872467,
+  "count": 2,
+  "sources": {
+    "ANYFREEBOOK": 3,
+    "Open Library": 6588,
+    "Internet Archive": 23527856,
+    "DOAJ": 17392,
+    "PubMed Central": 297904,
+    "Project Gutenberg": 22537,
+    "LibriVox": 0,
+    "Google Books": 190
+  },
+  "failedSources": [],
+  "partial": false,
   "results": [ "..." ]
 }
 ```
+
+That capture is the good case: every source answered, so `failedSources` is empty and `partial` is false. When one of them does not answer, its name appears in `failedSources` and `partial` flips to true — the response says so rather than letting a short list pass as a complete one.
 
 `partial` is derived on every request, never stored:
 

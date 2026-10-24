@@ -1,12 +1,12 @@
 # One codebase, two install paths: shipping a PWA and an Android app from the same Next.js site
 
-The Play build of ANYFREEBOOK is 1.2 MB. Almost none of that is the app. It is an Android shell around the website that already exists, and the interesting engineering is not in the shell — it is in the handshake that tells Android the shell is allowed to claim your domain.
+The Play build of ANYFREEBOOK is 1.2 MB. Almost none of that is the app. It is an Android shell around the website that already exists, and the interesting engineering is not in the shell — it is in the handshake that lets Android believe the shell owns your domain.
 
 ## What a Trusted Web Activity actually is
 
 A TWA is an Android activity that loads a URL inside a WebView with the browser chrome stripped away. There is no duplicated application code, no second build of the product, nothing to keep in sync. The Play listing for ANYFREEBOOK is exactly that: package `com.anyfreebook.app`, host `anyfreebook.com`, full scope so every route stays inside the app.
 
-The package is built with Bubblewrap over the same Next.js site, and the numbers that matter are small: `minSdkVersion` 24, `targetSdk` 36, and a 1.2 MB app bundle. Compare that with shipping the same features natively — a second codebase, a second release train, and a version of the product that is always behind the website. The TWA gets you a Play listing, a launcher icon, and a native share sheet. Everything else is the website.
+The package is built with Bubblewrap over the same Next.js site, and the numbers that matter are small: `minSdkVersion` 24, `targetSdk` 36, and a 1.2 MB app bundle. Compare that with shipping the same features natively — a second codebase, a second release train, and a product version that is always behind the website. The TWA gets you a Play listing, a launcher icon, and a native share sheet. Everything else is the website.
 
 ## Digital Asset Links is the actual handshake
 
@@ -68,7 +68,7 @@ The script accepts more than one fingerprint, and `replace(/^SHA256\s*/i, '')` h
 
 ## Play App Signing: the fingerprint that matters is not the one you signed with
 
-This is the part that costs people a release. You sign your upload bundle with your own upload key. Google Play then re-signs the app with its own Play App Signing key before delivering it. The device validates the certificate of the APK it actually installed — the Play app-signing certificate, not yours.
+This is the part that costs people a release. You sign your upload bundle with your own upload key; Google Play then re-signs the app with its own Play App Signing key before delivering it. The device validates the certificate of the APK it actually installed — the Play app-signing certificate, not yours.
 
 So publishing only your upload-key fingerprint means the domain proves it owns a key the installed app does not use. The link opens in a Custom Tab: the app launches, the site loads, and the whole thing looks like a slightly broken browser rather than an app.
 
@@ -86,7 +86,7 @@ https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=http
 
 The site parameter is enough — the response lists every app the domain is associated with. (Adding an `source.android.app_id` parameter to narrow it returns `400 Unknown name "source.android.app_id"`, so leave it off.)
 
-A response containing a statement for `com.anyfreebook.app` and no error means the handshake holds. Getting the JSON to parse is not enough — that only proves the file is syntactically valid. The `statements:list` call proves the pairing is right.
+A response containing a statement for `com.anyfreebook.app` and no error means the handshake holds. Getting the JSON to parse is not enough — that only proves the file is syntactically valid. The `statements:list` call proves the pairing.
 
 There is one more switch in the Play Console: Release → Setup → App integrity → Digital Asset Links verification. Until it is on, the verification is advisory.
 
@@ -113,7 +113,7 @@ self.addEventListener('install', (event) => {
 });
 ```
 
-Two details there are about living inside an app shell rather than a browser tab. The worker returns error statuses untouched, so a genuine 404 stays a genuine 404 rather than being masked by a cached shell. And when an asset is unreachable offline, it returns a 1×1 transparent PNG with a 200 status instead of a failed request, because a failed subresource inside a TWA looks like a broken app in a way it never does in a tab.
+Two details there are about living in an app shell rather than a browser tab. The worker returns error statuses untouched, so a genuine 404 stays a genuine 404 rather than being masked by a cached shell. And when an asset is unreachable offline, it returns a 1×1 transparent PNG with a 200 status instead of a failed request — a failed subresource inside a TWA looks like a broken app in a way it never does in a tab.
 
 ## The Bubblewrap manifest, in essentials
 
@@ -141,10 +141,10 @@ The whole Android project is generated from one JSON file. The parts worth under
 
 `packageId` and `host` are the identity of the app and the domain it claims. `fullScopeUrl` is what makes it a full-scope TWA rather than a partial one — every route under that origin stays inside the shell. `minSdkVersion` 24 and `targetSdk` 36 set the platform floor and the API level the app targets. Changing anything here means re-running `npx bubblewrap update --manifest twa-manifest.json`, which regenerates the project and bumps `appVersionCode`.
 
-Note that the `fingerprints` array here carries the upload key. That is correct for Bubblewrap's own signing step, and it is *not* sufficient for Digital Asset Links — the file the domain serves needs the Play app-signing fingerprint too.
+Note that the `fingerprints` array here carries the upload key. That is correct for Bubblewrap's signing step, and it is *not* sufficient for Digital Asset Links — the file the domain serves needs the Play app-signing fingerprint too.
 
 ## The practical takeaway
 
 A TWA is not an excuse to skip the PWA, because the PWA is what the TWA loads. The manifest, the service worker, the offline page and the icons all have to be right before the app shell has anything to show. If the service worker's cache-first rules are wrong, the wrong version of a page is what the app shows, offline and online alike.
 
-Get the order right and the work is small: build the bundle, upload it, read the Play app-signing fingerprint out of the Play Console, publish it alongside the upload fingerprint in uppercase, verify with the `statements:list` endpoint, and turn on Digital Asset Links verification. Then the Play icon opens your website instead of a browser tab, and the app you have to maintain is still the one you already ship.
+Get the order right and the work is small: build the bundle, upload it, read the Play app-signing fingerprint out of the Play Console, publish it alongside the upload fingerprint in uppercase, verify with the `statements:list` endpoint, and turn on Digital Asset Links verification. Then the Play icon opens your website instead of a browser tab, and the app you maintain is still the one you already ship.

@@ -23,7 +23,7 @@ const restricted =
   !!metadata['lendinginfo'];
 ```
 
-If the metadata call fails or the item cannot be read, the resolver falls back to `unverified` rather than assuming the best. A record we could not read is never promoted to `download`.
+If the metadata call fails, the resolver falls back to `unverified` rather than assuming the best. A record we could not read is never promoted to `download`.
 
 For Project Gutenberg, the title and the author both have to match. `src/lib/api/resolveSource.ts` checks the author, because a title alone is not enough — a book by one Austen must never resolve to a different book that shares the surname:
 
@@ -58,7 +58,7 @@ if (match) {
 
 And the rule that matters most: **a catalogue record is not a copy.** Open Library holding an entry for a book tells you the book exists and where it can be bought. It says nothing about whether the text is free to read today. Treating "we found the title" as "the title is free" is the single most common bug in this category of API, and the one that ends up in front of a rights holder.
 
-The title has to be checked too, and this is a bug we hit ourselves. Gutendex and Open Library both rank by relevance, so taking the top hit returns whatever scored highest — not necessarily the book in the request. Our resolver asked Open Library for one result and checked the author; a request for *Fairy Circles* by William James Hudson came back with a downloadable copy of *Alice's Adventures in Wonderland*, labelled `tier: download`. The fix is to fetch several candidates, ask for their title and author fields, and accept the first one that is actually the title that was asked for:
+The title has to be checked too, and this is a bug we hit ourselves. Gutendex and Open Library both rank by relevance, so taking the top hit returns whatever scored highest. Our resolver asked Open Library for one result and checked the author; a request for *Fairy Circles* by William James Hudson came back with a downloadable copy of *Alice's Adventures in Wonderland*, labelled `tier: download`. The fix is to fetch several candidates, ask for their title and author fields, and accept the first that is actually the title requested:
 
 ```ts
 const doc = docs.find((d) => {
@@ -72,44 +72,54 @@ const doc = docs.find((d) => {
 
 ## Borrow is not download
 
-Controlled Digital Lending is easy to misdescribe. The Internet Archive holds a real copy of the book. The reader gets a real copy of the book. But the copy is only accessible through the Archive's lending interface: you need a free account, and you need to take out a loan, and the loan is time-limited and renewed through a queue.
+Controlled Digital Lending is easy to misdescribe. The Internet Archive holds a real copy of the book. The reader gets a real copy of the book. But it is only accessible through the Archive's lending interface: you need a free account, you need to take out a loan, and the loan is time-limited and renewed through a queue.
 
 None of that is a file. A link to a borrow-only item is not something a downloader can fetch; it is a page that requires an account before it gives you anything. If your API says "free download" and links to a borrow-only item, you have shipped a button that leads to a login wall and called it a download.
 
-That is why the tiers are separate values rather than a boolean `isFree`. `borrow` is a real, useful answer — this copy is genuinely free to read, under conditions — but it is a different answer from "you may fetch this file now".
+That is why the tiers are separate values rather than a boolean `isFree`. `borrow` is a real answer — this copy is free to read, under conditions — but it differs from "you may fetch this file now".
 
 ## The rule: never claim a download you cannot point at
 
-Our resolver never returns `download` for a search-results page. Where the source exposes a file, the API's `files[]` array carries it:
+Our resolver never returns `download` for a search-results page. Where the source exposes a file, the API's `files[]` array carries it. This is a real response, captured from the live API:
 
 ```json
 {
   "title": "Fairy Circles",
+  "author": "Villamaria",
   "tier": "download",
-  "tierReason": "Verified public-domain full text on Project Gutenberg.",
-  "license": "Public domain (Project Gutenberg)",
+  "tierReason": "Open-access copy on the Internet Archive.",
+  "sourceType": "archive",
+  "sourceUrl": "https://archive.org/details/fairycirclestale00villiala",
+  "license": "Public domain",
   "files": [
-    { "format": "epub", "url": "https://www.gutenberg.org/ebooks/39560.epub3.images", "bytes": null, "label": "EPUB" }
+    { "format": "epub", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.epub", "bytes": 15512987, "label": "fairycirclestale00villiala.epub" },
+    { "format": "pdf", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.pdf", "bytes": 13373257, "label": "fairycirclestale00villiala.pdf" },
+    { "format": "txt", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_djvu.txt", "bytes": 514307, "label": "fairycirclestale00villiala_djvu.txt" },
+    { "format": "html", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_hocr.html", "bytes": 11537829, "label": "fairycirclestale00villiala_hocr.html" }
   ],
   "links": [
-    { "label": "Read on Project Gutenberg", "url": "https://www.gutenberg.org/ebooks/39560", "source": "Project Gutenberg" }
-  ]
+    { "label": "Read on Internet Archive", "url": "https://archive.org/details/fairycirclestale00villiala", "source": "Internet Archive" },
+    { "label": "View on Open Library", "url": "https://openlibrary.org/works/OL7903107W", "source": "Open Library" }
+  ],
+  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-24T12:53:48.857Z", "caller": "anonymous" }
 }
 ```
 
-There is one case where `download` comes back with an empty `files[]`: the copy is genuinely free to read, but the source exposes no file you can fetch in one request. A DOAJ article and a PubMed Central paper are free full text at the publisher's page; a LibriVox recording is free as chapter files; an Internet Archive item whose only derivatives are DRM-encrypted has no fetchable file. Those records carry `links[]` instead, pointing at the real free copy.
+For Project Gutenberg the same shape comes back with Gutenberg's canonical URLs instead — `/ebooks/1342.epub3.images`, `.txt.utf-8` and `.html.images` — because those three exist for every ebook. Gutenberg serves no PDF for every title, so none is listed unless the source reported one.
 
-So a machine client should check two things. `tier === 'download'` says the copy is free without payment or an account. `files.length > 0` says you can fetch it right now. A downloader that only checks the tier will sometimes find nothing to download; one that only checks `files[]` will miss the cases where the tier matters.
+There is one case where `download` comes back with an empty `files[]`: the copy is genuinely free to read, but the source exposes no file you can fetch in one request. A DOAJ article or a PubMed Central paper is free full text at the publisher's page; a LibriVox recording is free as chapter files; an Internet Archive item whose only derivatives are DRM-encrypted has no fetchable file. Those records carry `links[]` instead.
+
+So a machine client should check two things. `tier === 'download'` says the copy is free without payment or an account. `files.length > 0` says you can fetch it right now. A downloader that only checks the tier sometimes finds nothing to download; one that only checks `files[]` misses the cases where the tier matters.
 
 For `borrow` and `unverified`, `files[]` is empty and `links[]` points at the real source. That is not an oversight in the payload — it is the payload making the distinction impossible to miss.
 
 When a source offers only a landing page, the tier is `unverified` and the links are search URLs for the exact title and author. We would rather send a reader to a real search page than pretend it is a download.
 
-One more wrinkle worth knowing if you work against the Internet Archive directly: the file list contains things that look like documents and are not. Labels are matched exactly against a small allowlist of real formats, and the file name is checked too, because "OCR Search Text" is a gzipped search index and "Single Page Original JP2 Tar" is a several-hundred-megabyte dump of page images. Matching labels loosely is how a downloader ends up fetching a 700 MB tarball thinking it fetched a book.
+One more wrinkle: the file list contains things that look like documents and are not. Labels are matched exactly against a small allowlist of real formats, and the file name is checked too, because "OCR Search Text" is a gzipped search index and "Single Page Original JP2 Tar" is a several-hundred-megabyte dump of page images. Matching labels loosely is how a downloader ends up fetching a 700 MB tarball thinking it fetched a book.
 
 ## What a client does with the tier
 
-Here is the client-side consequence, and it is the part most implementations skip. A consumer that downloads each book should check the tier and refuse out loud:
+Here is the client-side consequence, the part most implementations skip. A consumer that downloads each book should check the tier and refuse out loud:
 
 ```ts
 // An example client consuming GET /api/v1/resolve
@@ -143,9 +153,9 @@ The difference between throwing and skipping is the whole point. A silent skip p
 
 ## The tier is the single source of truth
 
-Inside our own codebase the discipline is enforced by having exactly one decision point. `src/lib/api/resolveSource.ts` exports the `SourceTier` type, and the book page's badge, its `<title>`, its meta description and its schema.org offer all read from that one value. The green "100% legal, open-access" badge appears only when the tier is `download`. Nothing hardcodes a free claim.
+Inside our own codebase the discipline is enforced by having exactly one decision point. `src/lib/api/resolveSource.ts` exports the `SourceTier` type, and the book page's badge, its `<title>`, its meta description and its schema.org offer all read from that one value. The green "100% legal, open-access" badge appears only when the tier is `download`.
 
-When the tier is anything other than `download`, the page does something better than apologising. It offers a genuinely free alternative — a real open resource for that subject, from OpenStax, MIT OpenCourseWare, Project Gutenberg, Cornell LII and similar, with per-title matches taking priority over per-category ones.
+When the tier is anything other than `download`, the page does something better than apologising. It offers a genuinely free alternative — a real open resource for that subject, from OpenStax, MIT OpenCourseWare, Project Gutenberg and Cornell LII, with per-title matches taking priority over per-category ones.
 
 ## If your API returns "free" URLs, you are making a legal claim
 
@@ -153,4 +163,4 @@ That is the broader point. A "free" URL in an API response is not a convenience 
 
 Resolve it properly or don't claim it. The tier is the mechanism: three values, each backed by the source's own metadata, each with a `tierReason` that a human can read and argue with.
 
-The failure this avoids is concrete. It is shipping a "free download" button that leads to a login wall, which is embarrassing. It is also shipping that same button where some downstream site has filled the gap with a pirated copy, which is not. Between the two, the boring tier system is the cheapest insurance there is.
+The failure this avoids is concrete. It is shipping a "free download" button that leads to a login wall, which is embarrassing. It is also shipping that same button where a downstream site has filled the gap with a pirated copy, which is not. Between the two, the boring tier system is the cheapest insurance there is.

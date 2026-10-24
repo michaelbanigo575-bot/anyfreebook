@@ -23,7 +23,7 @@ This API answers that question for you, per result, in a field called `tier`.
 
 | `tier` | Meaning | `files` |
 |---|---|---|
-| `download` | A verified, public-domain full text you can fetch directly. | Direct file URLs, when we have them. |
+| `download` | A free, legally readable copy of this exact title, resolved from the source's own metadata. | Direct file URLs, when the source exposes one. Sometimes empty — see below. |
 | `borrow` | A real copy on the Internet Archive, but confirmed **borrow-only**: a free IA account and a loan are required. Not a download. | Empty. |
 | `unverified` | A catalogue record or a search page. We could not confirm a free, legally readable copy of *this exact title*. | Empty. |
 
@@ -31,9 +31,10 @@ Only `download` is a free download. Every other result links to the real
 source so you can read it there.
 
 `tier` is never a guess about a specific copy. It comes from the source's own
-metadata: for the Internet Archive we read `access-restricted-item` and
-`lending_identifier` from the item's own record, and for Project Gutenberg we
-only claim `download` when the ebook id resolves to a real file.
+metadata: for the Internet Archive we read `access-restricted-item`,
+`lending_identifier` and `lendinginfo` from the item's own record, and for
+Project Gutenberg we only claim `download` when the title and the author match
+a real ebook and its id resolves to a real file.
 
 ---
 
@@ -73,38 +74,44 @@ stored.
 {
   "query": "python",
   "page": 1,
-  "limit": 20,
-  "total": 22537,
-  "count": 20,
-  "sources": { "Project Gutenberg": 120, "Open Library": 22417 },
+  "limit": 2,
+  "total": 23872467,
+  "count": 2,
+  "sources": {
+    "ANYFREEBOOK": 3,
+    "Open Library": 6588,
+    "Internet Archive": 23527856,
+    "DOAJ": 17392,
+    "PubMed Central": 297904,
+    "Project Gutenberg": 22537,
+    "LibriVox": 0,
+    "Google Books": 190
+  },
   "failedSources": [],
   "partial": false,
   "results": [
     {
-      "id": "pg-39560",
-      "title": "Fairy Circles",
-      "author": "Villamaria",
-      "year": null,
-      "source": "Project Gutenberg",
-      "sourceType": "gutenberg",
-      "sourceUrl": "https://www.gutenberg.org/ebooks/39560",
-      "tier": "download",
-      "tierReason": "Verified public-domain full text on Project Gutenberg.",
-      "license": "Public domain (Project Gutenberg)",
-      "files": [
-        { "format": "epub", "url": "https://www.gutenberg.org/ebooks/39560.epub3.images", "bytes": null, "label": "EPUB" },
-        { "format": "txt", "url": "https://www.gutenberg.org/ebooks/39560.txt.utf-8", "bytes": null, "label": "Plain text" },
-        { "format": "html", "url": "https://www.gutenberg.org/ebooks/39560.html.images", "bytes": null, "label": "HTML" }
-      ],
+      "id": "ol-OL2784125W",
+      "title": "Learning Python",
+      "author": "Mark Lutz, David Ascher",
+      "year": 1999,
+      "source": "Open Library",
+      "sourceType": "openlibrary",
+      "sourceUrl": "https://openlibrary.org/works/OL2784125W",
+      "tier": "borrow",
+      "tierReason": "A real Internet Archive copy exists, but it is borrow-only: a free Internet Archive account and a loan are required, so it is not a direct download.",
+      "license": "Borrow-only lending copy (Internet Archive)",
+      "files": [],
       "links": [
-        { "label": "Read on Project Gutenberg", "url": "https://www.gutenberg.org/ebooks/39560", "source": "Project Gutenberg" }
+        { "label": "Read on Open Library", "url": "https://openlibrary.org/works/OL2784125W", "source": "Open Library" },
+        { "label": "Read on Internet Archive", "url": "https://archive.org/details/einfuhrunginpyth0000lutz", "source": "Internet Archive" }
       ],
-      "url": "https://anyfreebook.com/book/fairy-circles-pg-39560"
+      "url": "https://anyfreebook.com/book/learning-python-ol-OL2784125W"
     }
   ],
   "meta": {
     "apiVersion": "v1",
-    "generatedAt": "2026-10-23T23:30:00.000Z"
+    "generatedAt": "2026-10-24T11:45:48.554Z"
   }
 }
 ```
@@ -125,13 +132,21 @@ Project Gutenberg's three canonical formats are always offered for a valid
 ebook id (EPUB, plain text, HTML). Gutenberg does **not** serve a PDF for every
 title, so no PDF is listed unless the source reported one.
 
+A `tier` of `download` means the copy is free to read without payment or an
+account. It does **not** guarantee that `files[]` is non-empty: a DOAJ article,
+a PubMed Central paper and a LibriVox recording are free, but the source
+exposes no file you can fetch in one request, so those records carry `links[]`
+instead. Check `files.length` before you try to fetch.
+
 ---
 
 ## `GET /resolve`
 
-The authoritative answer for one title. It asks Project Gutenberg for a real
-ebook and checks the author actually matches, so a book by one Austen never
-resolves to a different book that shares the surname.
+The authoritative answer for one title. It checks the title **and** the author
+against the real record, so a book by one Austen never resolves to a different
+book that shares the surname — and a request for one title never comes back
+with a different book attached. When no record matches, the tier is `unverified`
+and `links[]` points at real search pages for that exact title and author.
 
 | Parameter | Type | Required | Notes |
 |---|---|---|---|
@@ -140,20 +155,24 @@ resolves to a different book that shares the surname.
 
 ```json
 {
-  "title": "Pride and Prejudice",
-  "author": "Jane Austen",
+  "title": "Fairy Circles",
+  "author": "Villamaria",
   "tier": "download",
-  "tierReason": "Verified public-domain full text on Project Gutenberg.",
-  "sourceType": "gutenberg",
-  "sourceUrl": "https://www.gutenberg.org/ebooks/1342",
+  "tierReason": "Open-access copy on the Internet Archive.",
+  "sourceType": "archive",
+  "sourceUrl": "https://archive.org/details/fairycirclestale00villiala",
   "license": "Public domain",
   "files": [
-    { "format": "epub", "url": "https://www.gutenberg.org/ebooks/1342.epub3.images", "bytes": null, "label": "EPUB" }
+    { "format": "epub", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.epub", "bytes": 15512987, "label": "fairycirclestale00villiala.epub" },
+    { "format": "pdf", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.pdf", "bytes": 13373257, "label": "fairycirclestale00villiala.pdf" },
+    { "format": "txt", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_djvu.txt", "bytes": 514307, "label": "fairycirclestale00villiala_djvu.txt" },
+    { "format": "html", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_hocr.html", "bytes": 11537829, "label": "fairycirclestale00villiala_hocr.html" }
   ],
   "links": [
-    { "label": "Read on Project Gutenberg", "url": "https://www.gutenberg.org/ebooks/1342", "source": "Project Gutenberg" }
+    { "label": "Read on Internet Archive", "url": "https://archive.org/details/fairycirclestale00villiala", "source": "Internet Archive" },
+    { "label": "View on Open Library", "url": "https://openlibrary.org/works/OL7903107W", "source": "Open Library" }
   ],
-  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-23T23:30:00.000Z" }
+  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-24T12:53:48.857Z" }
 }
 ```
 

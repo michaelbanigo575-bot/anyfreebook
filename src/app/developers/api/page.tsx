@@ -100,34 +100,42 @@ export default function ApiReferencePage() {
 {`{
   "query": "python",
   "page": 1,
-  "limit": 20,
-  "total": 22537,
-  "count": 20,
-  "sources": { "Project Gutenberg": 120, "Open Library": 22417 },
+  "limit": 2,
+  "total": 23872467,
+  "count": 2,
+  "sources": {
+    "ANYFREEBOOK": 3,
+    "Open Library": 6588,
+    "Internet Archive": 23527856,
+    "DOAJ": 17392,
+    "PubMed Central": 297904,
+    "Project Gutenberg": 22537,
+    "LibriVox": 0,
+    "Google Books": 190
+  },
   "failedSources": [],
   "partial": false,
   "results": [
     {
-      "id": "pg-39560",
-      "title": "Fairy Circles",
-      "author": "Villamaria",
-      "year": null,
-      "source": "Project Gutenberg",
-      "sourceType": "gutenberg",
-      "sourceUrl": "https://www.gutenberg.org/ebooks/39560",
-      "tier": "download",
-      "tierReason": "Verified public-domain full text on Project Gutenberg.",
-      "license": "Public domain (Project Gutenberg)",
-      "files": [
-        { "format": "epub", "url": "https://www.gutenberg.org/ebooks/39560.epub3.images", "bytes": null, "label": "EPUB" }
-      ],
+      "id": "ol-OL2784125W",
+      "title": "Learning Python",
+      "author": "Mark Lutz, David Ascher",
+      "year": 1999,
+      "source": "Open Library",
+      "sourceType": "openlibrary",
+      "sourceUrl": "https://openlibrary.org/works/OL2784125W",
+      "tier": "borrow",
+      "tierReason": "A real Internet Archive copy exists, but it is borrow-only: a free Internet Archive account and a loan are required, so it is not a direct download.",
+      "license": "Borrow-only lending copy (Internet Archive)",
+      "files": [],
       "links": [
-        { "label": "Read on Project Gutenberg", "url": "https://www.gutenberg.org/ebooks/39560", "source": "Project Gutenberg" }
+        { "label": "Read on Open Library", "url": "https://openlibrary.org/works/OL2784125W", "source": "Open Library" },
+        { "label": "Read on Internet Archive", "url": "https://archive.org/details/einfuhrunginpyth0000lutz", "source": "Internet Archive" }
       ],
-      "url": "https://anyfreebook.com/book/fairy-circles-pg-39560"
+      "url": "https://anyfreebook.com/book/learning-python-ol-OL2784125W"
     }
   ],
-  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-23T23:30:00.000Z" }
+  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-24T11:45:48.554Z" }
 }`}
         </pre>
         <p className="text-sm text-[var(--text-secondary)] mt-3">
@@ -144,9 +152,11 @@ export default function ApiReferencePage() {
           <code className="font-mono">GET /resolve</code>
         </h2>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
-          The authoritative answer for one title. It asks Project Gutenberg for a real ebook and
-          checks the author actually matches, so a book by one Austen never resolves to a different
-          book that shares the surname.
+          The authoritative answer for one title. It checks the title <em>and</em> the author against
+          the real record, so a book by one Austen never resolves to a different book that shares the
+          surname — and a request for one title never comes back with a different book attached. When
+          nothing matches, the tier is <code className="font-mono">unverified</code> and the links
+          point at real search pages for that exact title and author.
         </p>
         <div className={cardClass({ hover: false, padding: 'p-4' })}>
           <Table
@@ -159,22 +169,34 @@ export default function ApiReferencePage() {
         </div>
         <pre className="mt-3 overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-4 text-xs text-[var(--text-secondary)]">
 {`{
-  "title": "Pride and Prejudice",
-  "author": "Jane Austen",
+  "title": "Fairy Circles",
+  "author": "Villamaria",
   "tier": "download",
-  "tierReason": "Verified public-domain full text on Project Gutenberg.",
-  "sourceType": "gutenberg",
-  "sourceUrl": "https://www.gutenberg.org/ebooks/1342",
+  "tierReason": "Open-access copy on the Internet Archive.",
+  "sourceType": "archive",
+  "sourceUrl": "https://archive.org/details/fairycirclestale00villiala",
   "license": "Public domain",
   "files": [
-    { "format": "epub", "url": "https://www.gutenberg.org/ebooks/1342.epub3.images", "bytes": null, "label": "EPUB" }
+    { "format": "epub", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.epub", "bytes": 15512987, "label": "fairycirclestale00villiala.epub" },
+    { "format": "pdf", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala.pdf", "bytes": 13373257, "label": "fairycirclestale00villiala.pdf" },
+    { "format": "txt", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_djvu.txt", "bytes": 514307, "label": "fairycirclestale00villiala_djvu.txt" },
+    { "format": "html", "url": "https://archive.org/download/fairycirclestale00villiala/fairycirclestale00villiala_hocr.html", "bytes": 11537829, "label": "fairycirclestale00villiala_hocr.html" }
   ],
   "links": [
-    { "label": "Read on Project Gutenberg", "url": "https://www.gutenberg.org/ebooks/1342", "source": "Project Gutenberg" }
+    { "label": "Read on Internet Archive", "url": "https://archive.org/details/fairycirclestale00villiala", "source": "Internet Archive" },
+    { "label": "View on Open Library", "url": "https://openlibrary.org/works/OL7903107W", "source": "Open Library" }
   ],
-  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-23T23:30:00.000Z" }
+  "meta": { "apiVersion": "v1", "generatedAt": "2026-10-24T12:53:48.857Z" }
 }`}
         </pre>
+        <p className="text-sm text-[var(--text-secondary)] mt-3">
+          A <code className="font-mono">tier</code> of <code className="font-mono">download</code>{' '}
+          means the copy is free to read without payment or an account. It does not guarantee a
+          fetchable file: a DOAJ article or a PubMed Central paper is free, but the source exposes no
+          file you can get in one request, so <code className="font-mono">files</code> is empty and
+          the links point at the publisher&rsquo;s page. Check{' '}
+          <code className="font-mono">files.length</code> before you try to fetch.
+        </p>
       </section>
 
       {/* GET /health */}

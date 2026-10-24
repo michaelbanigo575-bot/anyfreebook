@@ -33,8 +33,8 @@ const ENDPOINTS = [
 const TIERS = [
   {
     tier: 'download',
-    meaning: 'A verified, public-domain full text you can fetch directly.',
-    detail: 'files[] holds the direct URLs when we have them.',
+    meaning: 'A free, legally readable copy of this exact title.',
+    detail: 'files[] holds the direct URLs when the source exposes one.',
     tone: 'text-emerald-600 dark:text-emerald-400',
   },
   {

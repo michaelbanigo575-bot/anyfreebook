@@ -90,7 +90,7 @@ function SearchResults() {
             // never be presented as the complete answer.
             if (msg.error) {
               setFailedSources(prev => (prev.includes(msg.label) ? prev : [...prev, msg.label]));
-              return;
+              continue;
             }
             setResults(prev => [...prev, ...msg.books]);
             setSources(prev => ({ ...prev, [msg.label]: msg.total }));

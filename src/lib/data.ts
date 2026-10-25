@@ -22,7 +22,19 @@ export interface Book {
   narrator?: string;
   duration?: number;
   sourceUrl?: string;
-  sourceType?: 'local' | 'openlibrary' | 'gutenberg' | 'googlebooks' | 'archive' | 'pubmed' | 'doaj' | 'librivox';
+  sourceType?:
+    | 'local'
+    | 'openlibrary'
+    | 'gutenberg'
+    | 'googlebooks'
+    | 'archive'
+    | 'pubmed'
+    | 'doaj'
+    | 'librivox'
+    | 'openalex'
+    | 'wikisource'
+    | 'europeana'
+    | 'zenodo';
   downloadLinks?: { label: string; url: string; source: string }[];
 }
 

@@ -46,6 +46,10 @@ const SOURCE_LABELS: Record<string, string> = {
   pubmed: 'PubMed Central',
   doaj: 'DOAJ',
   librivox: 'LibriVox',
+  openalex: 'OpenAlex',
+  wikisource: 'Wikisource',
+  europeana: 'Europeana',
+  zenodo: 'Zenodo',
 };
 
 /** Formats we are willing to hand to a downloader, in the order we prefer them. */
@@ -249,6 +253,14 @@ const TIER_REASONS = {
     'Google Books holds a catalogue record for this title, not a confirmed free download.',
   local:
     'Curated catalogue entry. Call /api/v1/resolve with the title and author for a verified free copy.',
+  openalex:
+    'Open-access work — the open-access copy is free to read, and to download when the publisher serves a PDF.',
+  wikisource:
+    'Public-domain text from Wikisource, rendered to a PDF.',
+  europeana:
+    'Openly licensed item from a European library or museum collection, free to read via Europeana.',
+  zenodo:
+    'Open-access record on Zenodo, with the licence and the file both stated on the record.',
 } as const;
 
 /** Sorts files by how good they are to read. */
@@ -264,6 +276,27 @@ function rankFiles(files: PublicFile[]): PublicFile[] {
  * e.g. `/files/37431/37431-8.txt`) and the canonical Gutenberg URL only fills
  * the gaps the adapter did not resolve.
  */
+/**
+ * Files carried on the result's own download links.
+ *
+ * Used by the sources that hand over a direct file with the record — Zenodo,
+ * Wikisource, OpenAlex — where the URL in the link IS the file.
+ */
+function linkFiles(book: Book): PublicFile[] {
+  const files: PublicFile[] = [];
+  for (const link of book.downloadLinks || []) {
+    const format: PublicFormat | null =
+      /\.pdf(\?|$)/i.test(link.url) ? 'pdf'
+      : /\.epub(\?|$)/i.test(link.url) ? 'epub'
+      : /\.(txt|odt|rtf)(\?|$)/i.test(link.url) ? 'txt'
+      : /\.html?(\?|$)/i.test(link.url) ? 'html'
+      : null;
+    if (!format) continue;
+    files.push({ format, url: link.url, bytes: null, label: link.label });
+  }
+  return rankFiles(files);
+}
+
 function mergeFiles(base: PublicFile[], fallbacks: PublicFile[]): PublicFile[] {
   const byFormat = new Map<PublicFormat, PublicFile>();
   for (const file of base) byFormat.set(file.format, file);
@@ -312,6 +345,25 @@ export async function toPublicRecord(book: Book, archiveItem?: IaItem | null): P
     tier = 'download';
     reason = TIER_REASONS.librivox;
     license = 'Public domain (LibriVox)';
+  } else if (sourceType === 'openalex') {
+    tier = 'download';
+    reason = TIER_REASONS.openalex;
+    license = 'Open access (OpenAlex) — licence at the source';
+    files = linkFiles(book);
+  } else if (sourceType === 'wikisource') {
+    tier = 'download';
+    reason = TIER_REASONS.wikisource;
+    license = 'Public domain (Wikisource)';
+    files = linkFiles(book);
+  } else if (sourceType === 'europeana') {
+    tier = 'download';
+    reason = TIER_REASONS.europeana;
+    license = 'Open access (Europeana) — licence at the source';
+  } else if (sourceType === 'zenodo') {
+    tier = 'download';
+    reason = TIER_REASONS.zenodo;
+    license = 'Open access (Zenodo) — licence at the source';
+    files = linkFiles(book);
   } else if (sourceType === 'googlebooks') {
     tier = 'unverified';
     reason = TIER_REASONS.googlebooks;

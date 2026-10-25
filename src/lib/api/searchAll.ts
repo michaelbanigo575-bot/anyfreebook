@@ -6,6 +6,10 @@ import { searchPubMed } from './pubmed';
 import { searchDOAJ } from './doaj';
 import { searchLibrivox } from './librivox';
 import { searchBooks as searchLocal, type Book } from '@/lib/data';
+import { searchOpenAlex } from './openalex';
+import { searchWikisource } from './wikisource';
+import { searchEuropeana } from './europeana';
+import { searchZenodo } from './zenodo';
 
 /**
  * The one search fan-out, shared by the website's /api/search and the public
@@ -25,7 +29,11 @@ export type SearchSource =
   | 'googlebooks'
   | 'pubmed'
   | 'doaj'
-  | 'librivox';
+  | 'librivox'
+  | 'openalex'
+  | 'wikisource'
+  | 'europeana'
+  | 'zenodo';
 
 export const SEARCH_SOURCES: SearchSource[] = [
   'all',
@@ -37,6 +45,10 @@ export const SEARCH_SOURCES: SearchSource[] = [
   'pubmed',
   'doaj',
   'librivox',
+  'openalex',
+  'wikisource',
+  'europeana',
+  'zenodo',
 ];
 
 export interface SearchOutcome {
@@ -150,6 +162,69 @@ export async function searchAllSources(
           results.total += dj.total;
         } catch {
           results.failedSources.push('DOAJ');
+        }
+      })()
+    );
+  }
+
+  if (source === 'all' || source === 'openalex') {
+    fetches.push(
+      (async () => {
+        try {
+          const oa = await searchOpenAlex(query, page, 20);
+          results.books.push(...oa.books);
+          results.sources['OpenAlex'] = oa.total;
+          results.total += oa.total;
+        } catch {
+          results.failedSources.push('OpenAlex');
+        }
+      })()
+    );
+  }
+
+  if (source === 'all' || source === 'europeana') {
+    fetches.push(
+      (async () => {
+        try {
+          const eu = await searchEuropeana(query, page, 20);
+          results.books.push(...eu.books);
+          results.sources['Europeana'] = eu.total;
+          results.total += eu.total;
+        } catch {
+          results.failedSources.push('Europeana');
+        }
+      })()
+    );
+  }
+
+  if (source === 'all' || source === 'zenodo') {
+    fetches.push(
+      (async () => {
+        try {
+          const zn = await searchZenodo(query, page, 20);
+          results.books.push(...zn.books);
+          results.sources['Zenodo'] = zn.total;
+          results.total += zn.total;
+        } catch {
+          results.failedSources.push('Zenodo');
+        }
+      })()
+    );
+  }
+
+  // Wikisource asks one language edition by default. Every language is a
+  // separate wiki and a separate request, so the rest are opt-in — the
+  // language category pages ask for their own.
+  if (source === 'all' || source === 'wikisource') {
+    fetches.push(
+      (async () => {
+        try {
+          const ws = await searchWikisource(query, page, 20);
+          results.books.push(...ws.books);
+          results.sources['Wikisource'] = ws.total;
+          results.total += ws.total;
+        } catch {
+          results.failedSources.push('Wikisource');
         }
       })()
     );

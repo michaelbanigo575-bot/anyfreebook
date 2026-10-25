@@ -1,6 +1,6 @@
 # ANYFREEBOOK API v1
 
-A free, no-signup-required HTTP API over seven open-access book sources.
+A free, no-signup-required HTTP API over eleven open-access book and paper sources.
 
 **Base URL:** `https://anyfreebook.com/api/v1`
 
@@ -67,7 +67,7 @@ stored.
 |---|---|---|---|
 | `q` | string | — | **Required.** Max 200 characters. |
 | `page` | integer | `1` | |
-| `source` | string | `all` | `all`, `local`, `gutenberg`, `openlibrary`, `archive`, `googlebooks`, `pubmed`, `doaj`, `librivox` |
+| `source` | string | `all` | `all`, `local`, `gutenberg`, `openlibrary`, `archive`, `googlebooks`, `pubmed`, `doaj`, `librivox`, `openalex`, `wikisource`, `europeana`, `zenodo` |
 | `limit` | integer | `20` | 1–50. |
 
 ```json
@@ -185,7 +185,7 @@ and `links[]` points at real search pages for that exact title and author.
   "status": "ok",
   "apiVersion": "v1",
   "uptimeSeconds": 1234,
-  "sources": ["Project Gutenberg", "Open Library", "Internet Archive", "Google Books", "PubMed Central", "DOAJ", "LibriVox"]
+  "sources": ["Project Gutenberg", "Open Library", "Internet Archive", "Google Books", "PubMed Central", "DOAJ", "LibriVox", "OpenAlex", "Wikisource", "Europeana", "Zenodo"]
 }
 ```
 
@@ -208,7 +208,7 @@ Touches no upstream, so it stays up even when a source is down.
 
 Closed by default. The allowlist comes from `NEXT_PUBLIC_API_ALLOWED_ORIGINS`
 (a comma-separated list of origins). Set it to `*` only once you accept the
-load — every search fans out to up to seven third-party APIs.
+load — every search fans out to up to eleven third-party APIs.
 
 A command-line client or a server-side SDK does not need CORS at all.
 
@@ -226,7 +226,7 @@ Both are generated from this document, so they cannot drift from it.
 ## Sources
 
 Project Gutenberg · Open Library · Internet Archive · Google Books ·
-PubMed Central · DOAJ · LibriVox
+PubMed Central · DOAJ · LibriVox · OpenAlex · Wikisource · Europeana · Zenodo
 
 Google Books records are catalogue entries, not free copies, and are reported
 as `unverified` for exactly that reason.

@@ -26,6 +26,10 @@ function SourceBadge({ source }: { source?: string }) {
     archive: 'Internet Archive',
     pubmed: 'PubMed Central',
     doaj: 'DOAJ',
+    openalex: 'OpenAlex',
+    wikisource: 'Wikisource',
+    europeana: 'Europeana',
+    zenodo: 'Zenodo',
     local: 'ANYFREEBOOK',
   };
   const s = source || 'local';
@@ -152,6 +156,10 @@ function SearchResults() {
               { id: 'archive', label: 'Internet Archive', count: sources['Internet Archive'] },
               { id: 'pubmed', label: 'PubMed Central', count: sources['PubMed Central'] },
               { id: 'doaj', label: 'DOAJ', count: sources['DOAJ'] },
+              { id: 'openalex', label: 'OpenAlex', count: sources['OpenAlex'] },
+              { id: 'wikisource', label: 'Wikisource', count: sources['Wikisource'] },
+              { id: 'europeana', label: 'Europeana', count: sources['Europeana'] },
+              { id: 'zenodo', label: 'Zenodo', count: sources['Zenodo'] },
               { id: 'local', label: 'Curated', count: sources['ANYFREEBOOK'] },
             ].map(s => (
               <button

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 const PARAMS = [
   ['q', 'string', 'yes', 'The search query. Max 200 characters.'],
   ['page', 'integer', 'no', 'Defaults to 1.'],
-  ['source', 'string', 'no', 'all (default), local, gutenberg, openlibrary, archive, googlebooks, pubmed, doaj, librivox.'],
+  ['source', 'string', 'no', 'all (default), local, gutenberg, openlibrary, archive, googlebooks, pubmed, doaj, librivox, openalex, wikisource, europeana, zenodo.'],
   ['limit', 'integer', 'no', '1–50, defaults to 20.'],
 ];
 

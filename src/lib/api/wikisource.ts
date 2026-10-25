@@ -173,7 +173,10 @@ export async function searchWikisourceLanguage(
   const data: WikisourceSearchResponse = await res.json();
   const hits = (data.query?.search || []).filter(hit => titleMatches(query, hit.title));
   const books = hits.map(hit => pageToBook(lang, hit.title, hit.pageid));
-  return { books, total: data.query?.searchinfo?.totalhits ?? books.length };
+  // The search matches page text as well as titles, so the raw hit count is
+  // mostly noise — "python" matches a thousand pages that merely mention it.
+  // The total is the number of pages that are actually this title.
+  return { books, total: books.length };
 }
 
 /**

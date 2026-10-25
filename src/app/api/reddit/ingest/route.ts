@@ -5,7 +5,7 @@ import { REDDIT_TARGETS } from '@/lib/reddit/targets';
 import { scoreIntent, MAX_AGE_HOURS } from '@/lib/reddit/discovery';
 import { buildDraft } from '@/lib/reddit/drafting';
 import { matchArticle } from '@/lib/reddit/matching';
-import { listTargets, logEvent, saveDraft, savePosts } from '@/lib/reddit/store';
+import { listTargets, logEvent, saveDraft, savePosts, syncTargets } from '@/lib/reddit/store';
 import type { RedditListingChild, RedditPost } from '@/lib/reddit/types';
 
 export const dynamic = 'force-dynamic';
@@ -50,6 +50,11 @@ export async function POST(request: NextRequest) {
     if (!body.listings || typeof body.listings !== 'object') {
       return NextResponse.json({ error: 'Expected { listings: { subreddit: [...] } }' }, { status: 400 });
     }
+
+    // Seed the target list first. The cron does this too, but the ingest
+    // route must not depend on the cron having run — otherwise a fresh
+    // database finds no targets and silently drafts nothing.
+    await syncTargets(REDDIT_TARGETS);
 
     const targets = await listTargets();
     const now = Date.now();

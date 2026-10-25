@@ -66,6 +66,17 @@ The script waits at least a minute between subreddits and reads at most five a
 day. Both limits are enforced again on the server, counting from the
 database, so restarting the process does not reset them.
 
+**Reddit blocks some networks outright.** If the script says
+`HTTP 403 — Reddit blocked this IP`, the problem is the connection, not the
+code: Reddit returns 403 to datacenter and VPN ranges, and it does the same
+to a browser. The test is simple — can you open `reddit.com` in a browser on
+that machine? If not, run the script from a connection where you can (a home
+network, or a phone hotspot). Nothing else needs to change; the script posts
+the threads to the site either way.
+
+The script is safe to run more than once: threads are matched on their Reddit
+id, so a thread that has already been seen is updated rather than duplicated.
+
 ### 4. Review
 
 Open `/admin/reddit`. Each draft shows the reply, the value ratio, and the

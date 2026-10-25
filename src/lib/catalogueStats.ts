@@ -1,16 +1,25 @@
 /**
  * The catalogue size ANYFREEBOOK advertises, in one place.
  *
- * Every number here was measured against the live source on 2026-10-24. The
+ * Every number here was measured against the live source on 2026-10-25. The
  * claim on the site must never exceed what the smallest source that supports
  * it actually returns — the honest headline is the one that survives a reader
  * checking the source, not the biggest number we can find.
  *
- *   Internet Archive, collection:internetarchivebooks   5,757,688  scanned books
- *   Project Gutenberg, gutendex count                      79,666  ebooks
+ *   Internet Archive, collection:internetarchivebooks   5,757,717  scanned books
+ *   Internet Archive, collection:opensource (texts)     1,267,746  community books
+ *   Internet Archive, collection:biodiversity              286,333  scientific books
+ *   Project Gutenberg, gutendex count                       79,666  ebooks
+ *   ---------------------------------------------------------------------
+ *   books the live fan-out can reach                    7,391,462
+ *
  *   PubMed Central, open-access subset                  8,331,584  articles
  *   DOAJ article index                                 13,842,528  articles
- *   Gutenberg + Internet Archive books                 5,837,354  books
+ *   Internet Archive, mediatype:texts (all)            52,879,297  any text
+ *
+ * The IA sets are counted as distinct identifiers: the open-source and
+ * biodiversity collections were queried with "AND NOT
+ * collection:internetarchivebooks", so nothing is counted twice.
  *
  * Two different numbers get quoted on the site and they are not the same
  * thing, so keep them apart:
@@ -19,19 +28,18 @@
  *   curatedBooks   what we hand-picked in src/lib/data.ts — hundreds, and it
  *                  is what powers the category and book detail pages.
  *
- * `liveBooks` is deliberately rounded down to "5 million+" because the
- * Internet Archive alone held 5,757,688 scanned books on the measurement date
- * and that figure drifts with the archive.
+ * "7 million+" is deliberately conservative: the Internet Archive alone holds
+ * 52.9M text items, of which 7.3M are books in the sets above.
  *
  * Values are strings because they land in <StatBlock number="..." /> and in
  * metadata titles, where a number would be a type error.
  */
 export const CATALOGUE = {
   /** Headline reach: books and papers across the seven live sources. */
-  liveBooks: '5 million+',
+  liveBooks: '7 million+',
 
   /** Short form for stat tiles and badges. */
-  liveBooksShort: '5M+',
+  liveBooksShort: '7M+',
 
   /** Hand-curated titles in src/lib/data.ts (actually 258). */
   curatedBooks: '258',

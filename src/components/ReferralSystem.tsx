@@ -83,12 +83,12 @@ export function ReferralSystem() {
   };
 
   const shareWhatsApp = () => {
-    const msg = `Hey! I found this amazing site with 5 million+ free books — textbooks, novels, everything, verified free and legal. Check it out:`;
+    const msg = `Hey! I found this amazing site with 7 million+ free books — textbooks, novels, everything, verified free and legal. Check it out:`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg + '\n' + referralUrl)}`, '_blank');
   };
 
   const shareTwitter = () => {
-    const msg = `I read free books on ANYFREEBOOK — 5 million+ titles from Open Library, Gutenberg, Internet Archive & more. No catch.`;
+    const msg = `I read free books on ANYFREEBOOK — 7 million+ titles from Open Library, Gutenberg, Internet Archive & more. No catch.`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(msg)}&url=${encodeURIComponent(referralUrl)}`, '_blank');
   };
 

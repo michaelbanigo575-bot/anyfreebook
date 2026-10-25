@@ -29,7 +29,7 @@
   <!-- divider -->
   <rect x="266" y="278" width="96" height="3" rx="1.5" fill="#ffffff" opacity="0.55"/>
 
-  <text x="266" y="322" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#ffffff" opacity="0.82">5M+ free books &amp; papers &#183; live results from 7 open-access sources</text>
+  <text x="266" y="322" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#ffffff" opacity="0.82">7M+ free books &amp; papers &#183; live results from 7 open-access sources</text>
 
   <!-- badges -->
   <g transform="translate(266 348)">

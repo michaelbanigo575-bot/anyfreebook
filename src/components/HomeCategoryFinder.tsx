@@ -18,7 +18,7 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const ref = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
@@ -28,7 +28,12 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
     return () => { document.removeEventListener('mousedown', onDoc); document.removeEventListener('keydown', onKey); };
   }, []);
 
-  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 60); }, [open]);
+  // Focus the panel, NOT the filter input. Auto-focusing the input made this
+  // read as a second search bar the moment it opened, which is exactly what a
+  // category picker should not look like.
+  useEffect(() => {
+    if (open) setTimeout(() => panelRef.current?.focus(), 30);
+  }, [open]);
 
   const groups = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -42,6 +47,7 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
     <div ref={ref} className="relative flex-shrink-0">
       {/* The Category button — matches the search bar's height, gradient accent */}
       <button
+        type="button"
         onClick={() => setOpen(o => !o)}
         className={`h-full inline-flex items-center gap-2 px-4 sm:px-5 rounded-xl text-sm font-bold transition-all ${
           open
@@ -59,19 +65,40 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9" /></svg>
       </button>
 
-      {/* Dropdown: search + every category, grouped */}
+      {/* Dropdown: the category list is the point. The filter is a small,
+          clearly-labelled control at the top, not the first thing focused. */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[360px] max-w-[92vw] rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl overflow-hidden z-50 text-left">
-          <div className="p-2.5 border-b border-[var(--border-subtle)]">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] focus-within:border-[var(--primary)]">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--text-muted)] flex-shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <div
+          ref={panelRef}
+          tabIndex={-1}
+          role="dialog"
+          aria-label="Browse categories"
+          className="absolute right-0 top-full mt-2 w-[360px] max-w-[92vw] rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-2xl overflow-hidden z-50 text-left outline-none"
+        >
+          <div className="px-3.5 pt-3 pb-2.5 border-b border-[var(--border-subtle)] flex items-center justify-between gap-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-[var(--text)]">Browse categories</p>
+            <p className="text-xs text-[var(--text-muted)]">{categories.length} total</p>
+          </div>
+          <div className="p-2 border-b border-[var(--border-subtle)]">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] focus-within:border-[var(--primary)]">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--text-muted)] flex-shrink-0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input
-                ref={inputRef}
                 value={q}
                 onChange={e => setQ(e.target.value)}
-                placeholder={`Search ${categories.length} categories…`}
+                aria-label="Filter categories"
+                placeholder="Filter these categories…"
                 className="flex-1 bg-transparent text-sm text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
               />
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => setQ('')}
+                  aria-label="Clear filter"
+                  className="text-[var(--text-muted)] hover:text-[var(--text)] text-xs"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
           <div className="max-h-[46vh] overflow-y-auto p-1.5">

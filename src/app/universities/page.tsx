@@ -70,7 +70,7 @@ export default function UniversitiesPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
         {[
-          { number: '5M+', label: 'Free books & papers' },
+          { number: '7M+', label: 'Free books & papers' },
           { number: '7', label: 'Open-access sources searched live' },
           { number: '241', label: 'Subject categories to explore' },
           { number: '0', label: 'Cost to run an institution' },

@@ -87,8 +87,10 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema()) }}
       />
 
-      {/* HERO */}
-      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-20">
+      {/* HERO — no overflow-hidden here: the Category dropdown is absolutely
+          positioned inside this section and would be clipped by it. The
+          decorative blur layer below has its own overflow-hidden. */}
+      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl animate-pulse-slow" />
           <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />

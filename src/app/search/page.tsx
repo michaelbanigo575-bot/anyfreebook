@@ -119,7 +119,7 @@ function SearchResults() {
     <div className="content-wrapper py-8">
       <div className="mb-8 max-w-2xl">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-6">
-          Search 5 million+ free books and papers
+          Search 7 million+ free books and papers
         </h1>
         <form onSubmit={handleSubmit} className="relative">
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

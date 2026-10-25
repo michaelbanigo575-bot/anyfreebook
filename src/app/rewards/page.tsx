@@ -63,7 +63,7 @@ export default function RewardsPage() {
           <h3 className="text-lg font-bold text-[var(--text)] mb-4">How It Works</h3>
           <div className="space-y-4">
             {[
-              { step: '1', title: 'Find free books', desc: 'Search 5 million+ free books and papers from Open Library, Gutenberg, the Internet Archive & more' },
+              { step: '1', title: 'Find free books', desc: 'Search 7 million+ free books and papers from Open Library, Gutenberg, the Internet Archive & more' },
               { step: '2', title: 'Share with friends', desc: 'Use your referral link or share directly via WhatsApp, Twitter, LinkedIn' },
               { step: '3', title: 'Track your savings', desc: 'See how much money you and your friends have saved on books' },
               { step: '4', title: 'Level up', desc: 'Complete reading challenges and climb the referral tiers' },

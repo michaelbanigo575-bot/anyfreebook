@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/guard';
+import { resolveApiKey } from '@/lib/apiKeys';
 import { REDDIT_TARGETS } from '@/lib/reddit/targets';
 import { scoreIntent, MAX_AGE_HOURS } from '@/lib/reddit/discovery';
 import { buildDraft } from '@/lib/reddit/drafting';
@@ -20,10 +21,22 @@ export const dynamic = 'force-dynamic';
  * This route writes to our database. It does not write to Reddit.
  */
 export async function POST(request: NextRequest) {
-  // Either an admin session, or the shared secret the local script uses.
+  // Three ways in, all of them deliberate:
+  //   1. an admin session, for a human working in the browser
+  //   2. the shared secret, if one is configured in the environment
+  //   3. a partner-tier API key labelled exactly "reddit-ingest", which is
+  //      what the local discovery script uses
+  // A normal free-tier API key is deliberately NOT enough: anyone holding one
+  // could otherwise fill the operator's review queue with junk.
   const secret = process.env.REDDIT_INGEST_SECRET || process.env.CRON_SECRET;
   const headerSecret = request.headers.get('x-ingest-secret');
-  const authorised = (secret && headerSecret === secret) || (await requireAdmin()) !== null;
+
+  let authorised = (Boolean(secret) && headerSecret === secret) || (await requireAdmin()) !== null;
+
+  if (!authorised) {
+    const key = await resolveApiKey(request);
+    authorised = key.tier === 'partner' && key.label === 'reddit-ingest';
+  }
 
   if (!authorised) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

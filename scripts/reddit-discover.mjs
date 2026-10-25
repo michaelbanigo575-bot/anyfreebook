@@ -14,8 +14,8 @@
  *   node scripts/reddit-discover.mjs --product anyfreebook --dry-run
  *
  * Env:
- *   REDDIT_INGEST_SECRET   shared secret for POST /api/reddit/ingest
- *   SITE_URL               defaults to https://anyfreebook.com
+ *   ANYFREEBOOK_API_KEY  a partner-tier key labelled "reddit-ingest"
+ *   SITE_URL             defaults to https://anyfreebook.com
  */
 
 import fs from 'node:fs';
@@ -107,7 +107,7 @@ for scoring and drafting. Nothing is posted to Reddit.
   }
 
   const site = (process.env.SITE_URL || 'https://anyfreebook.com').replace(/\/$/, '');
-  const secret = process.env.REDDIT_INGEST_SECRET || process.env.CRON_SECRET;
+  const apiKey = process.env.ANYFREEBOOK_API_KEY;
 
   let subs = args.subreddits.length > 0 ? args.subreddits : TARGETS;
   if (args.product) {
@@ -132,10 +132,10 @@ for scoring and drafting. Nothing is posted to Reddit.
     return;
   }
 
-  if (!secret) {
+  if (!apiKey) {
     console.error(
-      'REDDIT_INGEST_SECRET is not set. Add it to .env.local (and to the Vercel env vars) so this\n' +
-        'script can hand the threads to the site for scoring.'
+      'ANYFREEBOOK_API_KEY is not set. Add the partner-tier key labelled "reddit-ingest" to\n' +
+        '.env.local (and to your shell) so this script can hand the threads to the site.'
     );
     process.exitCode = 1;
     return;
@@ -170,7 +170,7 @@ for scoring and drafting. Nothing is posted to Reddit.
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-ingest-secret': secret,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({ listings }),
     signal: AbortSignal.timeout(60_000),

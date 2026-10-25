@@ -37,16 +37,21 @@ Paste `supabase/migrations/013_reddit.sql` into the Supabase SQL editor for
 project `ichmkzwjaftteyzrbwji`. It creates four tables: `reddit_targets`,
 `reddit_posts`, `reddit_drafts` and `reddit_events`. All service-role only.
 
-### 2. Set the ingest secret
+### 2. Set the ingest key
 
-Add to `.env.local` **and** to the Vercel environment variables:
+The local script authenticates with a **partner-tier API key labelled
+`reddit-ingest`**. A normal free-tier key is deliberately not enough — anyone
+holding one could otherwise fill the operator's review queue with junk.
 
+Create one with:
+
+```bash
+node scripts/issue-api-key.mjs --label reddit-ingest --tier partner
 ```
-REDDIT_INGEST_SECRET=<any long random string>
-```
 
-This is what lets your local script hand threads to the site. It is not a
-Reddit credential and it grants no ability to post.
+Put the key in `.env.local` as `ANYFREEBOOK_API_KEY`, and in your shell before
+running the script. It grants access to `POST /api/reddit/ingest` on your own
+site and nothing else.
 
 ### 3. Run discovery
 

@@ -30,6 +30,7 @@ function SourceBadge({ source }: { source?: string }) {
     wikisource: 'Wikisource',
     europeana: 'Europeana',
     zenodo: 'Zenodo',
+    otl: 'Textbooks',
     local: 'ANYFREEBOOK',
   };
   const s = source || 'local';
@@ -160,6 +161,7 @@ function SearchResults() {
               { id: 'wikisource', label: 'Wikisource', count: sources['Wikisource'] },
               { id: 'europeana', label: 'Europeana', count: sources['Europeana'] },
               { id: 'zenodo', label: 'Zenodo', count: sources['Zenodo'] },
+              { id: 'otl', label: 'Textbooks', count: sources['Open Textbook Library'] },
               { id: 'local', label: 'Curated', count: sources['ANYFREEBOOK'] },
             ].map(s => (
               <button

@@ -34,7 +34,8 @@ export interface Book {
     | 'openalex'
     | 'wikisource'
     | 'europeana'
-    | 'zenodo';
+    | 'zenodo'
+    | 'otl';
   downloadLinks?: { label: string; url: string; source: string }[];
 }
 

@@ -10,6 +10,7 @@ import { searchOpenAlex } from './openalex';
 import { searchWikisource } from './wikisource';
 import { searchEuropeana } from './europeana';
 import { searchZenodo } from './zenodo';
+import { searchOpenTextbooks } from './opentextbooks';
 
 /**
  * The one search fan-out, shared by the website's /api/search and the public
@@ -33,7 +34,8 @@ export type SearchSource =
   | 'openalex'
   | 'wikisource'
   | 'europeana'
-  | 'zenodo';
+  | 'zenodo'
+  | 'otl';
 
 export const SEARCH_SOURCES: SearchSource[] = [
   'all',
@@ -49,6 +51,7 @@ export const SEARCH_SOURCES: SearchSource[] = [
   'wikisource',
   'europeana',
   'zenodo',
+  'otl',
 ];
 
 export interface SearchOutcome {
@@ -225,6 +228,21 @@ export async function searchAllSources(
           results.total += ws.total;
         } catch {
           results.failedSources.push('Wikisource');
+        }
+      })()
+    );
+  }
+
+  if (source === 'all' || source === 'otl') {
+    fetches.push(
+      (async () => {
+        try {
+          const otl = await searchOpenTextbooks(query, page, 20);
+          results.books.push(...otl.books);
+          results.sources['Open Textbook Library'] = otl.total;
+          results.total += otl.total;
+        } catch {
+          results.failedSources.push('Open Textbook Library');
         }
       })()
     );

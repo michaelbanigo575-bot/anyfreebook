@@ -50,6 +50,7 @@ const SOURCE_LABELS: Record<string, string> = {
   wikisource: 'Wikisource',
   europeana: 'Europeana',
   zenodo: 'Zenodo',
+  otl: 'Open Textbook Library',
 };
 
 /** Formats we are willing to hand to a downloader, in the order we prefer them. */
@@ -261,6 +262,8 @@ const TIER_REASONS = {
     'Openly licensed item from a European library or museum collection, free to read via Europeana.',
   zenodo:
     'Open-access record on Zenodo, with the licence and the file both stated on the record.',
+  otl:
+    'Open textbook from the Open Textbook Library — the licence and the free formats are stated on the record.',
 } as const;
 
 /** Sorts files by how good they are to read. */
@@ -363,6 +366,11 @@ export async function toPublicRecord(book: Book, archiveItem?: IaItem | null): P
     tier = 'download';
     reason = TIER_REASONS.zenodo;
     license = 'Open access (Zenodo) — licence at the source';
+    files = linkFiles(book);
+  } else if (sourceType === 'otl') {
+    tier = 'download';
+    reason = TIER_REASONS.otl;
+    license = 'Open access (Open Textbook Library) — licence at the source';
     files = linkFiles(book);
   } else if (sourceType === 'googlebooks') {
     tier = 'unverified';

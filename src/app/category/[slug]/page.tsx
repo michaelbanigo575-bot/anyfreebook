@@ -7,6 +7,7 @@ import { faqSchema, breadcrumbSchema } from '@/lib/schema';
 import { searchOpenLibrary } from '@/lib/api/openlibrary';
 import { searchArchive } from '@/lib/api/archive';
 import { searchGoogleBooks } from '@/lib/api/googlebooks';
+import { searchWikisourceLanguage, WIKISOURCE_CATEGORY_LANGUAGES } from '@/lib/api/wikisource';
 
 // Categories render on demand, cache each for an hour. Pre-rendering all of
 // them at build time would hammer the source APIs and slow every deploy.
@@ -24,25 +25,36 @@ type LiveCategory = {
 /**
  * Live results for a category. The counts come from the sources themselves
  * (numFound / totalItems), never from a hardcoded number.
+ *
+ * A language category also searches the Wikisource edition for that language,
+ * so "Books in Chinese" returns Chinese-language texts from a Chinese edition
+ * rather than English-language books about Chinese.
  */
-async function fetchLiveCategoryBooks(query: string): Promise<LiveCategory> {
+async function fetchLiveCategoryBooks(query: string, categoryName?: string): Promise<LiveCategory> {
   try {
-    const [ol, archive, gb] = await Promise.allSettled([
+    const wikisource = categoryName ? WIKISOURCE_CATEGORY_LANGUAGES[categoryName] : undefined;
+
+    const [ol, archive, gb, ws] = await Promise.allSettled([
       searchOpenLibrary(query, 30, 1),
       searchArchive(query, 1, 24),
       searchGoogleBooks(query, 0, 20),
+      wikisource
+        ? searchWikisourceLanguage(wikisource.query, { code: wikisource.code, label: wikisource.code }, 1, 24, { exactTitleOnly: false })
+        : Promise.resolve({ books: [] as Book[], total: 0 }),
     ]);
     const olTotal = ol.status === 'fulfilled' ? ol.value.total : 0;
     const archiveTotal = archive.status === 'fulfilled' ? archive.value.total : 0;
     const gbTotal = gb.status === 'fulfilled' ? gb.value.total : 0;
+    const wsTotal = ws.status === 'fulfilled' ? ws.value.total : 0;
     return {
       books: [
         ...(ol.status === 'fulfilled' ? ol.value.books : []),
         ...(archive.status === 'fulfilled' ? archive.value.books : []),
         ...(gb.status === 'fulfilled' ? gb.value.books : []),
+        ...(ws.status === 'fulfilled' ? ws.value.books : []),
       ],
       olTotal,
-      total: olTotal + archiveTotal + gbTotal,
+      total: olTotal + archiveTotal + gbTotal + wsTotal,
     };
   } catch {
     return { books: [], olTotal: 0, total: 0 };
@@ -55,7 +67,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
   // Same fetch URLs as the page body, so Next's data cache serves the second
   // call — the upstream APIs are still hit exactly once per category per hour.
-  const { olTotal } = await fetchLiveCategoryBooks(category.query || category.name);
+  const { olTotal } = await fetchLiveCategoryBooks(category.query || category.name, category.name);
   const n = olTotal.toLocaleString();
   const name = category.name.toLowerCase();
 
@@ -91,7 +103,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
   // Live books only — every card links to a real, downloadable/readable book
   // at its source. No synthetic filler.
   const query = category.query || category.name;
-  const { books: live, olTotal } = await fetchLiveCategoryBooks(query);
+  const { books: live, olTotal } = await fetchLiveCategoryBooks(query, category.name);
   const seen = new Set<string>();
   const books = live.filter(b => {
     const key = b.title.toLowerCase().trim();

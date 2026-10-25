@@ -151,13 +151,57 @@ function titleMatches(query: string, title: string): boolean {
   return false;
 }
 
+/**
+ * Which Wikisource edition, and which native-language term, serves each
+ * language category.
+ *
+ * The category pages already carry a native-language query, but it is mixed
+ * with English ("中文书 chinese books"), and an English edition has no Chinese
+ * text to match. These are the terms that actually find literature inside
+ * each edition.
+ *
+ * Seven of the thirty-four language categories have no Wikisource edition —
+ * Yoruba, Igbo, Hausa and Amharic return 404, and Swahili, Zulu and
+ * Afrikaans serve an HTML page rather than the API. Those categories keep the
+ * three general sources and do not pretend otherwise.
+ */
+export const WIKISOURCE_CATEGORY_LANGUAGES: Record<string, { code: string; query: string }> = {
+  'Books in French': { code: 'fr', query: 'littérature' },
+  'Books in Spanish': { code: 'es', query: 'literatura' },
+  'Books in Portuguese': { code: 'pt', query: 'literatura' },
+  'Books in Arabic': { code: 'ar', query: 'أدب' },
+  'Books in Hindi': { code: 'hi', query: 'साहित्य' },
+  'Books in Urdu': { code: 'ur', query: 'ادب' },
+  'Books in Bengali': { code: 'bn', query: 'সাহিত্য' },
+  'Books in Tamil': { code: 'ta', query: 'இலக்கியம்' },
+  'Books in Chinese': { code: 'zh', query: '文学' },
+  'Books in Japanese': { code: 'ja', query: '文学' },
+  'Books in Korean': { code: 'ko', query: '문학' },
+  'Books in German': { code: 'de', query: 'literatur' },
+  'Books in Russian': { code: 'ru', query: 'литература' },
+  'Books in Italian': { code: 'it', query: 'letteratura' },
+  'Books in Dutch': { code: 'nl', query: 'literatuur' },
+  'Books in Greek': { code: 'el', query: 'λογοτεχνία' },
+  'Books in Turkish': { code: 'tr', query: 'edebiyat' },
+  'Books in Persian': { code: 'fa', query: 'ادبیات' },
+  'Books in Hebrew': { code: 'he', query: 'ספרות' },
+  'Books in Polish': { code: 'pl', query: 'literatura' },
+  'Books in Ukrainian': { code: 'uk', query: 'література' },
+  'Books in Vietnamese': { code: 'vi', query: 'văn học' },
+  'Books in Indonesian': { code: 'id', query: 'sastra' },
+  'Books in Latin': { code: 'la', query: 'libri' },
+  'Books in Esperanto': { code: 'eo', query: 'libroj' },
+};
+
 /** Search one Wikisource language edition. */
 export async function searchWikisourceLanguage(
   query: string,
   lang: WikisourceLanguage,
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  options: { exactTitleOnly?: boolean } = {}
 ): Promise<{ books: Book[]; total: number }> {
+  const exactTitleOnly = options.exactTitleOnly !== false;
   const url =
     `https://${lang.code}.wikisource.org/w/api.php?action=query&list=search` +
     `&srsearch=${encodeURIComponent(query)}&srlimit=${pageSize}` +
@@ -171,7 +215,8 @@ export async function searchWikisourceLanguage(
   if (!res.ok) return { books: [], total: 0 };
 
   const data: WikisourceSearchResponse = await res.json();
-  const hits = (data.query?.search || []).filter(hit => titleMatches(query, hit.title));
+  const all = data.query?.search || [];
+  const hits = exactTitleOnly ? all.filter(hit => titleMatches(query, hit.title)) : all;
   const books = hits.map(hit => pageToBook(lang, hit.title, hit.pageid));
   // The search matches page text as well as titles, so the raw hit count is
   // mostly noise — "python" matches a thousand pages that merely mention it.

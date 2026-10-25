@@ -127,7 +127,7 @@ WORLD_CATEGORY_SPECS.forEach(([name, icon, query, group], i) => {
     id: String(35 + i),
     name,
     slug: `free-${slugBase}-books`,
-    description: `Free ${name} books, classics, and study texts — streamed live from Open Library, Internet Archive, and Google Books.`,
+    description: `Free ${name} books, classics, and study texts — streamed live from Open Library, Internet Archive, Google Books and Wikisource.`,
 
     icon,
     gradient: WORLD_GRADIENTS[i % WORLD_GRADIENTS.length],

@@ -5,6 +5,11 @@ import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchArchive } from '@/lib/api/archive';
 import { searchPubMed } from '@/lib/api/pubmed';
 import { searchDOAJ } from '@/lib/api/doaj';
+import { searchOpenAlex } from '@/lib/api/openalex';
+import { searchWikisource } from '@/lib/api/wikisource';
+import { searchEuropeana } from '@/lib/api/europeana';
+import { searchZenodo } from '@/lib/api/zenodo';
+import { searchOpenTextbooks } from '@/lib/api/opentextbooks';
 import { searchBooks as searchLocal, type Book } from '@/lib/data';
 import { rateLimit, clientIp } from '@/lib/rateLimit';
 
@@ -15,7 +20,7 @@ interface SourceJob {
 }
 
 export async function GET(request: NextRequest) {
-  // Each request fans out to up to 6 external book APIs at once — cap per-IP
+  // Each request fans out to up to 11 external book APIs at once — cap per-IP
   // so a traffic spike can't get those providers to rate-limit or block us.
   const rl = rateLimit(`search:${clientIp(request.headers)}`, 30, 60_000);
   if (!rl.ok) {
@@ -48,6 +53,11 @@ export async function GET(request: NextRequest) {
     { id: 'archive', label: 'Internet Archive', run: () => searchArchive(query, page) },
     { id: 'pubmed', label: 'PubMed Central', run: () => searchPubMed(query, (page - 1) * 20, 20) },
     { id: 'doaj', label: 'DOAJ', run: () => searchDOAJ(query, page) },
+    { id: 'openalex', label: 'OpenAlex', run: () => searchOpenAlex(query, page, 20) },
+    { id: 'wikisource', label: 'Wikisource', run: () => searchWikisource(query, page, 20) },
+    { id: 'europeana', label: 'Europeana', run: () => searchEuropeana(query, page, 20) },
+    { id: 'zenodo', label: 'Zenodo', run: () => searchZenodo(query, page, 20) },
+    { id: 'otl', label: 'Open Textbook Library', run: () => searchOpenTextbooks(query, page, 20) },
   ].filter(j => requestedSource === 'all' || requestedSource === j.id);
 
   const seen = new Set<string>();

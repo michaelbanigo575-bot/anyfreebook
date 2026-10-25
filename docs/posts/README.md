@@ -6,7 +6,7 @@ Three technical posts about the ANYFREEBOOK build. Each is written to be publish
 
 | # | File | Title | Hook |
 |---|------|-------|------|
-| 1 | `01-fanning-out-search-across-seven-open-apis.md` | Fanning out a search across seven APIs, and telling the user when one of them fails | A multi-source search has a failure mode most implementations hide: one dead upstream silently shrinks the result set, and the reader cannot tell "that is all there is" from "we could not ask". |
+| 1 | `01-fanning-out-search-across-twelve-open-apis.md` | Fanning out a search across twelve APIs, and telling the user when one of them fails | A multi-source search has a failure mode most implementations hide: one dead upstream silently shrinks the result set, and the reader cannot tell "that is all there is" from "we could not ask". |
 | 2 | `02-your-free-book-api-might-not-be-free.md` | Your "free" book API might not be free | A book-search API hands you a URL and calls it free, but that URL may be a public-domain text, a borrow-only lending copy, or a catalogue record for a book still in copyright — and linking to it is a legal claim you cannot support. |
 | 3 | `03-one-codebase-two-install-paths-pwa-and-twa.md` | One codebase, two install paths: shipping a PWA and an Android app from the same Next.js site | The Play app is a 1.2 MB shell around the website, but the Digital Asset Links handshake has two traps in it: an uppercase-only fingerprint validator and the difference between your upload key and Play's app-signing key. |
 

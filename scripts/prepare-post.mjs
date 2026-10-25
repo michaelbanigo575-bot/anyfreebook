@@ -26,14 +26,14 @@ const POSTS_DIR = path.resolve(__dirname, '..', 'docs', 'posts');
 
 /** Tags per post, as agreed in docs/posts/README.md. */
 const TAGS = {
-  '01-fanning-out-search-across-seven-open-apis.md': ['webdev', 'api', 'typescript', 'nextjs'],
+  '01-fanning-out-search-across-twelve-open-apis.md': ['webdev', 'api', 'typescript', 'nextjs'],
   '02-your-free-book-api-might-not-be-free.md': ['api', 'legal', 'licensing', 'typescript'],
   '03-one-codebase-two-install-paths-pwa-and-twa.md': ['android', 'pwa', 'twa', 'nextjs'],
 };
 
 /** One-line summaries, used for the description and the social preview. */
 const DESCRIPTIONS = {
-  '01-fanning-out-search-across-seven-open-apis.md':
+  '01-fanning-out-search-across-twelve-open-apis.md':
     'A multi-source search has a failure mode most implementations hide: one dead upstream silently shrinks the result set, and the reader cannot tell "that is all there is" from "we could not ask".',
   '02-your-free-book-api-might-not-be-free.md':
     'A book-search API hands you a URL and calls it free, but that URL may be a public-domain text, a borrow-only lending copy, or a catalogue record for a book still in copyright — and linking to it is a legal claim you cannot support.',

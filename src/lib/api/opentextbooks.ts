@@ -165,16 +165,20 @@ export async function searchOpenTextbooks(
   page = 1,
   pageSize = 20
 ): Promise<{ books: Book[]; total: number }> {
-  const first = await fetchOtlPage(query, 1);
-
-  const total = first.links?.total_count ?? 0;
-
   // Ten books per library page; ours is twenty, so ask for two.
   const pagesNeeded = Math.max(1, Math.ceil(pageSize / OTL_PAGE_SIZE));
   const firstOtlPage = (Math.max(1, page) - 1) * pagesNeeded + 1;
 
+  // The first page is fetched once and reused: it carries the library's own
+  // total count and is also the first page of the results, so asking for it
+  // twice would spend a request on nothing.
+  const first = await fetchOtlPage(query, firstOtlPage);
+  const total = first.links?.total_count ?? 0;
+
   const pages = await Promise.all(
-    Array.from({ length: pagesNeeded }, (_, i) => fetchOtlPage(query, firstOtlPage + i))
+    Array.from({ length: pagesNeeded }, (_, i) =>
+      i === 0 ? Promise.resolve(first) : fetchOtlPage(query, firstOtlPage + i)
+    )
   );
 
   const raw = pages.flatMap((p) => (p?.data ? p.data : []));

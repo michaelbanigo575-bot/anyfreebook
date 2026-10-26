@@ -6,9 +6,28 @@ ANYFREEBOOK searches Project Gutenberg, Open Library, the Internet Archive, Goog
 
 Start with the constraint, because it dictates everything else. ANYFREEBOOK does not maintain a search index. We keep a curated catalogue of 258 books across 241 categories in `src/lib/data.ts`, and that catalogue powers the category pages and the per-title detail pages. But a search query is not answered out of that catalogue. It is fanned out, live, to twelve separate upstream APIs — each with its own index, its own rate limits, its own idea of what a result is, and its own bad days.
 
-There is no replica of those indexes in our database and we do not crawl and re-store. Every search is twelve outbound HTTP requests in parallel, and the answer is the union of whatever they returned.
+There is no replica of those indexes in our database and we do not crawl and re-store. Every search is a fan-out of live upstream calls, and the answer is the union of whatever they returned.
 
-That design is cheap to start and awkward to operate, because the failure modes of twelve separate services are now our failure modes.
+That fan-out is bigger than it looks. Twelve sources, but nineteen outbound HTTP requests, because three of them need more than one call to answer: Wikisource is a separate wiki per language and we ask six of them, PubMed Central is a search followed by a summary of the ids it returns, and the Open Textbook Library serves ten books per page so a page of twenty is two requests. Here is the measured breakdown of one search, counting the requests that actually leave the server:
+
+```
+   6  en.wikisource.org, zh, ja, ar, he, fr   (six Wikisource editions)
+   2  eutils.ncbi.nlm.nih.gov                  (esearch, then esummary)
+   2  open.umn.edu                             (Open Textbook Library, two pages)
+   1  openlibrary.org
+   1  gutendex.com
+   1  archive.org
+   1  doaj.org
+   1  api.openalex.org
+   1  api.europeana.eu
+   1  zenodo.org
+   1  librivox.org
+   1  www.googleapis.com                       (Google Books)
+```
+
+That number is worth knowing before the rest of this, because it is the reason the rate limiter in this system is not optional. Nineteen requests to twelve different services, on somebody else's infrastructure, for one user query.
+
+The design is cheap to start and awkward to operate, because the failure modes of twelve separate services are now our failure modes.
 
 ## One source failing must not cost you the other six
 
@@ -94,38 +113,94 @@ The other half of the story is timeouts. An upstream that never responds is wors
 
 ## The contract: failedSources and partial
 
-A failure record is only useful if it reaches the client. The public API (`https://anyfreebook.com/api/v1/search`) returns it. This is a real response, captured from the live API:
+A failure record is only useful if it reaches the client. The public API (`https://anyfreebook.com/api/v1/search`) returns it. Here is a real response, captured from the live API:
 
 ```json
 {
   "query": "python",
   "page": 1,
   "limit": 2,
-  "total": 25197940,
+  "total": 25204850,
   "count": 2,
   "sources": {
     "ANYFREEBOOK": 3,
-    "DOAJ": 17425,
-    "Internet Archive": 23530878,
-    "Open Library": 6588,
-    "OpenAlex": 1248862,
+    "Internet Archive": 23532873,
+    "Open Library": 6589,
+    "Google Books": 190,
+    "DOAJ": 17471,
     "Europeana": 409,
     "Wikisource": 0,
-    "Zenodo": 71311,
+    "OpenAlex": 1253080,
+    "Zenodo": 71644,
+    "PubMed Central": 300019,
     "Open Textbook Library": 38,
     "Project Gutenberg": 22537,
-    "PubMed Central": 299892,
-    "Google Books": 0
+    "LibriVox": 0
   },
-  "failedSources": ["LibriVox"],
+  "failedSources": [],
+  "partial": false,
+  "results": [ "..." ]
+}
+```
+
+All twelve sources answered, so `failedSources` is empty and `partial` is false. Two of those counts are zero — Wikisource and LibriVox — and both are real answers: LibriVox has no audiobook whose title starts with "python", and the Wikisource editions we ask have no page titled exactly "python". Zero is a legitimate answer, and it is different from not answering at all.
+
+Here is the same endpoint on a query where three sources genuinely did fail. The query is the word `AND`, which is a Solr/Lucene operator, so it is a malformed search for the three upstreams that speak that syntax:
+
+```json
+{
+  "query": "AND",
+  "page": 1,
+  "limit": 2,
+  "total": 20031433,
+  "count": 2,
+  "sources": {
+    "ANYFREEBOOK": 39,
+    "OpenAlex": 0,
+    "Google Books": 101,
+    "LibriVox": 20,
+    "Europeana": 7151166,
+    "Wikisource": 0,
+    "Zenodo": 4541111,
+    "PubMed Central": 8337033,
+    "Open Textbook Library": 2002,
+    "Project Gutenberg": 0
+  },
+  "failedSources": ["Internet Archive", "DOAJ", "Open Library"],
   "partial": true,
   "results": [ "..." ]
 }
 ```
 
-That capture is the interesting case. Ten of the twelve sources answered. LibriVox did not, and Google Books happened to be down at the same moment, which is why its count is zero rather than absent. The response says so: `failedSources` names LibriVox and `partial` is true.
+This is the interesting case. Ten sources answered and three did not, and the response says which three. Note that `Internet Archive` and `Open Library` are simply absent from `sources` — they are not present with a count of zero, because a zero would be a claim that they answered and found nothing.
 
-Without that flag the same payload would read as a confident "25,197,940 results", and a reader would have no way to know that a slice of the answer was missing. With it, the client can say "here is what we found, and here is what we could not ask". A shorter list is not a wrong list, but an undeclared short list is a misleading one.
+Without the flag the same payload would read as a confident "20,031,433 results", and a reader would have no way to know that a slice of the answer was missing. With it, the client can say "here is what we found, and here is what we could not ask". A shorter list is not a wrong list, but an undeclared short list is a misleading one.
+
+Getting there took one more thing that is easy to get wrong: the difference between "no matches" and "did not answer" has to be decided by the adapter, not by the caller. If an upstream returns 503 and the adapter returns an empty list, then the source reports a count of zero — and "Google Books has zero matching books" is a factual claim the code is making without checking anything.
+
+So the adapters throw on failure and return zero only when the upstream genuinely says there is nothing:
+
+```ts
+// src/lib/api/http.ts
+const data = await fetchUpstreamJson<GoogleBooksResponse>(
+  url,
+  { next: { revalidate: 3600 } },
+  { source: 'Google Books', emptyOnStatus: [404] }
+);
+if (!data) return { books: [], total: 0 };
+```
+
+`emptyOnStatus` is per upstream, because "no match" is not a universal status code. LibriVox answers a title search that matches nothing with a 404 and a body of `{"error":"Audiobooks could not be found"}` — that is a real answer, so for LibriVox a 404 is zero matches and not a failure. Every other source here answers no-match with a 200 and an empty list, so for them any error status is a failure.
+
+Transient statuses get retried before the source is written off, because a 503 from a busy API usually clears:
+
+```ts
+function isTransient(status: number): boolean {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+```
+
+Two retries, one shared deadline, so a single slow source cannot hold the request open indefinitely. This matters more than it sounds: Next.js caches a fetch only when the response status is 200, so a 503 is never cached and every retry reaches the real upstream rather than a stored failure.
 
 `partial` is derived on every request, never stored:
 
@@ -139,9 +214,9 @@ This is the part I care about most. If a UI renders `results` without looking at
 
 So the UI has to say something. On our own search page a partial result set gets an explicit banner naming the sources that did not answer, rather than a smaller grid with no explanation. The same contract is documented for API consumers on `/developers/api`.
 
-## Twelve upstream calls per request forces a real rate limit
+## Nineteen upstream calls per request forces a real rate limit
 
-The cost model is unforgiving: one API request from us is up to twelve requests to somebody else's server. Expose a public API on top of that without a quota and you have turned yourself into a load generator aimed at twelve services you do not control.
+The cost model is unforgiving: one API request from us is nineteen requests to somebody else's server. Expose a public API on top of that without a quota and you have turned yourself into a load generator aimed at twelve services you do not control.
 
 The first version of the limiter was a `Map` of timestamp arrays in process memory (`src/lib/rateLimit.ts`):
 

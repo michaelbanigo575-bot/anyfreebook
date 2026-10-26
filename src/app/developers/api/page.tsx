@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cardClass } from '@/lib/ui';
+import { SOURCE_REGISTRY } from '@/lib/api/sources';
+import { ApiPlayground } from './ApiPlayground';
 
 export const metadata: Metadata = {
   title: 'API Reference — ANYFREEBOOK',
@@ -84,6 +86,72 @@ export default function ApiReferencePage() {
           </Link>
         </p>
       </div>
+
+      {/* Try it */}
+      <section className="mb-10">
+        <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">Try it</h2>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          No key needed for the first try — the anonymous tier allows 30 requests a minute. The same
+          call from a terminal is a single <code className="font-mono">curl</code>:
+        </p>
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-4 mb-4 overflow-x-auto">
+          <code className="font-mono text-xs text-[var(--text-secondary)]">
+            curl &quot;https://anyfreebook.com/api/v1/search?q=free%20textbooks&amp;limit=3&quot;
+          </code>
+        </div>
+        <ApiPlayground />
+      </section>
+
+      {/* Sources */}
+      <section className="mb-10">
+        <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">Sources</h2>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          Twelve live upstreams behind one query. This table is rendered from the same registry the
+          API serves at <code className="font-mono">/api/v1/sources</code>, so it cannot drift away
+          from the code.
+        </p>
+        <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)]">
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--bg-secondary)] text-left">
+              <tr>
+                <th className="px-4 py-2 font-medium text-[var(--text)]">Source</th>
+                <th className="px-4 py-2 font-medium text-[var(--text)]">What it holds</th>
+                <th className="px-4 py-2 font-medium text-[var(--text)]">Tier</th>
+                <th className="px-4 py-2 font-medium text-[var(--text)]">File</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SOURCE_REGISTRY.map((s) => (
+                <tr key={s.id} className="border-t border-[var(--border-subtle)] align-top">
+                  <td className="px-4 py-2">
+                    <a
+                      href={s.homepage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-[var(--primary)] hover:underline"
+                    >
+                      {s.label}
+                    </a>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{s.id}</p>
+                  </td>
+                  <td className="px-4 py-2 text-[var(--text-secondary)] max-w-md">
+                    {s.description}
+                    {s.catalogueSize && (
+                      <span className="block text-xs text-[var(--text-muted)] mt-1">{s.catalogueSize}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2">
+                    <code className="font-mono text-xs text-[var(--text-secondary)]">{s.tier}</code>
+                  </td>
+                  <td className="px-4 py-2 text-xs text-[var(--text-muted)]">
+                    {s.providesFiles ? 'yes' : 'no'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* GET /search */}
       <section className="mb-10">

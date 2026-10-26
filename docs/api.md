@@ -38,6 +38,32 @@ a real ebook and its id resolves to a real file.
 
 ---
 
+## GET /sources
+
+A machine-readable list of every source behind a query: what it holds, what
+tier its results carry, and whether the result comes with a file you can
+fetch. The developer page renders the same registry, so the two cannot
+drift apart.
+
+```bash
+curl https://anyfreebook.com/api/v1/sources
+```
+
+## Rate-limit headers
+
+Every response carries the caller's quota, so a client can see the limit
+before it hits it:
+
+| Header | Meaning |
+|---|---|
+| `X-RateLimit-Limit` | Requests allowed per minute |
+| `X-RateLimit-Window` | `60s` |
+| `X-RateLimit-Daily-Limit` | Requests allowed per day (absent when the tier has no daily cap) |
+| `X-RateLimit-Tier` | `anonymous`, `free` or `partner` |
+| `X-RateLimit-Scope` | `shared` when the counter is the shared Postgres one, `memory` when it is the per-instance fallback |
+
+A 429 adds `Retry-After` with the number of seconds to wait.
+
 ## Authentication
 
 **Optional.** The anonymous tier works with no setup.

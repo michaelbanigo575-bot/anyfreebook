@@ -19,6 +19,36 @@ export const API_BASE = 'https://anyfreebook.com/api/v1';
 export interface GuardResult {
   key: ApiKeyInfo | null;
   response: NextResponse | null;
+  /** Headers describing the quota, to be attached to every response. */
+  headers: Record<string, string>;
+}
+
+/**
+ * The quota headers for a request, stashed when the guard runs.
+ *
+ * A WeakMap keyed by the request means every response can carry the caller's
+ * limit without threading it through every call site — and it disappears with
+ * the request, so nothing leaks between calls.
+ */
+const quotaByRequest = new WeakMap<NextRequest, Record<string, string>>();
+
+/** Describes the caller's quota.
+ *
+ * A developer building against a rate-limited API needs to see the limit
+ * before they hit it, not after. The remaining count is not reported
+ * because the counter is a rolling window rather than a bucket, and a
+ * number that is wrong near the boundary is worse than no number.
+ */
+function quotaHeaders(key: ApiKeyInfo): Record<string, string> {
+  const headers: Record<string, string> = {
+    'X-RateLimit-Limit': String(key.requestsPerMinute),
+    'X-RateLimit-Window': '60s',
+    'X-RateLimit-Tier': key.tier,
+  };
+  if (key.requestsPerDay !== null) {
+    headers['X-RateLimit-Daily-Limit'] = String(key.requestsPerDay);
+  }
+  return headers;
 }
 
 /** Resolves the caller and applies the quota. Returns the 401/429 response, if any. */
@@ -38,29 +68,34 @@ export async function guard(request: NextRequest): Promise<GuardResult> {
         ),
         request
       ),
+      headers: {},
     };
   }
 
   const limit = await sharedRateLimitBoth(`v1:${key.callerId}`, key.requestsPerMinute, key.requestsPerDay);
+  const headers = { ...quotaHeaders(key), 'X-RateLimit-Scope': limit.scope };
+  quotaByRequest.set(request, headers);
+
   if (!limit.ok) {
     return {
       key: null,
       response: withCors(
         NextResponse.json(
           { error: 'Rate limit exceeded. Slow down and retry shortly.' },
-          { status: 429, headers: { 'Retry-After': String(limit.retryAfterSec) } }
+          { status: 429, headers: { ...headers, 'Retry-After': String(limit.retryAfterSec) } }
         ),
         request
       ),
+      headers,
     };
   }
 
-  return { key, response: null };
+  return { key, response: null, headers };
 }
 
 /** A JSON response with the CORS headers attached. */
 export function json(request: NextRequest, body: unknown, status = 200): NextResponse {
-  return withCors(NextResponse.json(body, { status }), request);
+  return withCors(NextResponse.json(body, { status, headers: quotaByRequest.get(request) || {} }), request);
 }
 
 /** The envelope every v1 response carries. */

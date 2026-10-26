@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 /**
@@ -117,14 +117,19 @@ export async function searchZenodo(
     `https://zenodo.org/api/records?q=${encodeURIComponent(query)}` +
     `&size=${pageSize}&page=${Math.max(1, page)}&sort=bestmatch`;
 
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-    headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
-    signal: UPSTREAM_TIMEOUT(),
-  });
-  if (!res.ok) return { books: [], total: 0 };
+  // Zenodo answers a query with no matching records with HTTP 200 and zero
+  // hits, so an error status means the upstream did not answer and is thrown
+  // for the caller to record as a failed source.
+  const data = await fetchUpstreamJson<ZenodoResponse>(
+    url,
+    {
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
+    },
+    { source: 'Zenodo' }
+  );
+  if (!data) return { books: [], total: 0 };
 
-  const data: ZenodoResponse = await res.json();
   const books = (data.hits?.hits || []).map(recordToBook).filter((b): b is Book => b !== null);
   return { books, total: data.hits?.total ?? books.length };
 }

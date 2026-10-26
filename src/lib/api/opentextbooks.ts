@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 /**
@@ -63,19 +63,20 @@ interface OtlResponse {
 /** The library serves ten books per page. */
 const OTL_PAGE_SIZE = 10;
 
-async function fetchOtlPage(query: string, page: number): Promise<OtlResponse | null> {
+async function fetchOtlPage(query: string, page: number): Promise<OtlResponse> {
   const url = `https://open.umn.edu/opentextbooks/textbooks.json?q=${encodeURIComponent(query)}&page=${page}`;
-  try {
-    const res = await fetch(url, {
+  // The library answers a query with no matching textbooks with HTTP 200 and an
+  // empty data list, so an error status means the upstream did not answer and is
+  // thrown — otherwise a broken library would look like an empty catalogue.
+  const data = await fetchUpstreamJson<OtlResponse>(
+    url,
+    {
       next: { revalidate: 3600 },
       headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
-      signal: UPSTREAM_TIMEOUT(),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
+    },
+    { source: 'Open Textbook Library' }
+  );
+  return data || {};
 }
 
 function contributorName(contributor: OtlContributor): string {
@@ -165,7 +166,6 @@ export async function searchOpenTextbooks(
   pageSize = 20
 ): Promise<{ books: Book[]; total: number }> {
   const first = await fetchOtlPage(query, 1);
-  if (!first) return { books: [], total: 0 };
 
   const total = first.links?.total_count ?? 0;
 

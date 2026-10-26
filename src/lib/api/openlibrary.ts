@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 interface OLSearchDoc {
@@ -79,9 +79,9 @@ function olDocToBook(doc: OLSearchDoc, source: 'openlibrary'): Book {
     coverUrl: coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : null,
     description: hasIA
       ? `Read "${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} on Internet Archive. ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`
-      : `"${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} — catalog listing on Open Library (no scanned copy indexed yet). ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`,
+      : `"${doc.title}" by ${doc.author_name?.[0] || 'Unknown Author'} â€” catalog listing on Open Library (no scanned copy indexed yet). ${doc.edition_count ? `${doc.edition_count} editions published.` : ''}`,
     // Real upstream values only. 0 means "Open Library has no rating for this
-    // record" and the UI omits the row — we never substitute a random number.
+    // record" and the UI omits the row â€” we never substitute a random number.
     rating: doc.ratings_average ? +doc.ratings_average.toFixed(1) : 0,
     ratingCount: doc.ratings_count || 0,
     contentType: 'BOOK',
@@ -107,9 +107,15 @@ export async function searchOpenLibrary(query: string, limit = 30, page = 1): Pr
   const offset = (page - 1) * limit;
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}&fields=key,title,author_name,cover_i,first_publish_year,number_of_pages_median,isbn,publisher,subject,language,edition_count,ratings_average,ratings_count,already_read_count,want_to_read_count,ia,ebook_access`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: OLSearchResponse = await res.json();
+  // A search that matches nothing is answered with HTTP 200 and an empty doc
+  // list, so any error status here means the upstream did not answer and is
+  // thrown for the caller to record as a failed source.
+  const data = await fetchUpstreamJson<OLSearchResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Open Library' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: data.docs.map(doc => olDocToBook(doc, 'openlibrary')),
@@ -119,9 +125,12 @@ export async function searchOpenLibrary(query: string, limit = 30, page = 1): Pr
 
 export async function getOpenLibrarySubject(subject: string, limit = 30, offset = 0): Promise<{ books: Book[]; total: number }> {
   const url = `https://openlibrary.org/subjects/${encodeURIComponent(subject)}.json?limit=${limit}&offset=${offset}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: OLSubjectResponse = await res.json();
+  const data = await fetchUpstreamJson<OLSubjectResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Open Library' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   const books: Book[] = data.works.map(w => {
     const slug = w.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80);
@@ -134,7 +143,7 @@ export async function getOpenLibrarySubject(subject: string, limit = 30, offset 
       coverUrl: w.cover_id ? `https://covers.openlibrary.org/b/id/${w.cover_id}-M.jpg` : null,
       description: w.ia && w.ia.length > 0
         ? `Read "${w.title}" on Internet Archive. ${w.edition_count ? `${w.edition_count} editions available.` : ''}`
-        : `"${w.title}" — catalog listing on Open Library (no scanned copy indexed yet). ${w.edition_count ? `${w.edition_count} editions available.` : ''}`,
+        : `"${w.title}" â€” catalog listing on Open Library (no scanned copy indexed yet). ${w.edition_count ? `${w.edition_count} editions available.` : ''}`,
       rating: 0,
       ratingCount: 0,
       contentType: 'BOOK' as const,

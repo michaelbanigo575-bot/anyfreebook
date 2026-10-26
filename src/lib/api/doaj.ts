@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 interface DoajLink {
@@ -75,9 +75,15 @@ function articleToBook(article: DoajArticle): Book | null {
 export async function searchDOAJ(query: string, page = 1, pageSize = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://doaj.org/api/search/articles/${encodeURIComponent(query)}?page=${page}&pageSize=${pageSize}`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: DoajResponse = await res.json();
+  // DOAJ answers a query with no matching articles with HTTP 200 and an empty
+  // result list, so an error status means the upstream did not answer and is
+  // thrown for the caller to record as a failed source.
+  const data = await fetchUpstreamJson<DoajResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'DOAJ' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   const books = (data.results || [])
     .map(articleToBook)

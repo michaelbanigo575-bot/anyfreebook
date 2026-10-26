@@ -1,5 +1,5 @@
 import type { Book } from '../data';
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 
 interface LibrivoxBook {
   id: string;
@@ -54,16 +54,22 @@ function librivoxToBook(b: LibrivoxBook): Book | null {
 
 export async function searchLibrivox(query: string, limit = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://librivox.org/api/feed/audiobooks/?title=^${encodeURIComponent(query)}&format=json&limit=${limit}`;
-  // Failures are thrown, not swallowed. A caller that reports `partial` needs to
-  // be able to tell "LibriVox has no matches for this query" apart from "LibriVox
-  // did not answer" — returning an empty list for both would make a broken
-  // upstream look like a complete answer.
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) {
-    console.error(`[librivox] request failed: ${res.status} ${res.statusText}`);
-    throw new Error(`librivox: upstream responded ${res.status}`);
-  }
-  const data: LibrivoxResponse = await res.json();
+  // Two different things can go wrong here, and they must not look alike.
+  //
+  // LibriVox answers a title search that matches nothing with HTTP 404 and a
+  // body of {"error":"Audiobooks could not be found"} — that is a real answer
+  // ("no audiobook starts with this word"), so it counts as zero matches.
+  //
+  // A 5xx, a 429 or a dead socket means LibriVox did not answer at all. That is
+  // thrown so the caller records the source as failed. Returning an empty list
+  // for both cases would make a broken upstream look like a complete answer.
+  const data = await fetchUpstreamJson<LibrivoxResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'LibriVox', emptyOnStatus: [404] }
+  );
+  if (!data) return { books: [], total: 0 };
+
   const books = (data.books || []).filter(b => b.title).map(librivoxToBook).filter((b): b is Book => b !== null);
   return { books, total: books.length };
 }

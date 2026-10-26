@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 /**
@@ -207,15 +207,17 @@ export async function searchWikisourceLanguage(
     `&srsearch=${encodeURIComponent(query)}&srlimit=${pageSize}` +
     `&sroffset=${(Math.max(1, page) - 1) * pageSize}&srnamespace=0&format=json`;
 
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-    headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
-    signal: UPSTREAM_TIMEOUT(),
-  });
-  if (!res.ok) return { books: [], total: 0 };
+  const res = await fetchUpstreamJson<WikisourceSearchResponse>(
+    url,
+    {
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
+    },
+    { source: `Wikisource (${lang.label})` }
+  );
+  if (!res) return { books: [], total: 0 };
 
-  const data: WikisourceSearchResponse = await res.json();
-  const all = data.query?.search || [];
+  const all = res.query?.search || [];
   const hits = exactTitleOnly ? all.filter(hit => titleMatches(query, hit.title)) : all;
   const books = hits.map(hit => pageToBook(lang, hit.title, hit.pageid));
   // The search matches page text as well as titles, so the raw hit count is

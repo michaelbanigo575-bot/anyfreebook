@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 interface ESearchResponse {
@@ -52,16 +52,27 @@ function summaryToBook(item: ESummaryResult): Book {
 export async function searchPubMed(query: string, retstart = 0, retmax = 20): Promise<{ books: Book[]; total: number }> {
   const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pmc&term=${encodeURIComponent(query)}+AND+open+access[filter]&retstart=${retstart}&retmax=${retmax}&retmode=json`;
 
-  const searchRes = await fetch(searchUrl, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!searchRes.ok) return { books: [], total: 0 };
-  const searchData: ESearchResponse = await searchRes.json();
+  // esearch answers "no papers match" with HTTP 200 and an empty id list, so
+  // that case is a real zero and stays below. An error status means NCBI did
+  // not answer and is thrown, so a broken upstream is never reported as "there
+  // are no open-access papers about this".
+  const searchData = await fetchUpstreamJson<ESearchResponse>(
+    searchUrl,
+    { next: { revalidate: 3600 } },
+    { source: 'PubMed Central' }
+  );
+  if (!searchData) return { books: [], total: 0 };
+
   const ids = searchData.esearchresult.idlist;
   if (!ids || ids.length === 0) return { books: [], total: 0 };
 
   const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pmc&id=${ids.join(',')}&retmode=json`;
-  const summaryRes = await fetch(summaryUrl, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!summaryRes.ok) return { books: [], total: 0 };
-  const summaryData: ESummaryResponse = await summaryRes.json();
+  const summaryData = await fetchUpstreamJson<ESummaryResponse>(
+    summaryUrl,
+    { next: { revalidate: 3600 } },
+    { source: 'PubMed Central' }
+  );
+  if (!summaryData) return { books: [], total: 0 };
 
   const books = summaryData.result.uids
     .map(uid => summaryData.result[uid])

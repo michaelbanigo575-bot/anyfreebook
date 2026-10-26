@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 /**
@@ -118,14 +118,16 @@ export async function searchEuropeana(
     `&query=${encodeURIComponent(query)}&rows=${pageSize}${paging}` +
     `&reusability=open&profile=rich`;
 
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-    headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
-    signal: UPSTREAM_TIMEOUT(),
-  });
-  if (!res.ok) return { books: [], total: 0 };
+  const res = await fetchUpstreamJson<EuropeanaResponse>(
+    url,
+    {
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': 'anyfreebook/1.0 (https://anyfreebook.com)' },
+    },
+    { source: 'Europeana' }
+  );
+  if (!res) return { books: [], total: 0 };
 
-  const data: EuropeanaResponse = await res.json();
-  const books = (data.items || []).map(itemToBook).filter((b): b is Book => b !== null);
-  return { books, total: data.totalResults ?? books.length };
+  const books = (res.items || []).map(itemToBook).filter((b): b is Book => b !== null);
+  return { books, total: res.totalResults ?? books.length };
 }

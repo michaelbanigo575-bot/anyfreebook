@@ -226,6 +226,12 @@ export async function searchAllSources(
           results.books.push(...ws.books);
           results.sources['Wikisource'] = ws.total;
           results.total += ws.total;
+          // A language edition that did not answer costs that edition, not the
+          // whole source — so it is named individually rather than reporting
+          // the whole of Wikisource as failed.
+          for (const failed of ws.failedLanguages) {
+            results.failedSources.push(`Wikisource (${failed})`);
+          }
         } catch {
           results.failedSources.push('Wikisource');
         }

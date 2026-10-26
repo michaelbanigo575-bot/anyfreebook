@@ -82,6 +82,14 @@ export async function GET(request: NextRequest) {
             const result = await job.run();
             const books = dedupe(result.books);
             enqueue({ type: 'source', id: job.id, label: job.label, books, total: result.total });
+            // Wikisource is a fan-out of separate wikis, one per language. An
+            // edition that did not answer costs that edition, not the whole
+            // source, so it is named individually rather than reporting all of
+            // Wikisource as failed.
+            const failedLanguages = (result as { failedLanguages?: string[] }).failedLanguages;
+            for (const lang of failedLanguages || []) {
+              enqueue({ type: 'source', id: `${job.id}-${lang}`, label: `${job.label} (${lang})`, books: [], total: 0, error: true });
+            }
           } catch {
             enqueue({ type: 'source', id: job.id, label: job.label, books: [], total: 0, error: true });
           }

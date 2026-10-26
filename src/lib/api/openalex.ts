@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 /**
@@ -115,14 +115,19 @@ export async function searchOpenAlex(
     `&filter=is_oa:true&per-page=${pageSize}&page=${Math.max(1, page)}` +
     `&mailto=${encodeURIComponent(MAILTO)}`;
 
-  const res = await fetch(url, {
-    next: { revalidate: 3600 },
-    headers: { 'User-Agent': `anyfreebook/1.0 (mailto:${MAILTO})` },
-    signal: UPSTREAM_TIMEOUT(),
-  });
-  if (!res.ok) return { books: [], total: 0 };
+  // OpenAlex answers a query with no matching works with HTTP 200 and an empty
+  // result list, so an error status means the upstream did not answer and is
+  // thrown for the caller to record as a failed source.
+  const data = await fetchUpstreamJson<OpenAlexResponse>(
+    url,
+    {
+      next: { revalidate: 3600 },
+      headers: { 'User-Agent': `anyfreebook/1.0 (mailto:${MAILTO})` },
+    },
+    { source: 'OpenAlex' }
+  );
+  if (!data) return { books: [], total: 0 };
 
-  const data: OpenAlexResponse = await res.json();
   const books = (data.results || []).map(workToBook).filter((b): b is Book => b !== null);
   return { books, total: data.meta?.count ?? books.length };
 }

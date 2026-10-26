@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson, UPSTREAM_TIMEOUT } from './http';
 import type { Book } from '../data';
 
 // gutendex.com blocks requests with no/generic User-Agent (common anti-bot behavior
@@ -102,8 +102,7 @@ async function searchGutenbergViaArchive(query: string, page = 1): Promise<{ boo
     // report a complete result set when in fact both upstreams failed.
     throw new Error(`gutenberg: archive.org fallback responded ${res.status}`);
   }
-  const data = await res.json();
-  const docs: { identifier: string; title?: string; creator?: string | string[]; year?: string; downloads?: number; subject?: string | string[] }[] = data.response?.docs || [];
+  const data = await res.json();  const docs: { identifier: string; title?: string; creator?: string | string[]; year?: string; downloads?: number; subject?: string | string[] }[] = data.response?.docs || [];
 
   const books: Book[] = docs.filter(d => d.title).map(d => {
     const pgMatch = d.identifier.match(/(\d+)gut$/);
@@ -184,12 +183,14 @@ export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; to
 
 export async function getGutenbergByTopic(topic: string, page = 1): Promise<{ books: Book[]; total: number }> {
   const url = `https://gutendex.com/books/?topic=${encodeURIComponent(topic)}&page=${page}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) {
-    console.error(`[gutenberg] topic request failed: ${res.status} ${res.statusText}`);
-    return { books: [], total: 0 };
-  }
-  const data: GutenbergResponse = await res.json();
+  // gutendex answers a topic with no books with HTTP 200 and an empty result
+  // list, so an error status means the upstream did not answer and is thrown.
+  const data = await fetchUpstreamJson<GutenbergResponse>(
+    url,
+    { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS },
+    { source: 'Project Gutenberg' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: data.results.map(gutenbergToBook),

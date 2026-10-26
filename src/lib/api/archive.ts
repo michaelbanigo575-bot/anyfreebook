@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 interface ArchiveDoc {
@@ -97,9 +97,14 @@ export async function searchArchiveAudio(query: string, page = 1, rows = 20): Pr
   const q = `${query} AND mediatype:audio`;
   const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&fl[]=language&rows=${rows}&page=${page}&output=json`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: ArchiveResponse = await res.json();
+  // A search with no matches is answered with HTTP 200 and numFound 0, so an
+  // error status means the upstream did not answer and is thrown.
+  const data = await fetchUpstreamJson<ArchiveResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Internet Archive' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: data.response.docs.filter(d => d.title).map(audioDocToBook),
@@ -111,9 +116,12 @@ export async function searchArchive(query: string, page = 1, rows = 20): Promise
   const q = `${query} AND mediatype:texts`;
   const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=downloads&fl[]=subject&fl[]=language&rows=${rows}&page=${page}&output=json`;
 
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: ArchiveResponse = await res.json();
+  const data = await fetchUpstreamJson<ArchiveResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Internet Archive' }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: data.response.docs.filter(d => d.title).map(docToBook),

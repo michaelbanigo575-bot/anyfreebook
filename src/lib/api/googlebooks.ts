@@ -1,4 +1,4 @@
-import { UPSTREAM_TIMEOUT } from './http';
+import { fetchUpstreamJson } from './http';
 import type { Book } from '../data';
 
 interface GoogleVolume {
@@ -102,12 +102,17 @@ function apiKeyParam(): string {
 
 export async function searchGoogleBooks(query: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) {
-    console.error(`[googlebooks] request failed: ${res.status} ${res.statusText}, hasKey=${!!process.env.GOOGLE_BOOKS_API_KEY}`);
-    return { books: [], total: 0 };
-  }
-  const data: GoogleBooksResponse = await res.json();
+  // A 404 here is the API's way of saying "no volumes match" — that is an
+  // answer, not a failure. Anything else (429, 503) means the API did not
+  // answer, and is thrown so the caller records the source as failed. Returning
+  // an empty list for a 503 would report "Google Books has zero matching
+  // books" when the truth is "we could not ask".
+  const data = await fetchUpstreamJson<GoogleBooksResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Google Books', emptyOnStatus: [404] }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: (data.items || []).map(googleToBook),
@@ -117,9 +122,12 @@ export async function searchGoogleBooks(query: string, startIndex = 0, maxResult
 
 export async function getGoogleBooksBySubject(subject: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
   const url = `https://www.googleapis.com/books/v1/volumes?q=subject:${encodeURIComponent(subject)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
-  const res = await fetch(url, { next: { revalidate: 3600 }, signal: UPSTREAM_TIMEOUT() });
-  if (!res.ok) return { books: [], total: 0 };
-  const data: GoogleBooksResponse = await res.json();
+  const data = await fetchUpstreamJson<GoogleBooksResponse>(
+    url,
+    { next: { revalidate: 3600 } },
+    { source: 'Google Books', emptyOnStatus: [404] }
+  );
+  if (!data) return { books: [], total: 0 };
 
   return {
     books: (data.items || []).map(googleToBook),

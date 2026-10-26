@@ -30,6 +30,12 @@ function Block({ block }: { block: BlogBlock }) {
       return <h2 className="text-xl md:text-2xl font-display font-bold text-[var(--text)] mt-10 mb-4">{block.text}</h2>;
     case 'p':
       return <p className="text-[var(--text-secondary)] leading-relaxed mb-5">{block.text}</p>;
+    case 'code':
+      return (
+        <pre className="mb-6 overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-4 text-xs leading-relaxed text-[var(--text-secondary)]">
+          <code>{block.code}</code>
+        </pre>
+      );
     case 'ul':
       return (
         <ul className="space-y-2 mb-6 pl-1">

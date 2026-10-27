@@ -193,12 +193,24 @@ interface PdfDoc {
   numPages: number;
   getPage: (n: number) => Promise<{
     getViewport: (o: { scale: number }) => { width: number; height: number };
-    render: (o: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => { promise: Promise<void> };
+    render: (o: { canvasContext: CanvasRenderingContext2D; viewport: { width: number; height: number } }) => PdfRenderTask;
     /** pdf.js frees the document's font/image/worker resources through this. */
     cleanup: () => void;
   }>;
   /** Releases the worker + document resources. Required to avoid leaking memory. */
   destroy: () => Promise<void>;
+}
+
+/**
+ * What pdf.js hands back from `page.render()`.
+ *
+ * The `cancel` method is the important part: pdf.js refuses to render the same
+ * canvas twice at once, so a second render for a page has to cancel and await
+ * the first one.
+ */
+interface PdfRenderTask {
+  promise: Promise<void>;
+  cancel: () => void;
 }
 
 function PdfStage({ url, title, height, onFail }: { url: string; title?: string; height: string; onFail: () => void }) {
@@ -207,6 +219,9 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const canvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const renderedAtZoom = useRef<Map<number, string>>(new Map()); // page -> zoom/fit key it was last rendered at
+  // page -> the render currently in flight, so a second request for the same
+  // page can cancel and await the first instead of racing it on one canvas.
+  const renderTasks = useRef<Map<number, PdfRenderTask>>(new Map());
   const docRef = useRef<PdfDoc | null>(null);
 
   const [numPages, setNumPages] = useState(0);
@@ -243,6 +258,10 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     })();
     return () => {
       cancelled = true;
+      // Stop any render still in flight before the document is destroyed, so
+      // pdf.js is not left rendering into a canvas that is being torn down.
+      renderTasks.current.forEach((task) => task.cancel());
+      renderTasks.current.clear();
       const doc = docRef.current;
       docRef.current = null;
       if (doc) void doc.destroy();
@@ -257,6 +276,22 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     if (!doc || !canvas || !section) return;
     const renderKey = `${zoom}:${fitRevision}`;
     if (renderedAtZoom.current.get(pageNum) === renderKey) return; // already current
+
+    // pdf.js refuses to render the same canvas twice at once ("Cannot use the
+    // same canvas during multiple render() operations"). Two effects can ask
+    // for the same page at the same time — the scroll handler and the zoom
+    // handler — so a render already in flight for this page is cancelled and
+    // awaited before the new one starts.
+    const inFlight = renderTasks.current.get(pageNum);
+    if (inFlight) {
+      inFlight.cancel();
+      try {
+        await inFlight.promise;
+      } catch {
+        // A cancelled render rejects; that is the point of cancelling it.
+      }
+    }
+
     const pdfPage = await doc.getPage(pageNum);
     const base = pdfPage.getViewport({ scale: 1 });
     const fitScale = Math.min((section.clientWidth - 24) / base.width, (section.clientHeight - 24) / base.height);
@@ -269,8 +304,16 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     canvas.style.height = `${viewport.height / dpr}px`;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-    renderedAtZoom.current.set(pageNum, renderKey);
+    const task = pdfPage.render({ canvasContext: ctx, viewport });
+    renderTasks.current.set(pageNum, task);
+    try {
+      await task.promise;
+      renderedAtZoom.current.set(pageNum, renderKey);
+    } catch {
+      // Cancelled by a newer render, or the page was torn down mid-render.
+    } finally {
+      if (renderTasks.current.get(pageNum) === task) renderTasks.current.delete(pageNum);
+    }
   }, [zoom, fitRevision]);
 
   // Track the current page and lazy-render nearby pages from scroll position

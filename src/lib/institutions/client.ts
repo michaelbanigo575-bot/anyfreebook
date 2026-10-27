@@ -107,6 +107,80 @@ export async function removeMember(institutionId: string, profileId: string): Pr
   return { error: error?.message ?? null };
 }
 
+/**
+ * Join an institution without an invite.
+ *
+ * A reader who finds a school or library on the site should be able to be part
+ * of it: follow it, get its study plans and see its members. The RLS policy
+ * "admins add members" already permits `auth.uid() = profile_id`, so a
+ * signed-in user may insert their own membership row. The role is always
+ * 'student' — self-joining never grants owner or admin, which is what the
+ * "admins add members" policy is about.
+ */
+export async function joinInstitution(institutionId: string): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { error: 'Sign in to join' };
+
+  // Never upsert: an upsert on an existing row would UPDATE it, and a
+  // self-join must not demote someone who is already an owner or admin.
+  const { data: existing } = await sb
+    .from('institution_members')
+    .select('id')
+    .eq('institution_id', institutionId)
+    .eq('profile_id', user.id)
+    .maybeSingle();
+  if (existing) return { error: null };
+
+  const { error } = await sb.from('institution_members').insert({
+    institution_id: institutionId,
+    profile_id: user.id,
+    role: 'student',
+  });
+  return { error: error?.message ?? null };
+}
+
+/** Leave an institution. The RLS policy "admins or self remove members" allows this. */
+export async function leaveInstitution(institutionId: string): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { error: 'Sign in first' };
+
+  // The owner is the institution's only route to an admin, so leaving would
+  // orphan it. Say so rather than silently stranding the institution.
+  const { data: mine } = await sb
+    .from('institution_members')
+    .select('role')
+    .eq('institution_id', institutionId)
+    .eq('profile_id', user.id)
+    .maybeSingle();
+  if (mine?.role === 'owner') {
+    return { error: 'Transfer ownership to an admin before leaving' };
+  }
+
+  const { error } = await sb
+    .from('institution_members')
+    .delete()
+    .eq('institution_id', institutionId)
+    .eq('profile_id', user.id);
+  return { error: error?.message ?? null };
+}
+
+/** The signed-in user's membership of one institution, or null if they are not a member. */
+export async function getMyMembership(institutionId: string): Promise<InstitutionMember | null> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await sb
+    .from('institution_members')
+    .select('*')
+    .eq('institution_id', institutionId)
+    .eq('profile_id', user.id)
+    .maybeSingle();
+  return (data as unknown as InstitutionMember) || null;
+}
+
 export async function createInvite(institutionId: string, role: 'admin' | 'teacher' | 'student'): Promise<{ error: string | null; token?: string }> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();

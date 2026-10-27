@@ -34,6 +34,62 @@ export interface ClassroomMessage {
   created_at: string;
 }
 
+/** One live session of a classroom, kept so a host can see its history. */
+export interface ClassroomSession {
+  id: string;
+  classroom_id: string;
+  host_id: string | null;
+  started_at: string;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  attendee_count: number;
+  title: string | null;
+}
+
+/**
+ * One attendee in one session.
+ *
+ * `user_id` is set when the attendee was signed in, `guest_id` is a stable
+ * random id when they were not, and `display_name` is what the host sees.
+ */
+export interface ClassroomSessionAttendance {
+  id: string;
+  session_id: string;
+  classroom_id: string;
+  user_id: string | null;
+  guest_id: string | null;
+  display_name: string;
+  joined_at: string;
+  left_at: string | null;
+  watch_seconds: number;
+}
+
+/**
+ * A session with its attendees attached, which is the shape a history list
+ * wants: one row per session, each with the people who were there.
+ */
+export interface ClassroomSessionWithAttendance extends ClassroomSession {
+  attendees: ClassroomSessionAttendance[];
+}
+
+/**
+ * A stable id for a guest who has not signed in.
+ *
+ * Generated once per browser and kept in localStorage, so the same anonymous
+ * attendee is the same person across sessions — the host sees a returning
+ * guest as the same guest rather than a new stranger each time.
+ */
+export function getGuestId(): string {
+  const KEY = 'afb_guest_id';
+  if (typeof window === 'undefined') return 'guest-server';
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = `g_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
 function randomCode(len: number): string {
   const chars = 'abcdefghjkmnpqrstuvwxyz23456789';
   return Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -122,8 +178,178 @@ export async function joinAttendance(classroomId: string, sessionKey: string, di
   return attendance;
 }
 
-export async function sendClassroomMessage(classroomId: string, body: string): Promise<{ error: string | null }> {
+/**
+ * Start a session for a classroom, or return the one already running.
+ *
+ * A session is what turns "a classroom" into "a history of sessions". The
+ * host starts one when the class goes live; the client records attendees
+ * against it; the host ends it and the duration is filled in by a trigger.
+ */
+export async function startClassroomSession(
+  classroomId: string,
+  title?: string | null
+): Promise<{ error: string | null; sessionId?: string }> {
   const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { error: 'Sign in first' };
+
+  // Already running? Reuse it, so a refresh mid-class does not start a second
+  // session and split the attendance.
+  const { data: open } = await sb
+    .from('classroom_sessions')
+    .select('id')
+    .eq('classroom_id', classroomId)
+    .is('ended_at', null)
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (open) return { error: null, sessionId: open.id };
+
+  const { data, error } = await sb
+    .from('classroom_sessions')
+    .insert({
+      classroom_id: classroomId,
+      host_id: user.id,
+      title: title || null,
+    })
+    .select('id')
+    .single();
+  if (error) return { error: error.message };
+  return { error: null, sessionId: data.id };
+}
+
+/** End a session. The database trigger fills in the duration. */
+export async function endClassroomSession(sessionId: string): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { error } = await sb
+    .from('classroom_sessions')
+    .update({ ended_at: new Date().toISOString() })
+    .eq('id', sessionId);
+  return { error: error?.message ?? null };
+}
+
+/**
+ * Record an attendee in a session.
+ *
+ * Signed-in attendees are stored by profile id; anonymous ones get the stable
+ * guest id from `getGuestId()`, so a returning guest is still recognisable.
+ * `displayName` is what the host sees — the name the attendee typed, or their
+ * profile name when they are signed in.
+ */
+export async function recordSessionAttendance(
+  sessionId: string,
+  classroomId: string,
+  displayName: string | null
+): Promise<{ error: string | null }> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+
+  const name = (displayName || '').trim().slice(0, 60);
+  const { data: profile } = user
+    ? await sb.from('profiles').select('display_name').eq('id', user.id).maybeSingle()
+    : { data: null };
+
+  const resolved = name || profile?.display_name || (user ? 'Reader' : 'Guest');
+
+  // Upsert on the partial unique index that matches this attendee: the signed
+  // in ones are keyed on user_id, the anonymous ones on guest_id. A single
+  // composite conflict target would not work, because a NULL guest_id never
+  // equals another NULL and would insert a duplicate row on every reconnect.
+  const conflict = user ? 'session_id,user_id' : 'session_id,guest_id';
+
+  const { error } = await sb.from('classroom_session_attendance').upsert(
+    {
+      session_id: sessionId,
+      classroom_id: classroomId,
+      user_id: user?.id ?? null,
+      guest_id: user ? null : getGuestId(),
+      display_name: resolved,
+    },
+    { onConflict: conflict }
+  );
+  return { error: error?.message ?? null };
+}
+
+/** Record how long an attendee stayed. */
+export async function recordSessionWatchTime(
+  sessionId: string,
+  guestId: string | null,
+  userId: string | null,
+  seconds: number
+): Promise<void> {
+  const sb = createClient();
+  const query = sb
+    .from('classroom_session_attendance')
+    .update({ watch_seconds: seconds })
+    .eq('session_id', sessionId);
+  if (userId) await query.eq('user_id', userId);
+  else if (guestId) await query.eq('guest_id', guestId);
+}
+
+/**
+ * The session history of a classroom, newest first, each session with the
+ * people who attended it.
+ */
+export async function listClassroomSessions(
+  classroomId: string
+): Promise<ClassroomSessionWithAttendance[]> {
+  const sb = createClient();
+  const { data: sessions } = await sb
+    .from('classroom_sessions')
+    .select('*')
+    .eq('classroom_id', classroomId)
+    .order('started_at', { ascending: false });
+
+  const list = (sessions as ClassroomSession[]) || [];
+  if (list.length === 0) return [];
+
+  const ids = list.map((s) => s.id);
+  const { data: attendance } = await sb
+    .from('classroom_session_attendance')
+    .select('*')
+    .in('session_id', ids)
+    .order('joined_at', { ascending: true });
+
+  const bySession = new Map<string, ClassroomSessionAttendance[]>();
+  for (const a of (attendance as ClassroomSessionAttendance[]) || []) {
+    const list = bySession.get(a.session_id) || [];
+    list.push(a);
+    bySession.set(a.session_id, list);
+  }
+
+  return list.map((s) => ({ ...s, attendees: bySession.get(s.id) || [] }));
+}
+
+/** A running-together summary of a classroom's history, for the host's dashboard. */
+export async function getClassroomHistorySummary(classroomId: string): Promise<{
+  sessions: number;
+  totalAttendees: number;
+  uniqueAttendees: number;
+  totalSeconds: number;
+  averageSeconds: number;
+  lastSessionAt: string | null;
+}> {
+  const sessions = await listClassroomSessions(classroomId);
+  const attendees = sessions.flatMap((s) => s.attendees);
+  const unique = new Set(
+    attendees.map((a) => (a.user_id ? `u:${a.user_id}` : `g:${a.guest_id}`))
+  );
+  const durations = sessions
+    .map((s) => s.duration_seconds || 0)
+    .filter((d) => d > 0);
+  const totalSeconds = durations.reduce((a, b) => a + b, 0);
+
+  return {
+    sessions: sessions.length,
+    totalAttendees: attendees.length,
+    uniqueAttendees: unique.size,
+    totalSeconds,
+    averageSeconds: durations.length ? Math.round(totalSeconds / durations.length) : 0,
+    lastSessionAt: sessions[0]?.started_at || null,
+  };
+}
+
+export async function sendClassroomMessage(classroomId: string, body: string): Promise<{ error: string | null }> {  const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return { error: 'Sign in to chat' };
   const { data: profile } = await sb.from('profiles').select('display_name').eq('id', user.id).single();

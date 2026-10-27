@@ -9,18 +9,24 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        // The current @supabase/ssr API is getAll/setAll. The older
+        // get/set/remove form is deprecated, and using it here is what produced
+        // "@supabase/ssr: chunked cookie decoded to invalid JSON, treating as
+        // absent" in the browser console: a long auth cookie is split across
+        // several chunks, and the deprecated adapter could write only part of
+        // them, so the next request read a half-written cookie as no session
+        // at all. That is why sign-in sometimes appeared not to stick.
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
+        setAll(cookiesToSet) {
+          for (const { name, value } of cookiesToSet) {
+            request.cookies.set(name, value);
+          }
           response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value: '', ...options });
+          for (const { name, value, options } of cookiesToSet) {
+            response.cookies.set(name, value, options as CookieOptions);
+          }
         },
       },
     }

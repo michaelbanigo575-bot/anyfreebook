@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getInstitutionBySlug, getInstitutionPublications, getInstitutionClassrooms, getMyRole } from '@/lib/institutions/server';
+import { InstitutionJoin } from './JoinAndMembers';
 import { cardClass } from '@/lib/ui';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -56,6 +57,12 @@ export default async function InstitutionProfilePage({ params }: { params: { slu
           </Link>
         )}
       </div>
+
+      <InstitutionJoin
+        institutionId={institution.id}
+        slug={institution.slug}
+        initialRole={myRole}
+      />
 
       {institution.description && <p className="text-[var(--text-secondary)] mb-8 max-w-2xl">{institution.description}</p>}
       {institution.website && (

@@ -42,3 +42,5 @@ next-env.d.ts
 .env*
 # Generated publish-ready post files (see scripts/prepare-post.mjs)
 docs/posts/out/
+# Supabase CLI link state — holds the project ref and the pooler connection string
+supabase/.temp/

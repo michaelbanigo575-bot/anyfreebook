@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createPublication, updatePublication, uploadPublicationFile } from '@/lib/creators/client';
+import { createPublication, updatePublication, uploadPublicationFile, uploadCoverImage } from '@/lib/creators/client';
 import { listMyInstitutions, type Institution, type InstitutionMember } from '@/lib/institutions/client';
 import { PUBLICATION_TYPES, type Publication, type PublicationType, type OriginalityStatus } from '@/lib/creators/types';
 import { primaryButtonClass } from '@/lib/ui';
@@ -38,8 +38,20 @@ export function PublishForm({ existing }: { existing?: Publication }) {
   const [externalUrl, setExternalUrl] = useState(existing?.external_url || '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  /** Upload a cover image and use its public URL as the publication's cover. */
+  const uploadCover = async (file: File | null) => {
+    if (!file) return;
+    setUploadingCover(true);
+    setError(null);
+    const { error: uploadError, url } = await uploadCoverImage(file);
+    setUploadingCover(false);
+    if (uploadError) { setError(uploadError); return; }
+    if (url) setCoverUrl(url);
+  };
 
   // Post as an institution — only shown when the user is staff (owner/admin/teacher) of at least one
   const [postAsInstitutions, setPostAsInstitutions] = useState<(InstitutionMember & { institution: Institution })[]>([]);
@@ -208,12 +220,32 @@ export function PublishForm({ existing }: { existing?: Publication }) {
             </select>
           </div>
 
-          <input
-            value={coverUrl}
-            onChange={e => setCoverUrl(e.target.value)}
-            placeholder="Cover image URL (optional)"
-            className="w-full px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--primary)]"
-          />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus-within:border-[var(--primary)] cursor-pointer flex items-center justify-center">
+              {uploadingCover ? 'Uploading cover…' : coverUrl ? '📷 Replace cover image' : '📷 Upload a cover image'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                className="hidden"
+                onChange={e => uploadCover(e.target.files?.[0] || null)}
+              />
+            </label>
+            <input
+              value={coverUrl}
+              onChange={e => setCoverUrl(e.target.value)}
+              placeholder="…or paste a cover image URL"
+              className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text)] text-sm outline-none focus:border-[var(--primary)]"
+            />
+          </div>
+          {coverUrl && (
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={coverUrl} alt="Cover preview" className="w-16 h-20 object-cover rounded-lg border border-[var(--border-subtle)]" />
+              <button type="button" onClick={() => setCoverUrl('')} className="text-xs text-[var(--text-muted)] hover:text-red-500">
+                Remove cover
+              </button>
+            </div>
+          )}
 
           <textarea
             value={description}

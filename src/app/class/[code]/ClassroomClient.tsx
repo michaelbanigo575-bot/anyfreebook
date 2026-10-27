@@ -6,12 +6,15 @@ import { useAuth } from '@/components/AuthProvider';
 import {
   joinAttendance, sendClassroomMessage, listClassroomMessages, subscribeClassroom,
   setClassroomStatus, saveRecordingUrl, trackPresence, bumpPeakAttendance, setClassroomMaterial,
+  startClassroomSession, endClassroomSession, recordSessionAttendance, recordSessionWatchTime,
+  getGuestId,
   type ClassroomMessage,
 } from '@/lib/classrooms/client';
 import { uploadPublicationFile } from '@/lib/creators/client';
 import { createClient } from '@/lib/supabase/client';
 import { LiveStage } from '@/components/LiveStage';
 import { DocumentReader } from '@/components/DocumentReader';
+import { ClassroomHistory } from './ClassroomHistory';
 import type { ClassroomWithHost } from '@/lib/classrooms/server';
 import { getSessionKey } from '@/lib/creators/client';
 
@@ -70,6 +73,56 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
   useEffect(() => {
     if (isHost && watching > 0) bumpPeakAttendance(room.id, watching);
   }, [isHost, watching, room.id]);
+
+  // Session history. The host opens a session when the class goes live; every
+  // attendee is recorded against it, so the host can later see who was there
+  // and for how long. Signed-in attendees are recorded by profile id,
+  // anonymous ones by a stable guest id.
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (room.status !== 'live') return;
+    let cancelled = false;
+    (async () => {
+      // The host starts the session; for everyone else it is started on
+      // demand, and the unique "one open session per classroom" rule means
+      // everybody converges on the same session id.
+      const { sessionId: id } = await startClassroomSession(room.id, room.title);
+      if (cancelled || !id) return;
+      setSessionId(id);
+      await recordSessionAttendance(id, room.id, displayName);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.id, room.status]);
+
+  // Close the session when the class ends, so its duration is recorded.
+  useEffect(() => {
+    if (room.status === 'ended' && sessionId) {
+      void endClassroomSession(sessionId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room.status, sessionId]);
+
+  // How long this attendee stayed. The seconds are counted here and flushed to
+  // the server periodically, so a browser closed mid-class does not lose the
+  // last few minutes.
+  useEffect(() => {
+    if (!sessionId) return;
+    const startedAt = Date.now();
+    const flush = () => {
+      const seconds = Math.round((Date.now() - startedAt) / 1000);
+      void recordSessionWatchTime(sessionId, getGuestId(), user?.id ?? null, seconds);
+    };
+    const timer = setInterval(flush, 30_000);
+    window.addEventListener('beforeunload', flush);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('beforeunload', flush);
+      flush();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, user?.id]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -367,6 +420,14 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Session history — the host's record of who attended, and for how long */}
+          {isHost && (
+            <div className="mt-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-4">
+              <h2 className="text-sm font-bold text-[var(--text)] mb-3">📊 Class history</h2>
+              <ClassroomHistory classroomId={room.id} roomCode={room.room_code} />
             </div>
           )}
         </div>

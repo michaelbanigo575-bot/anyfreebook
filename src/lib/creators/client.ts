@@ -200,6 +200,39 @@ const OFFICE_MIME_TO_FORMAT: Record<string, string> = {
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
 };
 
+const COVER_MAX_BYTES = 5 * 1024 * 1024; // 5 MB is plenty for a cover
+
+/**
+ * Upload a cover image for a publication.
+ *
+ * Same bucket as the publication files, so an author's cover lives next to
+ * their work and is served from the same public URL. Only images are allowed
+ * here — a cover is never a document.
+ */
+export async function uploadCoverImage(file: File): Promise<{ error: string | null; url?: string }> {
+  const sb = createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return { error: 'Not signed in' };
+  if (file.size > COVER_MAX_BYTES) return { error: 'That image is too large (max 5 MB).' };
+
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+  if (!allowed.includes(file.type)) {
+    return { error: 'A cover must be a JPEG, PNG, WebP, GIF or AVIF image.' };
+  }
+
+  const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').slice(-60);
+  const path = `${user.id}/covers/${Date.now()}-${safeName}`;
+
+  const { error } = await sb.storage.from('publications').upload(path, file, {
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (error) return { error: error.message };
+
+  const { data } = sb.storage.from('publications').getPublicUrl(path);
+  return { error: null, url: data.publicUrl };
+}
+
 /** Stable-ish per-browser key for anonymous read de-duplication. */
 export function getSessionKey(): string {
   if (typeof window === 'undefined') return 'server';

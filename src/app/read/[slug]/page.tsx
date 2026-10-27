@@ -42,7 +42,6 @@ function htmlToText(html: string): string {
 
 /** Data-URL downloads get unwieldy on very long works — keep the file small. */
 const TEXT_DOWNLOAD_LIMIT = 150_000;
-
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const data = await getPublicationBySlug(params.slug);
   if (!data) return {};
@@ -84,13 +83,11 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
   };
 
   // The whole work as plain text — the body for a single-piece publication,
-  // every chapter for a serialised one.
+  // every chapter for a serialised one. The download itself is served by
+  // /api/publications/[slug]/download, which can also build an EPUB.
   const plainText = pub.body
     ? htmlToText(pub.body)
     : chapters.map(c => `${c.title}\n\n${htmlToText(c.body || '')}`).join('\n\n').trim();
-  const textDownload = plainText.length > 0 && plainText.length <= TEXT_DOWNLOAD_LIMIT
-    ? `data:text/plain;charset=utf-8,${encodeURIComponent(plainText)}`
-    : null;
 
   return (
     <article className="content-wrapper py-8 max-w-3xl mx-auto">
@@ -249,11 +246,18 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
           Take a copy with you.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          {textDownload && (
-            <a href={textDownload} download={`${pub.slug}.txt`} className={primaryButtonClass()}>
-              ⬇ Save as plain text (.txt)
-            </a>
-          )}
+          <a
+            href={`/api/publications/${pub.slug}/download?format=epub`}
+            className={primaryButtonClass()}
+          >
+            ⬇ Download EPUB
+          </a>
+          <a
+            href={`/api/publications/${pub.slug}/download?format=txt`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[var(--radius-lg)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all"
+          >
+            📄 Download plain text
+          </a>
           {pub.external_url && (
             <a
               href={pub.external_url}
@@ -263,13 +267,6 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
             >
               📎 Open the attached file
             </a>
-          )}
-          {!textDownload && !pub.external_url && (
-            <p className="text-xs text-[var(--text-muted)]">
-              {plainText
-                ? 'This work is too long to save as a single text file here — use your browser’s print → Save as PDF instead.'
-                : 'There is no downloadable file for this work yet.'}
-            </p>
           )}
         </div>
       </div>

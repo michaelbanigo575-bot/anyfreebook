@@ -12,6 +12,21 @@ const AD_DIMENSIONS: Record<AdSize, { width: number; height: number }> = {
   footer: { width: 728, height: 90 },
 };
 
+/**
+ * Slots already pushed on this page.
+ *
+ * AdSense's `adsbygoogle.push()` fills ONE `<ins>` element per call, and it
+ * throws "All 'ins' elements in the DOM with class=adsbygoogle already have
+ * ads in them" when it is called with no unfilled element left.
+ *
+ * A `useRef` per component is not enough: React can unmount and remount the
+ * component (a `key` change, a route change, a fast refresh), the ref starts
+ * empty again, and the second push throws. Tracking the pushed slots at module
+ * scope means a slot is only ever pushed once per page load, whichever
+ * component instance asks for it.
+ */
+const pushedSlots = new Set<string>();
+
 interface AdUnitProps {
   size: AdSize;
   slot?: string;
@@ -21,20 +36,19 @@ interface AdUnitProps {
 export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
   const adRef = useRef<HTMLDivElement>(null);
   const { width, height } = AD_DIMENSIONS[size];
-  // The slot we already pushed — AdSense fills one <ins> per push, so the
-  // same slot must never be pushed twice.
-  const pushedSlot = useRef<string | null>(null);
 
   useEffect(() => {
     if (!slot || !process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID) return;
+    if (pushedSlots.has(slot)) return;
     try {
       const w = window as unknown as { adsbygoogle?: unknown[] };
       // The AdSense script is loaded async, so the queue may not exist yet.
       if (!w.adsbygoogle) w.adsbygoogle = [];
-      if (pushedSlot.current === slot) return;
       w.adsbygoogle.push({});
-      pushedSlot.current = slot;
-    } catch {}
+      pushedSlots.add(slot);
+    } catch {
+      // AdSense refusing to fill an ad is not worth breaking the page over.
+    }
   }, [slot]);
 
   return (
@@ -45,7 +59,6 @@ export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
     >
       {slot && process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ? (
         <ins
-          key={slot}
           className="adsbygoogle"
           style={{ display: 'block', width: '100%', maxWidth: width, height }}
           data-ad-client={process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}

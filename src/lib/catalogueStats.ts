@@ -34,8 +34,11 @@
  * Values are strings because they land in <StatBlock number="..." /> and in
  * metadata titles, where a number would be a type error.
  */
+
+import { SOURCE_REGISTRY } from './api/sources';
+
 export const CATALOGUE = {
-  /** Headline reach: books and papers across the seven live sources. */
+  /** Headline reach: books and papers across the live sources. */
   liveBooks: '7 million+',
 
   /** Short form for stat tiles and badges. */
@@ -50,14 +53,14 @@ export const CATALOGUE = {
   /** 34 top-level subjects + 111 deep subject shelves. */
   fields: '50+',
 
-  /** The seven sources the fan-out searches. */
-  sources: '7',
+  /** The live sources the fan-out searches. Kept in step with SOURCE_REGISTRY. */
+  sources: String(SOURCE_REGISTRY.length),
 
   /** Project Gutenberg's catalogue, via gutendex. */
   gutenbergTitles: '79K+',
 
   /** Named once so the count and the name never drift apart. */
-  sourceNames: 'Open Library, Project Gutenberg, Google Books, the Internet Archive, LibriVox, PubMed Central and DOAJ',
+  sourceNames: SOURCE_REGISTRY.map(s => s.label).join(', '),
 } as const;
 
 /** One sentence, used wherever the site explains where the books come from. */

@@ -19,8 +19,7 @@ export default function AboutPage() {
         <p className="mt-6 text-lg text-[var(--text-secondary)] text-center leading-relaxed">
           ANYFREEBOOK aggregates free, legal books from {CATALOGUE.sources} open-access sources
           worldwide — {CATALOGUE.liveBooks} books and papers across {CATALOGUE.fields} fields and
-          professions. Our mission is simple: no one should be priced out of knowledge.
-        </p>
+          professions. Our mission is simple: no one should be priced out of knowledge.        </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-12 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
           <StatBlock number={CATALOGUE.liveBooksShort} label="Free Books & Papers" />

@@ -1,5 +1,6 @@
 import type { Book } from './data';
 import type { SourceTier } from './api/resolveSource';
+import { SOURCE_REGISTRY } from './api/sources';
 
 export function websiteSchema() {
   return {
@@ -8,7 +9,7 @@ export function websiteSchema() {
     name: 'ANYFREEBOOK',
     alternateName: 'Any Free Book',
     url: 'https://anyfreebook.com',
-    description: "A free book aggregator. Curated books plus live results from 7 open-access sources.",
+    description: `A free book aggregator. Curated books plus live results from ${SOURCE_REGISTRY.length} open-access sources.`,
     publisher: organizationSchema(),
     potentialAction: {
       '@type': 'SearchAction',

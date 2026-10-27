@@ -8,6 +8,7 @@ import { AdUnit } from '@/components/AdUnit';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { cardClass } from '@/lib/ui';
 import type { Book } from '@/lib/data';
+import { SOURCE_REGISTRY } from '@/lib/api/sources';
 
 function SourceBadge({ source }: { source?: string }) {
   const colors: Record<string, string> = {
@@ -333,15 +334,12 @@ function SearchResults() {
           <p className="text-5xl mb-4">📚</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">Search millions of free books, textbooks & research papers</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">
-            Aggregated live from 7 open-access sources
+            Aggregated live from {SOURCE_REGISTRY.length} open-access sources
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 text-xs text-[var(--text-muted)]">
-            <span>📖 Open Library</span>
-            <span>📜 Project Gutenberg</span>
-            <span>📗 Google Books</span>
-            <span>🏛️ Internet Archive</span>
-            <span>🔬 PubMed Central</span>
-            <span>📰 DOAJ</span>
+            {SOURCE_REGISTRY.map(s => (
+              <span key={s.id}>{s.label}</span>
+            ))}
           </div>
         </div>
       )}

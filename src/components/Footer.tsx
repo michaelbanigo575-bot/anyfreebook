@@ -35,6 +35,8 @@ const linkGroups = [
       title: 'Company',
       links: [
         { label: 'About', href: '/about' },
+        { label: 'What’s New', href: '/changelog' },
+        { label: 'Our Sources', href: '/sources' },
         { label: 'FAQ', href: '/faq' },
         { label: 'Blog', href: '/blog' },
         { label: 'Contact', href: '/contact' },
@@ -69,7 +71,7 @@ const linkGroups = [
               <span className="font-display font-bold text-lg text-[var(--text)]">ANYFREEBOOK</span>
             </div>
             <p className="text-sm text-[var(--text-muted)] max-w-xs leading-relaxed">
-              A free book aggregator. 7 million+ free books and papers from 50+ fields, searched live across 7 open-access sources.
+              A free book aggregator. {CATALOGUE.liveBooks} free books and papers from {CATALOGUE.fields} fields, searched live across {CATALOGUE.sources} open-access sources.
             </p>
             <div className="flex gap-3 mt-4">
               {SOCIAL_LINKS.map(social => (

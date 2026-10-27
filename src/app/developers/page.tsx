@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cardClass, primaryButtonClass } from '@/lib/ui';
+import { SOURCE_REGISTRY } from '@/lib/api/sources';
 
 export const metadata: Metadata = {
   title: 'Free Books API for Developers — ANYFREEBOOK',
@@ -51,15 +52,7 @@ const TIERS = [
   },
 ];
 
-const SOURCES = [
-  'Project Gutenberg',
-  'Open Library',
-  'Internet Archive',
-  'Google Books',
-  'PubMed Central',
-  'DOAJ',
-  'LibriVox',
-];
+const SOURCES = SOURCE_REGISTRY.map(s => s.label);
 
 export default function DevelopersPage() {
   return (
@@ -157,7 +150,7 @@ export default function DevelopersPage() {
       <section className="mb-12">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">Sources</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-3">
-          Seven open-access sources, asked in parallel. When one does not answer, the response
+          {SOURCE_REGISTRY.length} open-access sources, asked in parallel. When one does not answer, the response
           says so in <code className="font-mono text-[var(--text)]">failedSources</code> — a short
           result set is never presented as a complete one.
         </p>

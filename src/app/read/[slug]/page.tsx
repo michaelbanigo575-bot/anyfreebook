@@ -250,7 +250,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
             href={`/api/publications/${pub.slug}/download?format=epub`}
             className={primaryButtonClass()}
           >
-            ⬇ Download EPUB
+            ⬇ Download {pub.external_url && !pub.body ? 'the book' : 'EPUB'}
           </a>
           <a
             href={`/api/publications/${pub.slug}/download?format=txt`}

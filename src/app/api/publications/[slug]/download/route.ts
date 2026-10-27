@@ -120,12 +120,45 @@ export async function GET(
   const chapters = await getPublishedChapters(pub.id);
   const filename = safeFilename(pub.title);
 
+  // A book published as an attached file has no body and no chapters: the
+  // file IS the work. Serve it as the download, so "Download EPUB" gives the
+  // reader the book the author uploaded rather than nothing.
+  const hasOwnText = Boolean(pub.body) || chapters.length > 0;
+  if (!hasOwnText && pub.external_url) {
+    try {
+      const upstream = await fetch(pub.external_url, { redirect: 'follow' });
+      if (!upstream.ok) {
+        return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
+      }
+      const type = upstream.headers.get('content-type') || 'application/octet-stream';
+      const ext = type.includes('pdf') ? 'pdf' : type.includes('epub') ? 'epub' : 'bin';
+      const buf = await upstream.arrayBuffer();
+      return new NextResponse(buf, {
+        headers: {
+          'Content-Type': type,
+          'Content-Disposition': `attachment; filename="${filename}.${ext}"`,
+          'Cache-Control': 'public, max-age=300',
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
+    }
+  }
+
   if (format === 'txt') {
     const text = pub.body
       ? htmlToText(pub.body)
       : chapters.map((c) => `${c.title}\n\n${htmlToText(c.body || '')}`).join('\n\n').trim();
     if (!text) {
-      return NextResponse.json({ error: 'Nothing to download' }, { status: 404 });
+      // A book published as an attached file has no text to serve. Say so
+      // clearly rather than returning a bare 404.
+      return NextResponse.json(
+        {
+          error: 'This work is published as a file, so there is no plain-text version. Use the file download instead.',
+          file: pub.external_url,
+        },
+        { status: 409 }
+      );
     }
     return new NextResponse(text, {
       headers: {
@@ -143,7 +176,7 @@ export async function GET(
       : [];
 
   if (epubChapters.length === 0) {
-    return NextResponse.json({ error: 'Nothing to download' }, { status: 404 });
+    return NextResponse.json({ error: 'There is no downloadable file for this work yet' }, { status: 404 });
   }
 
   const epub = buildEpub({

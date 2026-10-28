@@ -114,7 +114,20 @@ export async function POST(request: NextRequest) {
       if (!target) continue;
 
       const article = matchArticle(post.title, post.body, post.product);
-      const { draft, policy } = buildDraft(post, target, { article });
+      const { draft, policy, draftable } = buildDraft(post, target, { article });
+
+      // Nothing to say. The thread is saved and left for a person; a reply
+      // that does not answer the question is what gets an account banned.
+      if (!draftable || !draft) {
+        notReady++;
+        drafts.push({
+          subreddit: post.subreddit,
+          title: post.title,
+          ratio: 0,
+          problems: policy.problems,
+        });
+        continue;
+      }
 
       const draftId = await saveDraft(draft);
       if (!draftId) continue;

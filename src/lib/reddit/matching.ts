@@ -69,9 +69,11 @@ export function matchArticle(
     }
   }
 
-  // One weak match is not enough — two independent topics, or one strong one.
+  // One weak match is not enough. Two independent topics, or one strong one
+  // — a single shared word like "backend" is not an article answering the
+  // question.
   if (!best) return null;
-  if (best.matched.length < 1 || best.score < 25) return null;
+  if (best.matched.length < 2 || best.score < 45) return null;
 
   return best;
 }

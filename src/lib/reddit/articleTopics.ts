@@ -21,10 +21,13 @@ export const ARTICLE_TOPICS: ArticleTopic[] = [
   {
     slug: 'fanning-out-search-across-twelve-apis',
     topics: [
-      'api', 'parallel', 'fan out', 'fan-out', 'aggregation', 'aggregator', 'multi-source',
-      'multiple apis', 'third-party api', 'upstream', 'timeout', 'retry', 'backoff',
-      'rate limit', 'partial results', 'failed sources', 'graphql', 'rest api',
+      'api', 'apis', 'parallel', 'fan out', 'fan-out', 'aggregation', 'aggregator',
+      'multi-source', 'multiple sources', 'multiple apis', 'third-party api',
+      'third-party apis', 'upstream', 'upstreams', 'timeout', 'timeouts',
+      'retry', 'retries', 'backoff', 'rate limit', 'rate limits', 'partial results',
+      'failed sources', 'empty result', 'empty results', 'graphql', 'rest api',
       'search api', 'api aggregation', 'microservice', 'reverse proxy',
+      'one of several apis', 'several apis', 'multiple endpoints',
     ],
   },
   {
@@ -51,14 +54,16 @@ export const ARTICLE_TOPICS: ArticleTopic[] = [
     topics: [
       'attendance', 'attendance tracking', 'classroom', 'session history', 'roster',
       'who attended', 'duration', 'elapsed time', 'tracking time', 'engagement',
-      'unique index', 'null', 'partial index', 'upsert', 'on conflict',
-      'row level security', 'rls', 'postgres policy', 'trigger', 'schema design',
-      'anonymous user', 'guest id', 'privacy', 'supabase', 'next.js',
+      'unique index', 'unique indexes', 'null', 'nulls', 'partial index',
+      'partial unique index', 'upsert', 'upserts', 'on conflict', 'conflict target',
+      'row level security', 'rls', 'postgres policy', 'rls policy', 'trigger',
+      'triggers', 'schema design', 'anonymous user', 'guest id', 'privacy',
+      'supabase', 'next.js', 'attendance sheet', 'session table',
     ],
   },
   {
     slug: 'top-25-free-programming-books-2026',
-    topics: ['programming', 'python', 'javascript', 'typescript', 'rust', 'golang', 'java', 'c++', 'linux', 'git', 'algorithms', 'coding', 'software', 'developer', 'web development', 'frontend', 'backend'],
+    topics: ['programming', 'python', 'javascript', 'typescript', 'rust', 'golang', 'java', 'c++', 'linux', 'git', 'algorithms', 'web development'],
   },
   {
     slug: 'free-alternatives-campbell-biology',

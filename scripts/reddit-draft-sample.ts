@@ -34,6 +34,21 @@ const samples = [
     title: 'Where do I get free WAEC past questions?',
     body: 'Everyone keeps posting links to PDFs of past papers. Are any of those legitimate, and is there an official free source?',
   },
+  {
+    subreddit: 'Postgres',
+    title: 'Why does my unique index not stop duplicate rows when one column is NULL?',
+    body: 'I have a unique index on (session_id, user_id, guest_id) and signed-in users still get a new row on every reconnect. Is NULL the problem?',
+  },
+  {
+    subreddit: 'webdev',
+    title: 'How do you tell the user when one of several APIs fails instead of returning an empty result?',
+    body: 'My search fans out to a dozen upstreams in parallel. Right now a rate-limited source looks like "no matches". What should the response carry?',
+  },
+  {
+    subreddit: 'webdev',
+    title: 'First client e-commerce store: roll my own cart/orders on Supabase, or use Medusa.js?',
+    body: 'Ten to twenty products, near-zero monthly hosting. What would you pick and why?',
+  },
 ];
 
 for (const sample of samples) {
@@ -61,11 +76,17 @@ for (const sample of samples) {
   };
 
   const article = matchArticle(sample.title, sample.body, target.product);
-  const { draft, policy } = buildDraft(post, target, { article });
+  const { draft, policy, draftable } = buildDraft(post, target, { article });
 
   console.log('='.repeat(78));
   console.log(`r/${sample.subreddit} — ${sample.title}`);
   console.log(`article matched: ${article ? `${article.title} (${article.url})` : 'none — reply will be link-free'}`);
+  if (!draftable || !draft) {
+    console.log('no draft — this thread needs a person to write it');
+    console.log(`problems: ${policy.problems.join(' | ')}`);
+    console.log();
+    continue;
+  }
   console.log(`value ratio: ${draft.valueRatio}:1   ready: ${policy.ok}`);
   if (!policy.ok) console.log(`problems: ${policy.problems.join(' | ')}`);
   console.log('-'.repeat(78));

@@ -26,10 +26,16 @@ import {
   MIN_VALUE_RATIO,
 } from './policy.ts';
 import { matchArticle, type ArticleMatch } from './matching.ts';
+import { BLOG_POSTS } from '../blogPosts.ts';
 
 export interface DraftResult {
-  draft: RedditDraft;
+  draft: RedditDraft | null;
   policy: ReturnType<typeof checkDraftPolicy>;
+  /**
+   * False when there was nothing to say. The thread is still saved, but no
+   * reply is proposed: a person has to write it.
+   */
+  draftable: boolean;
 }
 
 /** The kinds of thread we know how to answer. */
@@ -47,6 +53,13 @@ export type AnswerKind =
 
 interface AnswerTemplate {
   kind: AnswerKind;
+  /**
+   * Which product this answer is about. A template written for narration
+   * costs must never answer a question about an e-commerce backend: a reply
+   * that ignores the thread is spam wearing our name, and that is how a
+   * community bans you.
+   */
+  product: 'anyfreebook' | 'afristudio';
   /** Words that identify this template in the thread. */
   match: string[];
   /** The body of the answer. No product mention allowed in here. */
@@ -60,6 +73,7 @@ interface AnswerTemplate {
 const TEMPLATES: AnswerTemplate[] = [
   {
     kind: 'textbooks',
+    product: 'anyfreebook',
     match: ['textbook', 'textbooks', 'course', 'curriculum', 'syllabus', 'open course', 'ocw', 'openstax'],
     answer:
       'The ones that actually work for a full course are the open textbooks and the open course archives, not the file-dump forums.\n\n' +
@@ -73,6 +87,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'ebooks',
+    product: 'anyfreebook',
     match: ['ebook', 'ebooks', 'epub', 'kindle', 'mobi', 'pdf book', 'where to download', 'free download'],
     answer:
       'It depends entirely on whether the title is actually out of copyright, and most sites do not tell you that clearly — which is the trap people fall into.\n\n' +
@@ -87,6 +102,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'reading-list',
+    product: 'anyfreebook',
     match: ['reading list', 'recommend', 'what should i read', 'looking for books', 'suggestions', 'next book'],
     answer:
       'A good free reading list looks different from a paid one, because the constraint is not "good" but "legally free and still interesting".\n\n' +
@@ -100,6 +116,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'exam-prep',
+    product: 'anyfreebook',
     match: ['waec', 'jamb', 'past questions', 'exam prep', 'revision', 'mock', 'ss1', 'ss2', 'ss3', 'neco', 'namibian', 'bECE'],
     answer:
       'The past questions themselves are the hard part, because papers that are still in copyright cannot be redistributed — and most of the sites offering "free past questions" are either pirating them or selling you a PDF of the questions with the answers scraped from a site.\n\n' +
@@ -113,6 +130,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'audiobooks',
+    product: 'anyfreebook',
     match: ['audiobook', 'audiobooks', 'listen', 'narrated', 'free audio'],
     answer:
       '**LibriVox** is the one that matters: volunteers record public-domain texts, and the catalogue is free with no account. It is genuinely good — a lot of the recordings are excellent, and there are genuine full-cast productions.\n\n' +
@@ -125,6 +143,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'tts',
+    product: 'afristudio',
     match: ['text to speech', 'tts', 'voice', 'narration', 'voice cloning', 'whisper', 'piper', 'coqui', 'xtts', 'elevenlabs'],
     answer:
       'If you want it to run locally, the shortlist is **Piper**, **Kokoro** and **Coqui XTTS**. Piper is fast, small and sounds surprisingly good for its size; Kokoro is newer and noticeably more natural; XTTS v2 does near-zero-shot voice cloning, which is the one people usually want and the one that needs the most care.\n\n' +
@@ -138,6 +157,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'faceless-video',
+    product: 'afristudio',
     match: ['faceless', 'youtube automation', 'shorts', 'reels', 'tiktok', 'auto captions', 'burned in'],
     answer:
       'The pipeline that tends to survive contact with reality is: **script → TTS → images → captions → edit**. The parts people usually underestimate are the captions and the edit.\n\n' +
@@ -151,6 +171,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'ai-pipeline',
+    product: 'afristudio',
     match: ['workflow', 'pipeline', 'ai video', 'diffusion', 'model', 'inference'],
     answer:
       'The architecture question usually comes down to where you put the boundaries, and the answer that tends to hold up is: keep the generative steps local and the orchestration in code.\n\n' +
@@ -163,6 +184,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'api-cost',
+    product: 'afristudio',
     match: ['api cost', 'rate limit', 'pricing', 'cost per', 'credits', 'free tier', 'per minute'],
     answer:
       'The cost model that surprises people is that text-to-speech is priced per character and video is priced per second, so the unit you are billed in is not the unit you think in.\n\n' +
@@ -176,6 +198,7 @@ const TEMPLATES: AnswerTemplate[] = [
   },
   {
     kind: 'flutter',
+    product: 'afristudio',
     match: ['flutter', 'dart', 'plugin', 'package', 'pub.dev'],
     answer:
       'For text-to-speech inside a Flutter app there are two routes and they are not equivalent.\n\n' +
@@ -189,16 +212,30 @@ const TEMPLATES: AnswerTemplate[] = [
   },
 ];
 
-/** Choose the template that best fits a thread. */
-export function chooseTemplate(post: RedditPost): AnswerTemplate {
+/**
+ * Choose the template that best fits a thread.
+ *
+ * Returns null when nothing fits. A null means we have nothing to say, and
+ * the honest answer to that is to write nothing and let the operator decide.
+ * Falling back to a generic paragraph about free books in a thread about
+ * Postgres is how a community decides we are spam.
+ */
+export function chooseTemplate(post: RedditPost): AnswerTemplate | null {
   const haystack = `${post.title} ${post.body} ${post.intentSignals.join(' ')}`.toLowerCase();
   let best: AnswerTemplate | null = null;
   let bestScore = 0;
 
   for (const template of TEMPLATES) {
+    // A template written for another product is never the right answer here,
+    // however well its keywords happen to fit.
+    if (template.product !== post.product) continue;
+
     let score = 0;
     for (const word of template.match) {
-      if (haystack.includes(word)) score += word.includes(' ') ? 20 : 10;
+      // A hit in the title is what the person is actually asking about. A
+      // hit in the body might be a passing mention.
+      if (post.title.toLowerCase().includes(word)) score += 25;
+      else if (post.body.toLowerCase().includes(word)) score += 8;
     }
     if (score > bestScore) {
       bestScore = score;
@@ -206,28 +243,71 @@ export function chooseTemplate(post: RedditPost): AnswerTemplate {
     }
   }
 
-  if (best && bestScore > 0) return best;
+  // One loose keyword in the body is not a match. A phrase in the title, or
+  // three separate words, is.
+  if (best && bestScore >= 25) return best;
+  return null;
+}
 
-  // No template matched. The generic answer is still real advice.
-  return {
-    kind: 'ebooks',
-    match: [],
-    answer:
-      'It depends on what you are trying to read, but the shortlist that covers most people is:\n\n' +
-      '**Project Gutenberg** — around 79,000 public-domain texts, free in plain text, EPUB and HTML, no account needed. Strongest for anything published before roughly 1930.\n\n' +
-      '**Standard Ebooks** — a much smaller selection, but properly typeset and proofread editions of the same public-domain corpus. Best quality if you want something that reads like a real book.\n\n' +
-      '**Open Library** — the catalogue layer, useful for finding which edition is free and for borrowing copies that are not downloadable.\n\n' +
-      '**The Internet Archive** — the largest collection of scanned books; note that a lot of it is lending-only rather than free-to-download.\n\n' +
-      '**DOAJ** and **PubMed Central** for academic articles, both genuinely free as PDF.\n\n' +
-      '**LibriVox** if you would rather listen.',
-    insight:
-      'The one distinction worth learning early is between a book that is *free to read* and a book that is *free to download*, and between those and a book that is *free to borrow*. All three are legitimate; they need different links; and sites that offer one URL for all three are either careless or not legitimate. Checking which one you are looking at takes ten seconds and saves a lot of confusion.',
-    closer: 'One practical suggestion: check the copyright date before downloading anything. Editions published within the last seventy years are usually still in copyright even when an older edition of the same book is free. Searching by author rather than title tends to find the free edition more reliably, and it takes less time than reading a terms-of-service page you are going to ignore anyway.',
-  };
+/**
+ * Build an answer out of the article that actually answers the thread.
+ *
+ * This is the whole idea of the article map: the article is the value, and
+ * the product is only the byline. When a thread matches one of our technical
+ * articles, the reply carries the article's own explanation of the problem
+ * the thread is asking about — on-topic by construction, because it is the
+ * same text.
+ *
+ * Returns null when the article is too thin to carry a reply.
+ */
+export function answerFromArticle(
+  post: RedditPost,
+  article: ArticleMatch
+): { answer: string; insight: string; closer: string } | null {
+  const entry = BLOG_POSTS.find((p) => p.slug === article.slug);
+  if (!entry) return null;
+
+  const paragraphs = entry.content
+    .filter((block) => block.type === 'p' && (block.text ?? '').trim().length > 80)
+    .map((block) => (block.text ?? '').trim())
+    // A paragraph that ends in a colon is introducing a code block. Quoted on
+    // its own it dangles, so it is not a paragraph to quote.
+    .filter((text) => !text.endsWith(':'));
+  if (paragraphs.length < 2) return null;
+
+  const tips = entry.content
+    .filter((block) => block.type === 'tip' && (block.text ?? '').trim().length > 40)
+    .map((block) => (block.text ?? '').trim());
+
+  // Prefer the paragraphs that talk about what the thread is about. The
+  // paragraph with the most distinct matched topics is the one that answers
+  // the question; the opening paragraph of an article usually does not.
+  const topics = article.matched.map((t) => t.toLowerCase());
+  const scored = paragraphs
+    .map((text, index) => {
+      const lower = text.toLowerCase();
+      const hit = topics.filter((topic) => lower.includes(topic));
+      return { text, index, hits: hit.length };
+    })
+    .sort((a, b) => b.hits - a.hits || a.index - b.index);
+
+  const answer = scored[0].text;
+  const insight = scored.find((s) => s.text !== answer)?.text;
+  const closer = tips[0] ?? scored.find((s) => s.text !== answer && s.text !== insight)?.text;
+
+  if (!insight || !closer) return null;
+
+  return { answer, insight, closer };
 }
 
 /**
  * Build the draft. The body is answer + insight + mention, in that order.
+ *
+ * There are two ways to get an answer, and only two. A template written for
+ * this kind of question, or the article that answers it. When neither
+ * applies, nothing is drafted: `draftable` is false and the thread is left
+ * for a person. A reply that does not answer the question is worse than no
+ * reply, because it is indistinguishable from spam.
  */
 export function buildDraft(
   post: RedditPost,
@@ -239,16 +319,38 @@ export function buildDraft(
   const article = options.article ?? matchArticle(post.title, post.body, post.product);
   const includeLink = options.includeLink ?? true;
 
-  const answerBody = `${template.answer}\n\n${template.insight}\n\n${template.closer}`;
+  // A template first, because it is written for the question. Failing that,
+  // the article that matches the thread, which carries the answer itself.
+  const fromArticle = template ? null : article ? answerFromArticle(post, article) : null;
+
+  if (!template && !fromArticle) {
+    return {
+      draft: null,
+      policy: {
+        ok: false,
+        problems: ['no template and no matching article — this one needs a person to write it'],
+      },
+      draftable: false,
+    };
+  }
+
+  const answerBody = template
+    ? `${template.answer}\n\n${template.insight}\n\n${template.closer}`
+    : `${fromArticle!.answer}\n\n${fromArticle!.insight}\n\n${fromArticle!.closer}`;
 
   // The mention has to stay short: it is the minority of the reply by design,
   // and a reply where the product is a third of the text is an ad.
   const mentionParts: string[] = [];
   mentionParts.push(disclosure);
   mentionParts.push(
-    post.product === 'anyfreebook'
-      ? 'It searches those sources live and marks each title as a real download, a borrow-only copy, or a catalogue record.'
-      : 'It runs the narration and caption steps together so the per-character cost is not what decides whether a channel is viable.'
+    template
+      ? post.product === 'anyfreebook'
+        ? 'It searches those sources live and marks each title as a real download, a borrow-only copy, or a catalogue record.'
+        : 'It runs the narration and caption steps together so the per-character cost is not what decides whether a channel is viable.'
+      : // The answer came from an article, so the article is what the mention
+        // should point at. Saying "it searches those sources live" in a thread
+        // about a Postgres index would be a non sequitur.
+        'The write-up above is from that codebase, which is a free-book aggregator.'
   );
 
   if (includeLink && article) {
@@ -291,7 +393,7 @@ export function buildDraft(
     subreddit: draft.subreddit,
     linksAllowed: target.linksAllowed,
   });
-  return { draft, policy };
+  return { draft, policy, draftable: true };
 }
 
 /** The floor a draft has to clear to be worth an operator's time. */

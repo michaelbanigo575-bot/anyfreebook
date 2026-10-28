@@ -76,6 +76,75 @@ export const REDDIT_TARGETS: RedditTarget[] = [
   },
   {
     product: 'anyfreebook',
+    subreddit: 'webdev',
+    purpose:
+      'Web developers with the same problems we solved: fanning a search across many upstreams, telling the user when an upstream failed, and shipping one codebase as both a PWA and a Play app.',
+    intentKeywords: [
+      'api', 'api key', 'rate limit', 'fan out', 'parallel requests', 'upstream',
+      'timeout', 'retry', 'backoff', 'partial results', 'failed sources',
+      'nextjs', 'typescript', 'supabase', 'postgres', 'rls', 'row level security',
+      'pwa', 'trusted web activity', 'twa', 'digital asset links', 'play store',
+      'service worker', 'epub', 'monorepo', 'error boundary',
+    ],
+    linksAllowed: null,
+    selfPromoThread: null,
+    minAccountAgeDays: null,
+    minKarma: null,
+    rulesVerifiedAt: null,
+    active: true,
+  },
+  {
+    product: 'anyfreebook',
+    subreddit: 'programming',
+    purpose:
+      'Working programmers asking about database and API design, especially Postgres constraints and multi-source backends.',
+    intentKeywords: [
+      'unique index', 'null', 'postgres', 'postgresql', 'database constraint',
+      'row level security', 'rls', 'trigger', 'upsert', 'conflict target',
+      'partial index', 'schema design', 'api design', 'error handling',
+    ],
+    linksAllowed: null,
+    selfPromoThread: null,
+    minAccountAgeDays: null,
+    minKarma: null,
+    rulesVerifiedAt: null,
+    active: true,
+  },
+  {
+    product: 'anyfreebook',
+    subreddit: 'Postgres',
+    purpose:
+      'Postgres users with the exact questions our session-history schema raised: partial unique indexes over nullable columns, and what an RLS policy actually permits.',
+    intentKeywords: [
+      'unique index', 'null', 'partial index', 'upsert', 'on conflict',
+      'row level security', 'rls', 'policy', 'trigger', 'constraint',
+      'primary key', 'foreign key', 'schema',
+    ],
+    linksAllowed: null,
+    selfPromoThread: null,
+    minAccountAgeDays: null,
+    minKarma: null,
+    rulesVerifiedAt: null,
+    active: true,
+  },
+  {
+    product: 'anyfreebook',
+    subreddit: 'supabase',
+    purpose:
+      'Supabase users working with RLS policies, realtime presence and database triggers.',
+    intentKeywords: [
+      'supabase', 'rls', 'row level security', 'policy', 'realtime', 'presence',
+      'postgres', 'trigger', 'auth', 'service role', 'anon key',
+    ],
+    linksAllowed: null,
+    selfPromoThread: null,
+    minAccountAgeDays: null,
+    minKarma: null,
+    rulesVerifiedAt: null,
+    active: true,
+  },
+  {
+    product: 'anyfreebook',
     subreddit: 'Nigeria',
     purpose: 'Nigerians asking about free textbooks, WAEC and JAMB preparation.',
     intentKeywords: [

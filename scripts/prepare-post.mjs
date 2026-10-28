@@ -29,6 +29,7 @@ const TAGS = {
   '01-fanning-out-search-across-twelve-open-apis.md': ['webdev', 'api', 'typescript', 'nextjs'],
   '02-your-free-book-api-might-not-be-free.md': ['api', 'legal', 'licensing', 'typescript'],
   '03-one-codebase-two-install-paths-pwa-and-twa.md': ['android', 'pwa', 'twa', 'nextjs'],
+  '04-classroom-session-history-and-the-rls-hole-behind-it.md': ['postgres', 'security', 'rls', 'database'],
 };
 
 /** One-line summaries, used for the description and the social preview. */
@@ -39,6 +40,8 @@ const DESCRIPTIONS = {
     'A book-search API hands you a URL and calls it free, but that URL may be a public-domain text, a borrow-only lending copy, or a catalogue record for a book still in copyright — and linking to it is a legal claim you cannot support.',
   '03-one-codebase-two-install-paths-pwa-and-twa.md':
     'The Play app is a 1.2 MB shell around the website, but the Digital Asset Links handshake has two traps in it: an uppercase-only fingerprint validator and the difference between your upload key and Play\'s app-signing key.',
+  '04-classroom-session-history-and-the-rls-hole-behind-it.md':
+    'A live class needs history, not just a current state. Recording it properly turned up a schema bug (a unique index over a nullable column is not a uniqueness constraint) and an RLS policy that let any signed-in user make themselves owner of an institution.',
 };
 
 const args = process.argv.slice(2);

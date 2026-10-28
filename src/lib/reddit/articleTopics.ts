@@ -19,6 +19,44 @@ export interface ArticleTopic {
 
 export const ARTICLE_TOPICS: ArticleTopic[] = [
   {
+    slug: 'fanning-out-search-across-twelve-apis',
+    topics: [
+      'api', 'parallel', 'fan out', 'fan-out', 'aggregation', 'aggregator', 'multi-source',
+      'multiple apis', 'third-party api', 'upstream', 'timeout', 'retry', 'backoff',
+      'rate limit', 'partial results', 'failed sources', 'graphql', 'rest api',
+      'search api', 'api aggregation', 'microservice', 'reverse proxy',
+    ],
+  },
+  {
+    slug: 'your-free-book-api-might-not-be-free',
+    topics: [
+      'licence', 'license', 'licensing', 'copyright', 'public domain', 'creative commons',
+      'cc by', 'fair use', 'legal', 'piracy', 'pirated', 'piracy free', 'dmca',
+      'open access', 'oa', 'open educational resources', 'oer', 'rights', 'attribution',
+      'ebook legality', 'free books legal', 'borrowing', 'lending library', 'tier',
+    ],
+  },
+  {
+    slug: 'one-codebase-two-install-paths-pwa-and-twa',
+    topics: [
+      'pwa', 'trusted web activity', 'twa', 'bubblewrap', 'digital asset links',
+      'assetlinks', 'play store', 'google play', 'android app', 'app bundle',
+      'aab', 'keystore', 'signing key', 'fingerprint', 'service worker',
+      'offline', 'installable', 'web app manifest', 'manifest.json', 'next.js pwa',
+      'mobile app from website', 'splash screen',
+    ],
+  },
+  {
+    slug: 'classroom-session-history-and-the-rls-hole',
+    topics: [
+      'attendance', 'attendance tracking', 'classroom', 'session history', 'roster',
+      'who attended', 'duration', 'elapsed time', 'tracking time', 'engagement',
+      'unique index', 'null', 'partial index', 'upsert', 'on conflict',
+      'row level security', 'rls', 'postgres policy', 'trigger', 'schema design',
+      'anonymous user', 'guest id', 'privacy', 'supabase', 'next.js',
+    ],
+  },
+  {
     slug: 'top-25-free-programming-books-2026',
     topics: ['programming', 'python', 'javascript', 'typescript', 'rust', 'golang', 'java', 'c++', 'linux', 'git', 'algorithms', 'coding', 'software', 'developer', 'web development', 'frontend', 'backend'],
   },

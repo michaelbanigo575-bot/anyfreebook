@@ -36,6 +36,16 @@ const POSTS = [
     readTime: '7 min',
     date: 'Oct 26, 2026',
   },
+  {
+    file: 'docs/posts/out/04-classroom-session-history-and-the-rls-hole-behind-it.devto.md',
+    slug: 'classroom-session-history-and-the-rls-hole',
+    title: 'Recording who was in the room: session history, two partial unique indexes, and the RLS hole it uncovered',
+    description:
+      'A live class needs history, not just a current state. Recording it properly turned up a schema bug (a unique index over a nullable column is not a uniqueness constraint) and an RLS policy that let any signed-in user make themselves owner of an institution.',
+    category: 'Technology',
+    readTime: '7 min',
+    date: 'Oct 28, 2026',
+  },
 ];
 
 let source = '';

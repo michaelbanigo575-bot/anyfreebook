@@ -27,7 +27,11 @@ export const REDDIT_TARGETS: RedditTarget[] = [
       'study material', 'study materials', 'textbook alternatives', 'alternative to textbook',
       'library', 'pirate', 'open library', 'gutenberg', 'internet archive',
     ],
-    linksAllowed: null,
+    // The rules of r/freebooks say that services are not to be promoted there,
+    // that affiliate links and redirections are removed, and that link
+    // shorteners are not allowed. A reply in this community is a list of
+    // free books, full stop. No link, no pitch.
+    linksAllowed: false,
     selfPromoThread: null,
     minAccountAgeDays: null,
     minKarma: null,
@@ -45,7 +49,11 @@ export const REDDIT_TARGETS: RedditTarget[] = [
       'public domain', 'public domain books', 'classics', 'free to read',
       'download books', 'look for books', 'online library', 'free classics',
     ],
-    linksAllowed: null,
+    // r/reading has no self-promotion rule, but its first rule is "Irrelevant
+    // to Reading", and a reply that exists to point at a search engine is
+    // exactly the kind of thing a moderator reads that way. The answer stands
+    // on its own; the link does not go in.
+    linksAllowed: false,
     selfPromoThread: null,
     minAccountAgeDays: null,
     minKarma: null,

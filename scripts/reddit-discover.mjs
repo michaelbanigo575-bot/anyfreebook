@@ -68,13 +68,14 @@ const FEED_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
 
 function parseArgs(argv) {
-  const args = { subreddits: [], dryRun: false, product: null, transport: 'feed' };
+  const args = { subreddits: [], dryRun: false, product: null, transport: 'feed', sort: 'new' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--subreddit' || a === '-s') args.subreddits.push(argv[++i]);
     else if (a === '--product' || a === '-p') args.product = argv[++i];
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--transport') args.transport = argv[++i];
+    else if (a === '--sort') args.sort = argv[++i];
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -122,8 +123,18 @@ async function fetchSubreddit(subreddit) {
  * one. That is the conservative direction: the reply queue is for the
  * operator to judge, not for a ranking to hide threads.
  */
-async function fetchSubredditFeed(subreddit) {
-  const url = `https://www.reddit.com/r/${subreddit}/new.rss?limit=25`;
+async function fetchSubredditFeed(subreddit, sort) {
+  // "new" is the newest posts, which in a busy community is mostly people
+  // promoting their own book. "top of the day" is the threads that actually
+  // got attention, which is much more often a question somebody wants
+  // answered. Both are read; the operator sees the difference.
+  const path =
+    sort === 'top'
+      ? `top.rss?t=day&limit=25`
+      : sort === 'hot'
+        ? 'hot.rss?limit=25'
+        : 'new.rss?limit=25';
+  const url = `https://www.reddit.com/r/${subreddit}/${path}`;
   const res = await fetch(url, {
     headers: { 'User-Agent': FEED_USER_AGENT, Accept: 'application/atom+xml,application/xml,text/xml' },
     signal: AbortSignal.timeout(25_000),
@@ -149,10 +160,10 @@ async function fetchSubredditFeed(subreddit) {
  * for misbehaving. We wait, we try again, and we give up rather than
  * hammering.
  */
-async function fetchSubredditFeedWithBackoff(subreddit, attempts = 3) {
+async function fetchSubredditFeedWithBackoff(subreddit, sort, attempts = 3) {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      return await fetchSubredditFeed(subreddit);
+      return await fetchSubredditFeed(subreddit, sort);
     } catch (err) {
       const isRateLimit = /HTTP 429/.test(err.message);
       if (!isRateLimit || attempt === attempts) throw err;
@@ -239,6 +250,7 @@ Reddit discovery (read-only)
   --subreddit, -s <name>   watch one subreddit (repeatable)
   --product, -p <name>     anyfreebook | afristudio
   --transport <mode>       feed (default) or json
+  --sort <mode>           new (default), top (top of the day) or hot
   --dry-run               list what would be fetched, then stop
   --help, -h              this message
 
@@ -300,7 +312,7 @@ use feed unless you are on a home connection and want the extra fields.
       const children =
         args.transport === 'json'
           ? await fetchSubreddit(subreddit)
-          : await fetchSubredditFeedWithBackoff(subreddit);
+          : await fetchSubredditFeedWithBackoff(subreddit, args.sort);
       listings[subreddit] = children;
       console.log(`r/${subreddit}: ${children.length} threads`);
     } catch (err) {

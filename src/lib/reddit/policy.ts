@@ -44,10 +44,16 @@ export const MAX_REPLY_WORDS = 900;
  * Every product mention carries this. It is not optional and the draft
  * builder refuses to produce a reply without it.
  */
-export function disclosureFor(product: RedditProduct): string {
-  return product === 'anyfreebook'
-    ? 'Full disclosure: I built Anyfreebook (https://anyfreebook.com).'
-    : 'Full disclosure: I built AfriStudio (https://afristudio.org).';
+export function disclosureFor(product: RedditProduct, options: { allowUrl?: boolean } = {}): string {
+  const allowUrl = options.allowUrl ?? true;
+  if (product === 'anyfreebook') {
+    return allowUrl
+      ? 'Full disclosure: I built Anyfreebook (https://anyfreebook.com).'
+      : 'Full disclosure: I built Anyfreebook, the book-search engine behind this reply.';
+  }
+  return allowUrl
+    ? 'Full disclosure: I built AfriStudio (https://afristudio.org).'
+    : 'Full disclosure: I built AfriStudio, the narration tool behind this reply.';
 }
 
 /** Words that count as "talking about our product" for the ratio check. */

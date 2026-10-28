@@ -315,9 +315,12 @@ export function buildDraft(
   options: { article?: ArticleMatch | null; includeLink?: boolean } = {}
 ): DraftResult {
   const template = chooseTemplate(post);
-  const disclosure = disclosureFor(post.product);
+  // Some communities do not allow a service to be promoted at all. There the
+  // reply is the value and nothing else: no link, no URL in the disclosure.
+  const linksAllowed = target.linksAllowed !== false;
+  const disclosure = disclosureFor(post.product, { allowUrl: linksAllowed });
   const article = options.article ?? matchArticle(post.title, post.body, post.product);
-  const includeLink = options.includeLink ?? true;
+  const includeLink = (options.includeLink ?? true) && linksAllowed;
 
   // A template first, because it is written for the question. Failing that,
   // the article that matches the thread, which carries the answer itself.
@@ -342,16 +345,20 @@ export function buildDraft(
   // and a reply where the product is a third of the text is an ad.
   const mentionParts: string[] = [];
   mentionParts.push(disclosure);
-  mentionParts.push(
-    template
-      ? post.product === 'anyfreebook'
-        ? 'It searches those sources live and marks each title as a real download, a borrow-only copy, or a catalogue record.'
-        : 'It runs the narration and caption steps together so the per-character cost is not what decides whether a channel is viable.'
-      : // The answer came from an article, so the article is what the mention
-        // should point at. Saying "it searches those sources live" in a thread
-        // about a Postgres index would be a non sequitur.
-        'The write-up above is from that codebase, which is a free-book aggregator.'
-  );
+  // Where a service cannot be promoted at all, the disclosure is the whole
+  // mention: who we are, no pitch, no link.
+  if (linksAllowed) {
+    mentionParts.push(
+      template
+        ? post.product === 'anyfreebook'
+          ? 'It searches those sources live and marks each title as a real download, a borrow-only copy, or a catalogue record.'
+          : 'It runs the narration and caption steps together so the per-character cost is not what decides whether a channel is viable.'
+        : // The answer came from an article, so the article is what the mention
+          // should point at. Saying "it searches those sources live" in a thread
+          // about a Postgres index would be a non sequitur.
+          'The write-up above is from that codebase, which is a free-book aggregator.'
+    );
+  }
 
   if (includeLink && article) {
     mentionParts.push(`Longer write-up: ${article.url}`);

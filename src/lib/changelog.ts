@@ -23,6 +23,27 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    date: '2026-10-28',
+    area: 'Community',
+    title: 'The Reddit system now reads threads it can actually answer',
+    changes: [
+      'Discovery runs through each subreddit’s public feed, so it works from a machine that Reddit’s JSON API refuses. The published timestamps are real, so the freshness rule is applied to real data rather than to a guess.',
+      'A reply is only drafted when it answers the thread. If no template fits and no article matches, nothing is drafted and the thread is left for a person — a reply that ignores the question is what gets an account banned.',
+      'Technical threads are answered from the article that matches them, so the reply carries the part of the write-up that addresses the question.',
+      'Every draft still goes to the operator’s review queue at /admin/reddit. Nothing is posted automatically, ever.',
+    ],
+  },
+  {
+    date: '2026-10-28',
+    area: 'Site',
+    title: 'A changelog, and an honest count of our sources',
+    changes: [
+      'A “What’s new” page, listing every change that reached production and the day it went live.',
+      'A sources page explaining each open-access library: what it holds, its licence, and whether a result from it carries a real file.',
+      'The site said “7 open-access sources” in eight places while the registry held twelve. The count is now derived from the registry, so it cannot drift again.',
+    ],
+  },
+  {
     date: '2026-10-27',
     area: 'Stability',
     title: 'The app no longer shows a raw client-side error',

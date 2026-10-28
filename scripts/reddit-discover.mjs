@@ -28,7 +28,10 @@ const ROOT = path.resolve(__dirname, '..');
 /** The same subreddits the app watches. Kept in sync with src/lib/reddit/targets.ts. */
 const TARGETS = [
   'freebooks',
-  'reading',
+  'Booksuggestions',
+  'books',
+  'textbooks',
+  'matheducation',
   'educational-tools',
   'SideProject',
   'webdev',
@@ -273,7 +276,7 @@ use feed unless you are on a home connection and want the extra fields.
     // know which subreddits belong to it, and the list is small enough that
     // keeping it here is clearer than fetching it.
     const map = {
-      anyfreebook: ['freebooks', 'reading', 'educational-tools', 'SideProject', 'Nigeria'],
+      anyfreebook: ['freebooks', 'Booksuggestions', 'books', 'textbooks', 'educational-tools', 'SideProject', 'Nigeria'],
       afristudio: ['LocalLLaMA', 'ContentCreators', 'ArtificialInteligence', 'SaaS', 'FlutterDev'],
     };
     subs = (map[args.product] || []).filter((s) => subs.includes(s));
@@ -315,6 +318,17 @@ use feed unless you are on a home connection and want the extra fields.
           : await fetchSubredditFeedWithBackoff(subreddit, args.sort);
       listings[subreddit] = children;
       console.log(`r/${subreddit}: ${children.length} threads`);
+
+      // Keep what was read. Reddit rate-limits hard, so re-fetching a feed to
+      // look at it again is expensive; the file makes the last run analysable
+      // without another request.
+      const saveDir = path.join(ROOT, '.reddit-cache');
+      fs.mkdirSync(saveDir, { recursive: true });
+      const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+      fs.writeFileSync(
+        path.join(saveDir, `${subreddit}-${args.sort}-${stamp}.json`),
+        JSON.stringify(children, null, 2)
+      );
     } catch (err) {
       errors.push(err.message);
       console.error(err.message);

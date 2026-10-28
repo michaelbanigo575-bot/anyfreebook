@@ -45,3 +45,4 @@ docs/posts/out/
 # Supabase CLI link state â€” holds the project ref and the pooler connection string
 supabase/.temp/
 relocate-phone-media.ps1
+.reddit-cache/

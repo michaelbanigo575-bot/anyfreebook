@@ -19,6 +19,10 @@ export async function syncTargets(seed: RedditTarget[]): Promise<void> {
 
   const { data: existing } = await sb.from('reddit_targets').select('id, product, subreddit');
 
+  const seeded = new Set(
+    seed.map((t) => `${t.product}:${t.subreddit.toLowerCase()}`)
+  );
+
   for (const target of seed) {
     const match = (existing || []).find(
       (r: Row) => r.product === target.product && String(r.subreddit).toLowerCase() === target.subreddit.toLowerCase()
@@ -51,6 +55,19 @@ export async function syncTargets(seed: RedditTarget[]): Promise<void> {
         active: target.active,
       });
     }
+  }
+
+  // A target the code no longer lists is a community we have stopped
+  // watching. It is deactivated rather than deleted, so the threads we
+  // already found keep pointing at the right row.
+  //
+  // This matters more than it sounds: r/reading turned out to be the town of
+  // Reading in Berkshire, not a community about reading books. Leaving it
+  // active would have meant drafting replies to a town's discussions.
+  for (const row of existing || []) {
+    const key = `${row.product}:${String(row.subreddit).toLowerCase()}`;
+    if (seeded.has(key)) continue;
+    await sb.from('reddit_targets').update({ active: false }).eq('id', row.id);
   }
 }
 

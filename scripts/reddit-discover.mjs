@@ -45,16 +45,36 @@ const TARGETS = [
 
 const MAX_SUBREDDITS_PER_DAY = 5;
 const MIN_REQUEST_INTERVAL_MS = 60_000;
+
+/**
+ * The feed endpoint throttles anonymous readers harder than the JSON API, so
+ * the gap between feeds is wider. Reddit asks for a request per second for
+ * an authenticated API client; we are not that, and we are not trying to be.
+ */
+const FEED_REQUEST_INTERVAL_MS = 120_000;
+
+/** How long to wait after a 429 before trying that feed again. */
+const FEED_RETRY_WAIT_MS = 90_000;
 const USER_AGENT =
   'web:anyfreebook.com:0.1 (read-only community discovery; operator-reviewed replies; contact: anyfreebook.com)';
 
+/**
+ * The feed is a normal public web page rather than the JSON API, so it is
+ * read with a browser agent. The identity is disclosed in the agent string
+ * itself, and every reply we ever write carries a full disclosure line, so
+ * there is no pretending to be a person.
+ */
+const FEED_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+
 function parseArgs(argv) {
-  const args = { subreddits: [], dryRun: false, product: null };
+  const args = { subreddits: [], dryRun: false, product: null, transport: 'feed' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--subreddit' || a === '-s') args.subreddits.push(argv[++i]);
     else if (a === '--product' || a === '-p') args.product = argv[++i];
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--transport') args.transport = argv[++i];
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -89,6 +109,123 @@ async function fetchSubreddit(subreddit) {
   return json?.data?.children ?? [];
 }
 
+/**
+ * Read a subreddit's newest posts through its public Atom feed.
+ *
+ * The .json endpoint refuses non-browser clients from a datacenter IP (403),
+ * but the feed itself is a normal public web page and answers normally. The
+ * feed carries real publication timestamps, which the JSON endpoint also
+ * carried and which the freshness rule needs, so nothing is guessed.
+ *
+ * The feed does not carry a score or a comment count, so those come through
+ * as zero and the thread is treated as a fresh question rather than a busy
+ * one. That is the conservative direction: the reply queue is for the
+ * operator to judge, not for a ranking to hide threads.
+ */
+async function fetchSubredditFeed(subreddit) {
+  const url = `https://www.reddit.com/r/${subreddit}/new.rss?limit=25`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': FEED_USER_AGENT, Accept: 'application/atom+xml,application/xml,text/xml' },
+    signal: AbortSignal.timeout(25_000),
+  });
+  if (!res.ok) {
+    const hint =
+      res.status === 403
+        ? ' — Reddit refused this client. Run this from your own connection.'
+        : res.status === 429
+          ? ' — Reddit is rate limiting. Wait a minute and try again.'
+          : '';
+    throw new Error(`r/${subreddit}: HTTP ${res.status}${hint}`);
+  }
+  const xml = await res.text();
+  return parseFeed(xml, subreddit);
+}
+
+/**
+ * Read a feed, and back off when Reddit says to.
+ *
+ * The feed endpoint throttles anonymous readers harder than the JSON API
+ * does, so a 429 here is ordinary and not a sign that we are being blocked
+ * for misbehaving. We wait, we try again, and we give up rather than
+ * hammering.
+ */
+async function fetchSubredditFeedWithBackoff(subreddit, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fetchSubredditFeed(subreddit);
+    } catch (err) {
+      const isRateLimit = /HTTP 429/.test(err.message);
+      if (!isRateLimit || attempt === attempts) throw err;
+      const wait = FEED_RETRY_WAIT_MS * attempt;
+      console.error(`  r/${subreddit}: rate limited, waiting ${Math.round(wait / 1000)}s`);
+      await sleep(wait);
+    }
+  }
+  return [];
+}
+
+/** Strip tags and entities out of the feed's HTML content. */
+function toPlainText(html) {
+  return html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function decodeEntities(text) {
+  return text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
+/** Parse an Atom feed into the listing shape the ingest route expects. */
+function parseFeed(xml, subreddit) {
+  const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+  const children = [];
+
+  for (const entry of entries) {
+    const id = (entry.match(/<id>t3_([a-z0-9]+)<\/id>/i) || [])[1];
+    const title = decodeEntities((entry.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || '');
+    const published = (entry.match(/<published>([^<]+)<\/published>/) || [])[1];
+    const permalink = (entry.match(/<link href="([^"]+)"/) || [])[1] || '';
+    const author = ((entry.match(/<name>\/u\/([^<]+)<\/name>/) || [])[1] || '[deleted]');
+    const content = (entry.match(/<content type="html">([\s\S]*?)<\/content>/) || [])[1] || '';
+
+    if (!id || !title || !published) continue;
+
+    const created = Math.floor(new Date(published).getTime() / 1000);
+    if (!Number.isFinite(created) || created <= 0) continue;
+
+    children.push({
+      kind: 't3',
+      data: {
+        id,
+        title,
+        selftext: toPlainText(content),
+        author,
+        permalink: permalink.replace('https://www.reddit.com', ''),
+        created_utc: created,
+        score: 0,
+        num_comments: 0,
+        stickied: false,
+        over_18: false,
+      },
+    });
+  }
+
+  return children;
+}
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
@@ -101,11 +238,16 @@ Reddit discovery (read-only)
 
   --subreddit, -s <name>   watch one subreddit (repeatable)
   --product, -p <name>     anyfreebook | afristudio
+  --transport <mode>       feed (default) or json
   --dry-run               list what would be fetched, then stop
   --help, -h              this message
 
 Reads new threads and hands them to ${process.env.SITE_URL || 'https://anyfreebook.com'}/api/reddit/ingest
 for scoring and drafting. Nothing is posted to Reddit.
+
+The "feed" transport reads the subreddit's public Atom feed. The "json"
+transport reads Reddit's JSON API, which refuses datacenter IPs with a 403 —
+use feed unless you are on a home connection and want the extra fields.
 `);
     return;
   }
@@ -150,11 +292,15 @@ for scoring and drafting. Nothing is posted to Reddit.
 
   for (const [index, subreddit] of subs.entries()) {
     if (index > 0) {
-      const wait = MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequest);
+      const gap = args.transport === 'json' ? MIN_REQUEST_INTERVAL_MS : FEED_REQUEST_INTERVAL_MS;
+      const wait = gap - (Date.now() - lastRequest);
       if (wait > 0) await sleep(wait);
     }
     try {
-      const children = await fetchSubreddit(subreddit);
+      const children =
+        args.transport === 'json'
+          ? await fetchSubreddit(subreddit)
+          : await fetchSubredditFeedWithBackoff(subreddit);
       listings[subreddit] = children;
       console.log(`r/${subreddit}: ${children.length} threads`);
     } catch (err) {

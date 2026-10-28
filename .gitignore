@@ -46,3 +46,8 @@ docs/posts/out/
 supabase/.temp/
 relocate-phone-media.ps1
 .reddit-cache/
+public/guides/*.html
+public/guides/*.body.html
+content/guides/_p*.md
+content/guides/_trim*.py
+content/guides/renderer-test.json

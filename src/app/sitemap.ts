@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { getAllBooks, getAllCategories } from '@/lib/data';
 import { BLOG_POSTS } from '@/lib/blogPosts';
 import { createServiceClient } from '@/lib/supabase/server';
+import { GUIDES } from '@/lib/guides';
 
 async function getPublishedWorkPages(baseUrl: string): Promise<MetadataRoute.Sitemap> {
   try {
@@ -38,6 +39,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${baseUrl}/sources`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/changelog`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${baseUrl}/guides`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    ...GUIDES.map((guide) => ({
+      url: `${baseUrl}/guides/${guide.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
   ];
 
   // NOTE: no lastModified on category/book entries. These come from the static

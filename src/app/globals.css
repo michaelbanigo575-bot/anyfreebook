@@ -204,6 +204,138 @@
   }
 }
 
+/* The body of a guide, as rendered on /guides/[slug]. The guide is written
+   as a document, so it reads like one: a measure that is comfortable to read,
+   real headings, and tables that survive a narrow screen. */
+.guide-body {
+  max-width: 68ch;
+}
+
+.guide-body h2 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 2.6rem 0 0.9rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 2px solid var(--primary);
+  scroll-margin-top: 6rem;
+}
+
+.guide-body h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 1.8rem 0 0.6rem;
+  color: var(--text);
+  scroll-margin-top: 6rem;
+}
+
+.guide-body h4 {
+  font-size: 1.02rem;
+  font-weight: 700;
+  margin: 1.4rem 0 0.4rem;
+}
+
+.guide-body p {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin: 0 0 1rem;
+}
+
+.guide-body ul,
+.guide-body ol {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.guide-body li {
+  margin-bottom: 0.4rem;
+}
+
+.guide-body li > ul,
+.guide-body li > ol {
+  margin-top: 0.4rem;
+}
+
+.guide-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.guide-body a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guide-body blockquote {
+  margin: 1.4rem 0;
+  padding: 0.9rem 1.2rem;
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.guide-body blockquote p {
+  margin: 0;
+  color: var(--text);
+  font-style: italic;
+}
+
+.guide-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.4rem 0 1.6rem;
+  font-size: 0.9rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.guide-body th {
+  background: var(--primary);
+  color: #fff;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.guide-body td {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border-subtle);
+  vertical-align: top;
+  color: var(--text-secondary);
+}
+
+.guide-body tbody tr:nth-child(even) td {
+  background: var(--bg-secondary);
+}
+
+.guide-body code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.86em;
+  background: var(--bg-secondary);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+.guide-body pre {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  margin: 0 0 1.2rem;
+}
+
+.guide-body hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 2rem 0;
+}
+
 /* Users can turn animations off in Settings. */
 html[data-animations='off'] *,
 html[data-animations='off'] *::before,

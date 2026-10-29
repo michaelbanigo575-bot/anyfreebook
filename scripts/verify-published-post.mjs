@@ -76,6 +76,14 @@ const published = decode(
   articleHtml
     .replace(/<script[\s\S]*?<\/script>/g, '')
     .replace(/<style[\s\S]*?<\/style>/g, '')
+    // A link's text and its URL both matter, and the URL lives in an
+    // attribute — stripping tags would lose it and change the word order
+    // (Dev.to writes the href before the text). Put them back in the
+    // source's shape: "text (url)".
+    .replace(
+      /<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi,
+      (_m, href, text) => `${text} (${href})`
+    )
     .replace(/<[^>]+>/g, ' ')
 );
 

@@ -2,7 +2,7 @@
 title: "Five Free Back to School Guides: Encouragement Strategies, Study Plans and Reading Lists for Students, Lecturers and Researchers"
 description: "Five free PDF guides for going back to school: a 30-day re-entry plan for returning students, a first-30-days plan for freshers, a reading and writing plan for researchers, a first-week teaching plan for lecturers, and a map of the free textbooks and open courseware worth a term."
 tags: education, study, backtoschool, productivity
-published: false
+published: true
 cover_image: https://anyfreebook.com/api/og?title=Five%20Free%20Back%20to%20School%20Guides%3A%20Study%20Plans%20for%20Students%2C%20Lecturers%20and%20Researchers&subtitle=Free%20PDF%20guides%20from%20ANYFREEBOOK&type=book
 ---
 

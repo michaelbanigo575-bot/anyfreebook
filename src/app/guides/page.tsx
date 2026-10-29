@@ -89,6 +89,12 @@ export default function GuidesIndexPage() {
                 >
                   Read and download
                 </Link>
+                <Link
+                  href={`/read/${guide.slug}`}
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text)] hover:underline"
+                >
+                  Read it as a book →
+                </Link>
                 <span className="text-xs text-[var(--text-muted)]">
                   {guide.sections.length} sections · PDF · free
                 </span>

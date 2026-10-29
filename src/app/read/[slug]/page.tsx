@@ -260,6 +260,14 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
           </a>
           {pub.external_url && (
             <a
+              href={`/api/publications/${pub.slug}/download?format=pdf`}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[var(--radius-lg)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-all"
+            >
+              📕 Download the PDF
+            </a>
+          )}
+          {pub.external_url && (
+            <a
               href={pub.external_url}
               target="_blank"
               rel="noopener noreferrer"

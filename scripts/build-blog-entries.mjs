@@ -96,6 +96,17 @@ const POSTS = [
     readTime: '6 min',
     date: 'Oct 28, 2026',
   },
+  {
+    file: 'docs/posts/10-back-to-school-guides-collection.md',
+    slug: 'five-free-back-to-school-guides',
+    title:
+      'Five Free Back to School Guides: Encouragement Strategies, Study Plans and Reading Lists for Students, Lecturers and Researchers',
+    description:
+      'Five free PDF guides for going back to school: a 30-day re-entry plan for returning students, a first-30-days plan for freshers, a reading and writing plan for researchers, a first-week teaching plan for lecturers, and a map of the free textbooks and open courseware worth a term.',
+    category: 'Guides',
+    readTime: '7 min',
+    date: 'Oct 29, 2026',
+  },
 ];
 
 let source = '';

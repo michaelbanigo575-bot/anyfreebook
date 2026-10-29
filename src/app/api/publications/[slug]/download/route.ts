@@ -104,8 +104,8 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   const format = (request.nextUrl.searchParams.get('format') || 'epub').toLowerCase();
-  if (format !== 'epub' && format !== 'txt') {
-    return NextResponse.json({ error: 'format must be epub or txt' }, { status: 400 });
+  if (format !== 'epub' && format !== 'txt' && format !== 'pdf') {
+    return NextResponse.json({ error: 'format must be epub, txt or pdf' }, { status: 400 });
   }
 
   const data = await getPublicationBySlug(params.slug);
@@ -119,6 +119,28 @@ export async function GET(
 
   const chapters = await getPublishedChapters(pub.id);
   const filename = safeFilename(pub.title);
+
+  // A work with an attached PDF can always be fetched as that PDF, whether or
+  // not it also has text of its own. The guide is laid out as a document, and
+  // the PDF is the document.
+  if (format === 'pdf' && pub.external_url) {
+    try {
+      const upstream = await fetch(pub.external_url, { redirect: 'follow' });
+      if (!upstream.ok) {
+        return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
+      }
+      const buf = await upstream.arrayBuffer();
+      return new NextResponse(buf, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${filename}.pdf"`,
+          'Cache-Control': 'public, max-age=300',
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
+    }
+  }
 
   // A book published as an attached file has no body and no chapters: the
   // file IS the work. Serve it as the download, so "Download EPUB" gives the

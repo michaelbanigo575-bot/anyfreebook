@@ -51,3 +51,4 @@ public/guides/*.body.html
 content/guides/_p*.md
 content/guides/_trim*.py
 content/guides/renderer-test.json
+_scan.py

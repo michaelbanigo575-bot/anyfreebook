@@ -2,7 +2,7 @@
 title: "The Fresher's First 30 Days: A Starter Study Plan for New University Students"
 description: "A week-by-week starter plan for a first-year student: what week one is really for, how to read, take notes, and catch up when behind."
 tags: education, university, study, productivity
-published: false
+published: true
 cover_image: https://anyfreebook.com/api/og?title=The%20Fresher%27s%20First%2030%20Days%3A%20A%20Starter%20Study%20Plan%20for%20New%20University%20Students&subtitle=Free+PDF+guide&type=book
 ---
 
@@ -24,7 +24,9 @@ By the end of the first week you should have:
 4. **Three names.** One lecturer or module leader, one administrative contact, one classmate who seems to know how things work.
 5. **A place to work.** On campus, find the room you will actually use. At home, clear the kitchen table.
 
-On day one the guide says the most important thing you do is find out where the reading list lives and how you submit work. Two questions, asked at the induction desk, the lecturer, or a second-year. Write the answers down.### The lecture-to-review ratio
+On day one the guide says the most important thing you do is find out where the reading list lives and how you submit work. Two questions, asked at the induction desk, the lecturer, or a second-year. Write the answers down.
+
+### The lecture-to-review ratio
 
 The rough, tested rule: **for every hour of lecture, plan two hours of independent work.** One hour preparing the next lecture, one hour reviewing the last. A module with 10 lecture hours a week means 20 hours of independent work, which sounds brutal until you realise reading is not the same as sitting at a desk staring at a wall.
 
@@ -36,7 +38,9 @@ The rough, tested rule: **for every hour of lecture, plan two hours of independe
 | Group project module | 6 | 20-25 | 26-31 | Yes, plus meeting time you cannot control |
 | Part-time or employed | 5 | 12-15 | 17-20 | Yes, cut lecture replay, keep reading |
 
-The ratio is not about precision. Students under-budget independent work, then blame themselves at the end. Budget it up front.### The three ways a week can go
+The ratio is not about precision. Students under-budget independent work, then blame themselves at the end. Budget it up front.
+
+### The three ways a week can go
 
 Every week goes one of three ways, and the difference is almost always whether you read before the session that needed it. A **type A week** is prepared: you read first, the lecture confirms what you half-know, the tutorial feels like a conversation. A **type B week** is reactive: you did not read, you understand perhaps 40 per cent in the room, and you spend Sunday reconstructing the lecture from slides. A **type C week** is detached: you did not read, the lecture went over your head, you avoided the tutorial, and you have decided this week will be reclaimed later. It will not be — it costs 2 hours of avoidance now, then 15 hours of catch-up in week seven plus guilt.
 
@@ -57,7 +61,9 @@ And a set of reminders about where to keep notes:
 
 ### The timetable, the catch-up plan, the money
 
-The timetable section gives you a template and then a 30-minute procedure for building your real one: list every fixed commitment first, mark your peak hours, then place study into the gaps. Saturday and Sunday carry the flex, so if you are behind, Sunday's catch-up blocks absorb the gap without destroying the week.When you fall behind, the guide is specific about it in five steps — measure the gap honestly, triage by category, apply a plan matched to how far behind you are, use the five-hour catch-up day, and prevent the next gap. It also lists the ten mistakes that cost students whole terms, and the three that matter most:
+The timetable section gives you a template and then a 30-minute procedure for building your real one: list every fixed commitment first, mark your peak hours, then place study into the gaps. Saturday and Sunday carry the flex, so if you are behind, Sunday's catch-up blocks absorb the gap without destroying the week.
+
+When you fall behind, the guide is specific about it in five steps — measure the gap honestly, triage by category, apply a plan matched to how far behind you are, use the five-hour catch-up day, and prevent the next gap. It also lists the ten mistakes that cost students whole terms, and the three that matter most:
 
 - **Treating the first week as a study sprint.** Week one is for building the machine, not for running it.
 - **Choosing a timetable you would like rather than one you can keep.** A timetable that fits your life is worth more than an ambitious one you abandon.

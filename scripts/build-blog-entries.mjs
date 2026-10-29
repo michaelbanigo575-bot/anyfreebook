@@ -46,6 +46,56 @@ const POSTS = [
     readTime: '7 min',
     date: 'Oct 28, 2026',
   },
+  {
+    file: 'docs/posts/05-back-to-school-encouragement-strategies.md',
+    slug: 'back-to-school-encouragement-strategies',
+    title: 'Back to School Encouragement Strategies: A 30-Day Re-entry Plan for Returning Students',
+    description:
+      'A 30-day plan for restarting a course after a break: a seven-day reset before term, weekly routines, money advice and free books.',
+    category: 'Guides',
+    readTime: '6 min',
+    date: 'Oct 28, 2026',
+  },
+  {
+    file: 'docs/posts/06-first-30-days-university-starter-plan.md',
+    slug: 'first-30-days-university-starter-plan',
+    title: "The Fresher's First 30 Days: A Starter Study Plan for New University Students",
+    description:
+      'A week-by-week starter plan for a first-year student: what week one is really for, how to read, take notes, and catch up when behind.',
+    category: 'Guides',
+    readTime: '6 min',
+    date: 'Oct 28, 2026',
+  },
+  {
+    file: 'docs/posts/07-researchers-reentry-plan.md',
+    slug: 'researchers-reentry-plan',
+    title: "The Researcher's Restart: A Systematic Reading and Writing Plan for New Researchers",
+    description:
+      'A working system for new researchers: triage a literature you cannot read, build an evidence ledger, submit a first paper in twelve weeks.',
+    category: 'Guides',
+    readTime: '6 min',
+    date: 'Oct 28, 2026',
+  },
+  {
+    file: 'docs/posts/08-lecturer-reentry-plan.md',
+    slug: 'lecturer-reentry-plan',
+    title: "The Lecturer's Re-entry Plan: Designing an Encouraging First Week of Teaching",
+    description:
+      'A 14-day plan for teaching again: rebuild the course, design a first week that does not humiliate anyone, notice the struggling student.',
+    category: 'Guides',
+    readTime: '6 min',
+    date: 'Oct 28, 2026',
+  },
+  {
+    file: 'docs/posts/09-free-study-resources-reading-plans.md',
+    slug: 'free-study-resources-reading-plans',
+    title: 'Free Study Resources and Reading Plans: 150 Books and Courses That Cost Nothing',
+    description:
+      'The open libraries, free textbooks and courseware worth a term, plus six checks to tell a real download from a catalogue record.',
+    category: 'Guides',
+    readTime: '6 min',
+    date: 'Oct 28, 2026',
+  },
 ];
 
 let source = '';

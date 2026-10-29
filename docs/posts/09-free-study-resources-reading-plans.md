@@ -2,16 +2,18 @@
 title: "Free Study Resources and Reading Plans: 150 Books and Courses That Cost Nothing"
 description: "The open libraries, free textbooks and courseware worth a term, plus six checks to tell a real download from a catalogue record."
 tags: books, opensource, opendata, education
-published: false
+published: true
 cover_image: https://anyfreebook.com/api/og?title=Free%20Study%20Resources%20and%20Reading%20Plans%3A%20150%20Books%20and%20Courses%20That%20Cost%20Nothing&subtitle=Free+PDF+guide&type=book
 ---
 
 You have been told a book is free. You clicked through, saw a cover image and the word "Read", and either hit a paywall three paragraphs in or got forty pages of a two-hundred-page book and a "buy" button. You downloaded it anyway, and it now sits in a folder called PDFs you have not opened since. You have done this eleven times.
 
 The problem is not that free books are hard to find. It is that "free" and "available" are the same thing, and they are not. Libraries are full of records: metadata about books you cannot download, catalogue entries for titles whose only copy sits in a reading room in Boston, and links that resolve to a lending queue rather than a file.
+
 ## What the guide is
 
 The guide is a working map of the open shelf — what each source actually holds, how large it is, what format it uses, what it is good for, and where it stops — followed by the procedures for turning any of it into a plan you finish.
+
 ### The twelve open libraries
 
 The working shelf. Sizes are orders of magnitude, not exact counts, and the guide says so.
@@ -84,16 +86,16 @@ The full guide is free to download here: https://anyfreebook.com/guides/free-stu
 
 ## The search behind it
 
-ANYFREEBOOK searches these libraries live — Project Gutenberg, Open Library, the Internet Archive, Google Books, PubMed Central, DOAJ, LibriVox, OpenAlex, Wikisource, Europeana, Zenodo and the Open Textbook Library — and marks every result as a **real download**, a **borrow-only copy**, or a **catalogue record**. That labelling is the product: a search engine cannot tell you the link is a lending queue, and neither can most library catalogues, so a student ends up downloading forty samples and calling it research.
+ANYFREEBOOK searches these libraries live — Project Gutenberg, Open Library, the Internet Archive, Google Books, PubMed Central, DOAJ, LibriVox, OpenAlex, Wikisource, Europeana, Zenodo and the Open Textbook Library — and marks every result as a **real download**, a **borrow-only copy**, or a **catalogue record**. That labelling is the product: a search engine cannot tell you the link is a lending queue, and neither can most library catalogues, so a student ends up downloading forty samples and calls it research.
 
 Where the shelf is thin, the guide says so, and points to a real alternative. Its common mistakes are about over-collection:
 
 - **Treating a search result as a book.** Try one title end to end before trusting it.
 - **Downloading a sample and calling it a book.** Read the last page of the introduction first.
-- **Building a list of fifty books.** Cut it to 40 per cent, then pick one as the current book.
 
+- **Building a list of fifty books.** Cut it to 40 per cent, then pick one as the current book.
 ## Send it on
 
-Send this to the person who has eleven PDFs and no reading list, or to the course convenor who assumes the reading list is a solved problem. It is free, and the six checks take three minutes.
+Send this to the person with eleven PDFs and no reading list, or to the course convenor who assumes the reading list is a solved problem. It is free, and the six checks take three minutes.
 
 If you need a plan rather than a shelf, the returning-student 30-day plan and the first-30-days plan turn a list into a week you can keep.

@@ -2,7 +2,7 @@
 title: "Back to School Encouragement Strategies: A 30-Day Re-entry Plan for Returning Students"
 description: "A 30-day plan for restarting a course after a break: a seven-day reset before term, weekly routines, money advice and free books."
 tags: productivity, study, backtoschool, education
-published: false
+published: true
 cover_image: https://anyfreebook.com/api/og?title=Back%20to%20School%20Encouragement%20Strategies%3A%20A%2030-Day%20Re-entry%20Plan%20for%20Returning%20Students&subtitle=Free+PDF+guide&type=book
 ---
 

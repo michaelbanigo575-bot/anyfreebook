@@ -2,7 +2,7 @@
 title: "The Lecturer's Re-entry Plan: Designing an Encouraging First Week of Teaching"
 description: "A 14-day plan for teaching again: rebuild the course, design a first week that does not humiliate anyone, notice the struggling student."
 tags: teaching, education, highered, productivity
-published: false
+published: true
 cover_image: https://anyfreebook.com/api/og?title=The%20Lecturer%27s%20Re-entry%20Plan%3A%20Designing%20an%20Encouraging%20First%20Week%20of%20Teaching&subtitle=Free+PDF+guide&type=book
 ---
 
@@ -15,6 +15,7 @@ Three things are true of almost every returning class, and the guide treats all 
 ## What the guide is
 
 The guide is a fourteen-day plan before teaching, then a four-week plan after, with concrete timings, marks, session plans and checklists. It is written for lecturers, tutors, teaching fellows and graduate teaching assistants.
+
 ### What the students are feeling, and what to do about it
 
 | What the student is feeling | How it appears in the room | The move that helps |
@@ -42,7 +43,9 @@ The guide also insists on a small set of commitments before term, because the re
 
 Each day is 60 to 90 minutes of actual work. Day 14 is an audit against last year to find what has to be rebuilt from scratch. Day 13 is a one-paragraph course promise — what a student can do by week 12 that they cannot do now — reduced to a single sentence used in week one. Day 12 rebuilds the session skeleton for weeks one to four, minute by minute. Day 11 chooses the three week-one readings and checks each is readable in under 40 minutes. Day 10 designs the low-stakes diagnostic: eight questions, ten minutes, ungraded, no notes. Day 9 publishes the deadline map.
 
-The guide's advice on scope is the part experienced lecturers recognise: returning lecturers tend to over-change. Sort every element into three buckets and be ruthless about the third:- **Keep.** Anything that worked, that students use, and that you can explain in one sentence. In most courses this is 60 to 70 per cent.
+The guide's advice on scope is the part experienced lecturers recognise: returning lecturers tend to over-change. Sort every element into three buckets and be ruthless about the third:
+
+- **Keep.** Anything that worked, that students use, and that you can explain in one sentence. In most courses this is 60 to 70 per cent.
 - **Change.** Anything that depends on a dead assumption: a pre-requisite nobody teaches any more, an assessment format students hated, a schedule that assumed a week of preparation you now know does not exist.
 - **Retire.** Anything kept from habit or guilt. A course with fifteen readings instead of twenty-five is a better course.
 

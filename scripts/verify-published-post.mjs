@@ -41,13 +41,36 @@ const decode = (s) =>
  * Only the article body counts. The rest of the page is Dev.to's own chrome —
  * "Powered by Algolia", "Add reaction", the comment box — and none of it is
  * the post, so including it would make the reverse check meaningless.
+ *
+ * The end of the body is found by walking the div nesting from the opening
+ * tag, not by looking for the comments section further down the page. A
+ * document can carry an "id=comments" anchor before the article has finished,
+ * and slicing there silently drops the last paragraphs — which then read as
+ * missing text that is actually published.
  */
-const bodyStart = html.indexOf('id="article-body"');
-const bodyEnd = html.indexOf('id="comments"', bodyStart);
-const articleHtml =
-  bodyStart === -1
-    ? html
-    : html.slice(bodyStart, bodyEnd === -1 ? html.length : bodyEnd);
+function extractArticleBody(html) {
+  const start = html.indexOf('id="article-body"');
+  if (start === -1) return html;
+
+  const open = html.lastIndexOf('<div', start);
+  if (open === -1) return html;
+
+  let depth = 0;
+  const tag = /<(\/?)div\b[^>]*>/g;
+  tag.lastIndex = open;
+  let match;
+  while ((match = tag.exec(html)) !== null) {
+    if (match[1] === '/') {
+      depth -= 1;
+      if (depth === 0) return html.slice(open, match.index);
+    } else {
+      depth += 1;
+    }
+  }
+  return html.slice(open);
+}
+
+const articleHtml = extractArticleBody(html);
 
 const published = decode(
   articleHtml

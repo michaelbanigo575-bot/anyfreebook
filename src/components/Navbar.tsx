@@ -42,6 +42,7 @@ export function Navbar() {
     { label: 'Feed', href: '/feed' },
     { label: 'Classrooms', href: '/classrooms' },
     { label: 'Institutions', href: '/institutions' },
+    { label: 'Free Guides', href: '/guides' },
     // Signed-in users reach Publish & Earn from their profile dashboard instead
     ...(user ? [] : [{ label: 'Publish & Earn', href: '/creators' }]),
     { label: 'Study Plan', href: '/study-plan' },

@@ -24,6 +24,19 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     date: '2026-10-28',
+    area: 'Guides',
+    title: 'Five free back-to-school guides, as PDFs and as web pages',
+    changes: [
+      'A 30-day re-entry plan for students returning to study after a break: the week before term, rebuilding the basics, and the day you cannot face it.',
+      'A first-30-days plan for new students: what week one actually looks like, notes that survive until March, and how to catch up without giving up.',
+      'A reading and writing plan for new researchers: finding a direction, reading a literature that is too big, and writing a first paper.',
+      'A first-week teaching plan for lecturers: designing a week that does not humiliate anyone, and noticing the student who is quietly struggling.',
+      'A reference to the free libraries, open textbooks, open courseware and open-access papers that actually exist — and how to tell a real download from a catalogue record that only looks free.',
+      'Every guide is a 24-plus page PDF, free to download, print and share, with the full text readable on the site as well.',
+    ],
+  },
+  {
+    date: '2026-10-28',
     area: 'Community',
     title: 'The Reddit system now reads threads it can actually answer',
     changes: [

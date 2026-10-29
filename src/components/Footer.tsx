@@ -37,6 +37,7 @@ const linkGroups = [
         { label: 'About', href: '/about' },
         { label: 'What’s New', href: '/changelog' },
         { label: 'Our Sources', href: '/sources' },
+        { label: 'Free Guides', href: '/guides' },
         { label: 'FAQ', href: '/faq' },
         { label: 'Blog', href: '/blog' },
         { label: 'Contact', href: '/contact' },

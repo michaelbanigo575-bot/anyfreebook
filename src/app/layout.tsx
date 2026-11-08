@@ -12,7 +12,6 @@ import { BackButton } from '@/components/BackButton';
 import { PublicOnly } from '@/components/PublicChrome';
 import { themeBootstrapScript } from '@/lib/themes';
 import { preferencesBootstrapScript } from '@/lib/preferences';
-import { Analytics } from '@vercel/analytics/react';
 import { websiteSchema, organizationSchema } from '@/lib/schema';
 import { CATALOGUE } from '@/lib/catalogueStats';
 
@@ -130,7 +129,6 @@ export default function RootLayout({
             </AudioProvider>
           </ThemeProvider>
         </AuthProvider>
-        <Analytics />
       </body>
     </html>
   );

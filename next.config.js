@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+    // Cloudflare Workers has no built-in image optimizer: serve images as-is
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       // Publication covers may be uploaded to storage or linked from anywhere

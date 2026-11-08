@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "anyfreebook",
+  "main": "cf-worker.mjs",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Replaces the crons in vercel.json (times are UTC, same as before)
+  "triggers": {
+    "crons": ["0 3 * * *", "0 8 * * *"]
+  }
+}

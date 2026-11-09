@@ -8,6 +8,9 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "kv_namespaces": [
+    { "binding": "NEXT_INC_CACHE_KV", "id": "9c522d0e098a4ed5911fdc7ee1e34041" }
+  ],
   // Replaces the crons in vercel.json (times are UTC, same as before)
   "triggers": {
     "crons": ["0 3 * * *", "0 8 * * *"]

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { cronAuthorized } from '@/lib/cronAuth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { pingIndexNow } from '@/lib/indexnow';
 
@@ -71,7 +72,11 @@ async function postMastodon(pub: NewPub): Promise<string | null> {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!cronAuthorized(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const pubs = await findNewPublications();
 
   const outcomes = await Promise.all(pubs.flatMap(p => [postDiscord(p), postMastodon(p)]));

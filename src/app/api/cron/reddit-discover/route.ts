@@ -1,3 +1,4 @@
+import { cronAuthorized } from '@/lib/cronAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { REDDIT_TARGETS } from '@/lib/reddit/targets';
 import { discover } from '@/lib/reddit/discovery';
@@ -32,8 +33,7 @@ export const dynamic = 'force-dynamic';
  * across restarts.
  */
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get('authorization') !== `Bearer ${secret}`) {
+  if (!cronAuthorized(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -9,6 +9,7 @@ import { NotificationsBell } from './NotificationsBell';
 import { CategoryMenu } from './CategoryMenu';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTheme } from './ThemeProvider';
+import { MoreMenu, AccountMenu } from './NavMenus';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -49,6 +50,11 @@ export function Navbar() {
     { label: 'Rewards', href: '/rewards' },
   ];
 
+  // Desktop shows five primary links; the rest live under "More" so the bar never overflows.
+  const primaryHrefs = ['/explore', '/audiobooks', '/classrooms', user ? '/feed' : '/creators'];
+  const primaryLinks = navLinks.filter(l => primaryHrefs.includes(l.href));
+  const moreLinks = navLinks.filter(l => !primaryHrefs.includes(l.href) && l.href !== '/');
+
   return (
     <>
       <header
@@ -75,25 +81,37 @@ export function Navbar() {
             </Link>
 
             {/* Desktop nav links */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.map(link => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
+              {primaryLinks.map(link => {
+                const active = pathname === link.href || pathname?.startsWith(link.href + '/');
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`px-2.5 xl:px-3 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-colors ${
+                      active
+                        ? 'text-[var(--text)] bg-[var(--surface-hover)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)]'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <CategoryMenu />
+              <MoreMenu links={moreLinks} />
             </nav>
 
             {/* Desktop search + actions */}
-            <div className="hidden md:flex items-center gap-3">
-              <div className="w-72">
+            <div className="hidden md:flex items-center gap-1.5 xl:gap-3">
+              <div className="hidden xl:block w-64 2xl:w-72">
                 <SearchBar compact />
               </div>
-              <LanguageSwitcher />
+              <Link href="/search" aria-label="Search" className="xl:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </Link>
+              <LanguageSwitcher compact />
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors"
@@ -111,21 +129,11 @@ export function Navbar() {
               </button>
               <NotificationsBell />
               {user ? (
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                    {(profile?.display_name || user.email || '?')[0].toUpperCase()}
-                  </div>
-                  <span className="text-sm font-medium text-[var(--text)] max-w-[100px] truncate">
-                    {profile?.display_name || user.email}
-                  </span>
-                </Link>
+                <AccountMenu />
               ) : (
                 <Link
                   href="/login"
-                  className="px-4 py-2 rounded-lg bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-md transition-all"
+                  className="px-4 py-2 whitespace-nowrap rounded-lg bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-md transition-all"
                 >
                   Sign In
                 </Link>
@@ -184,6 +192,13 @@ export function Navbar() {
                     className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
                   >
                     {profile?.display_name || user.email}
+                  </Link>
+                  <Link
+                    href={profile?.is_creator ? '/creators/dashboard' : '/creators'}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                  >
+                    {profile?.is_creator ? 'Creator dashboard' : 'Become a creator'}
                   </Link>
                   <button
                     onClick={() => { signOut(); setMobileMenuOpen(false); }}

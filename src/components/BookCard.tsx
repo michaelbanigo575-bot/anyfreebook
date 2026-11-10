@@ -15,25 +15,28 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
   // go to our detail page (which resolves real download links).
   const isExternal = !!book.sourceUrl && !!book.sourceType && book.sourceType !== 'local';
   const href = isExternal ? book.sourceUrl! : `/book/${book.slug}`;
-  const contentTypeBadge = {
-    AUDIOBOOK: { emoji: '🎧', bg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' },
-    COMIC: { emoji: '🦸', bg: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-    NOVEL: { emoji: '📖', bg: 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300' },
-    MAGAZINE: { emoji: '📰', bg: 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300' },
-    BOOK: { emoji: '📚', bg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-  }[book.contentType] || { emoji: '📚', bg: 'bg-blue-100 text-blue-700' };
+  const typeMeta = {
+    AUDIOBOOK: { label: 'Audiobook', emoji: '🎧', tone: 'text-purple-600 dark:text-purple-300' },
+    COMIC: { label: 'Comic', emoji: '🦸', tone: 'text-amber-600 dark:text-amber-300' },
+    NOVEL: { label: 'Novel', emoji: '📖', tone: 'text-rose-600 dark:text-rose-300' },
+    MAGAZINE: { label: 'Magazine', emoji: '📰', tone: 'text-teal-600 dark:text-teal-300' },
+    BOOK: { label: 'Book', emoji: '📚', tone: 'text-blue-600 dark:text-blue-300' },
+  }[book.contentType] || { label: 'Book', emoji: '📚', tone: 'text-blue-600 dark:text-blue-300' };
+  const shownFormats = book.formats.slice(0, 3);
+  const extraFormats = book.formats.length - shownFormats.length;
 
   return (
-    <article className="group relative">
+    <article className="group relative h-full">
       <Link
         href={href}
         target={isExternal ? '_blank' : undefined}
         rel={isExternal ? 'noopener noreferrer' : undefined}
         className={`
-          block
+          block h-full outline-none
+          focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]
           ${size === 'featured'
             ? cardClass({ padding: 'p-5' })
-            : 'rounded-xl p-3 hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)] transition-all duration-300'
+            : 'rounded-2xl p-3 border border-transparent hover:border-[var(--border-subtle)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-300'
           }
           ease-[var(--ease-out-expo)]
         `}
@@ -49,18 +52,13 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
               className="relative z-[1] transition-transform duration-300
                 group-hover:-translate-y-1 group-hover:shadow-book-hover"
             />
-
-            {/* Content type badge */}
-            <span className={`
-              absolute -top-1.5 -right-1.5 z-20 text-[10px] font-bold px-1.5 py-0.5
-              rounded-full shadow-sm ${contentTypeBadge.bg}
-            `}>
-              {contentTypeBadge.emoji}
-            </span>
           </div>
 
           {/* Info */}
           <div className={`flex flex-col min-w-0 flex-1 ${size === 'compact' ? 'justify-center' : ''}`}>
+            <span className={`mb-1 text-[10px] font-semibold uppercase tracking-wider ${typeMeta.tone}`}>
+              <span aria-hidden>{typeMeta.emoji}</span> {typeMeta.label}
+            </span>
             <h3 className={`
               font-semibold text-[var(--text)] leading-snug
               ${size === 'featured' ? 'text-base line-clamp-2' : size === 'compact' ? 'text-sm line-clamp-1' : 'text-sm line-clamp-2'}
@@ -74,32 +72,26 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
 
             {/* Rating */}
             {book.rating > 0 && (
-              <div className="flex items-center gap-1 mt-1.5">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <svg key={star} className={`w-3 h-3 ${
-                      star <= Math.round(book.rating)
-                        ? 'text-amber-400'
-                        : 'text-neutral-300 dark:text-neutral-600'
-                    }`} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-[11px] text-[var(--text-muted)]">
-                  {book.rating.toFixed(1)} ({formatCount(book.ratingCount)})
-                </span>
+              <div className="flex items-center gap-1 mt-1.5 text-[11px] text-[var(--text-muted)]" aria-label={`Rated ${book.rating.toFixed(1)} out of 5`}>
+                <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span className="font-semibold text-[var(--text-secondary)]">{book.rating.toFixed(1)}</span>
+                <span>({formatCount(book.ratingCount)})</span>
               </div>
             )}
 
             {/* Formats + Stats */}
             <div className="mt-2">
               <div className="flex flex-wrap gap-1">
-                {book.formats.map(format => (
-                  <span key={format} className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
+                {shownFormats.map(format => (
+                  <span key={format} className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
                     {format}
                   </span>
                 ))}
+                {extraFormats > 0 && (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md text-[var(--text-muted)]">+{extraFormats}</span>
+                )}
               </div>
               {/* Engagement stats render only when the source gave us real
                   numbers. 0 means "unknown", not "zero" — never print 0 reads. */}

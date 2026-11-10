@@ -23,9 +23,9 @@ export function placeholderGradient(title: string): string {
 
 const SIZES = {
   xs:   { w: 48,  h: 72,  d: 8  },
-  sm:   { w: 80,  h: 120, d: 12 },
-  md:   { w: 128, h: 192, d: 18 },
-  lg:   { w: 200, h: 300, d: 26 },
+  sm:   { w: 72,  h: 108, d: 11 },
+  md:   { w: 108, h: 162, d: 15 },
+  lg:   { w: 170, h: 255, d: 22 },
   xl:   { w: 280, h: 420, d: 34 },
 };
 

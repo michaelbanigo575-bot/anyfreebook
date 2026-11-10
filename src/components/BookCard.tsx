@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { BookCover } from './BookCover';
 import { formatCount, type Book } from '@/lib/data';
 import { cardClass } from '@/lib/ui';
+import { TiltCard } from './TiltCard';
 
 interface BookCardProps {
   book: Book;
@@ -27,6 +28,7 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
 
   return (
     <article className="group relative h-full">
+      <TiltCard>
       <Link
         href={href}
         target={isExternal ? '_blank' : undefined}
@@ -36,12 +38,12 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
           focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)]
           ${size === 'featured'
             ? cardClass({ padding: 'p-5' })
-            : 'rounded-2xl p-3 border border-transparent hover:border-[var(--border-subtle)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-300'
+            : 'rounded-2xl p-2 border border-transparent hover:border-[var(--border-subtle)] hover:bg-[var(--surface)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all duration-300'
           }
           ease-[var(--ease-out-expo)]
         `}
       >
-        <div className={`flex ${size === 'featured' ? 'gap-5' : size === 'compact' ? 'flex-row gap-3' : 'flex-col gap-3'}`}>
+        <div className={`flex ${size === 'featured' ? 'gap-5' : size === 'compact' ? 'flex-row gap-3' : 'flex-col gap-2'}`}>
           {/* Cover */}
           <div className="relative flex-shrink-0 self-center">
             <BookCover
@@ -61,7 +63,7 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
             </span>
             <h3 className={`
               font-semibold text-[var(--text)] leading-snug
-              ${size === 'featured' ? 'text-base line-clamp-2' : size === 'compact' ? 'text-sm line-clamp-1' : 'text-sm line-clamp-2'}
+              ${size === 'featured' ? 'text-base line-clamp-2' : size === 'compact' ? 'text-sm line-clamp-1' : 'text-[13px] line-clamp-2'}
             `}>
               {book.title}
             </h3>
@@ -105,6 +107,7 @@ export function BookCard({ book, size = 'standard', priority }: BookCardProps) {
           </div>
         </div>
       </Link>
+      </TiltCard>
     </article>
   );
 }

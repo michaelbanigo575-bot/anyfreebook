@@ -26,7 +26,7 @@ export function BookGrid({ books, layout }: BookGridProps) {
           className="flex gap-2 md:gap-4 overflow-x-auto pb-4 px-1 pt-1 snap-x snap-mandatory scrollbar-none scroll-smooth"
         >
           {books.map((book, i) => (
-            <div key={book.id} className="snap-start flex-shrink-0 w-[160px] sm:w-[180px] md:w-[210px]">
+            <div key={book.id} className="snap-start flex-shrink-0 w-[128px] sm:w-[140px] md:w-[156px]">
               <BookCard book={book} priority={i < 5} />
             </div>
           ))}
@@ -73,7 +73,7 @@ export function BookGrid({ books, layout }: BookGridProps) {
   }
 
   return (
-    <div className="grid gap-2 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+    <div className="grid gap-x-2 gap-y-4 md:gap-x-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8">
       {books.map((book, i) => (
         <BookCard key={book.id} book={book} priority={i < 8} />
       ))}

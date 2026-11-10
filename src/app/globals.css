@@ -360,10 +360,34 @@ html[data-animations='off'] *::after {
   outline-offset: 2px;
 }
 
+/* ---- 3D pop-up card (pointer tilt, lift, glare) ---- */
+.tilt-card {
+  position: relative;
+  height: 100%;
+  border-radius: 1rem;
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+.tilt-card:hover {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-6px) scale(1.04);
+  box-shadow: 0 22px 40px -14px rgba(0, 0, 0, 0.35), 0 8px 14px -8px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+.tilt-glare {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(255,255,255,0.28), transparent 55%);
+  transition: opacity 0.3s ease;
+}
+.tilt-card:hover .tilt-glare { opacity: 1; }
+.tilt-card .book3d-scene { transform: translateZ(0); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+.tilt-card:hover .book3d-scene { transform: translateZ(36px); }
+
 /* ---- 3D interactive book cover (hover to spin) ---- */
 .book3d-scene {
   perspective: 900px;
   display: inline-block;
+  box-shadow: 0 10px 18px -8px rgba(0,0,0,0.45), 0 2px 4px rgba(0,0,0,0.25);
 }
 .book3d {
   position: relative;
@@ -375,23 +399,42 @@ html[data-animations='off'] *::after {
   will-change: transform;
 }
 .book3d-scene:hover .book3d {
-  animation: book3d-spin 3.4s linear infinite; /* 30% slower */
+  /* ease-in-out turn with a small tip-up, then a pause on the front cover */
+  animation: book3d-spin 5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 @keyframes book3d-spin {
-  to { transform: rotateY(-376deg); }   /* resting -16deg → full 360 turn, seamless loop */
+  0%   { transform: rotateX(0deg)  rotateY(-16deg); }
+  15%  { transform: rotateX(-6deg) rotateY(-16deg); }
+  70%  { transform: rotateX(-6deg) rotateY(-376deg); }
+  85%, 100% { transform: rotateX(0deg) rotateY(-376deg); }
 }
 .book3d-face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  border-radius: 6px;
+  border-radius: 4px 7px 7px 4px;
   overflow: hidden;
 }
 .book3d-front { transform: translateZ(calc(var(--book-d) / 2)); }
+.book3d-front::after {            /* glossy sheen + hinge crease */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(105deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0) 38%),
+    linear-gradient(90deg, rgba(0,0,0,0.35) 0, rgba(0,0,0,0) 4%, rgba(255,255,255,0.18) 5%, rgba(0,0,0,0) 8%);
+}
 .book3d-back  { transform: rotateY(180deg) translateZ(calc(var(--book-d) / 2)); }
 .book3d-spine { left: 0; width: var(--book-d); transform-origin: left center; transform: rotateY(-90deg); border-radius: 2px; }
-.book3d-pages { right: 0; left: auto; width: var(--book-d); transform-origin: right center; transform: rotateY(90deg); border-radius: 2px; }
+.book3d-pages {
+  right: 0; left: auto; width: var(--book-d); transform-origin: right center; transform: rotateY(90deg); border-radius: 2px;
+  background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0 1px, rgba(255,255,255,0) 1px 3px);
+}
 
+/* Touch screens + reduced motion: no tilt, no spin */
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .tilt-card:hover { transform: none; box-shadow: none; }
+  .tilt-card:hover .book3d-scene { transform: none; }
+  .tilt-glare { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .book3d-scene:hover .book3d { animation: none; transform: rotateY(-32deg); }
 }

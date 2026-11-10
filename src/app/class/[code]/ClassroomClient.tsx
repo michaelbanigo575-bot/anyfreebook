@@ -57,8 +57,10 @@ export function ClassroomClient({ room: initialRoom, inviteToken }: { room: Clas
 
   // Attendance + chat history + live subscriptions + realtime presence
   useEffect(() => {
-    joinAttendance(room.id, getSessionKey(), displayName).then(setAttendance);
-    listClassroomMessages(room.id).then(setMessages);
+    // Chat history is loaded AFTER joining: in private classes only attendees can read it.
+    joinAttendance(room.id, getSessionKey(), displayName)
+      .then(n => { setAttendance(n); return listClassroomMessages(room.id); })
+      .then(setMessages);
     const unsubscribe = subscribeClassroom(
       room.id,
       m => setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m]),

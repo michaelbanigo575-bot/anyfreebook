@@ -174,8 +174,9 @@ export async function joinAttendance(classroomId: string, sessionKey: string, di
     display_name: displayName,
   }, { onConflict: 'classroom_id,session_key', ignoreDuplicates: true });
 
-  const { count } = await sb.from('classroom_attendance').select('id', { count: 'exact', head: true }).eq('classroom_id', classroomId);
-  const attendance = count || 0;
+  // Count via a server function: the attendance table itself is not readable for private classes.
+  const { data: count } = await sb.rpc('classroom_attendance_count', { p_classroom: classroomId });
+  const attendance = typeof count === 'number' ? count : 0;
 
   // Track the high-water mark for the host's analytics (best-effort)
   await sb.from('classrooms').update({ peak_attendance: attendance }).eq('id', classroomId).lt('peak_attendance', attendance);

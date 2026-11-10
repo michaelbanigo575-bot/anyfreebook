@@ -69,15 +69,32 @@ export async function GET(request: NextRequest) {
   const rangeHeader = request.headers.get('range');
 
   try {
-    const upstream = await fetch(target.toString(), {
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'ANYFREEBOOK-Reader/1.0',
-        Accept: '*/*',
-        ...(rangeHeader ? { Range: rangeHeader } : {}),
-      },
-      signal: AbortSignal.timeout(20000),
-    });
+    // Follow redirects by hand so every hop is re-checked against the allowlist
+    // (an open redirect on an allowed host must not lead anywhere else).
+    let upstream: Response | null = null;
+    let hop = target;
+    for (let i = 0; i < 5; i++) {
+      const res = await fetch(hop.toString(), {
+        redirect: 'manual',
+        headers: {
+          'User-Agent': 'ANYFREEBOOK-Reader/1.0',
+          Accept: '*/*',
+          ...(rangeHeader ? { Range: rangeHeader } : {}),
+        },
+        signal: AbortSignal.timeout(20000),
+      });
+      if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+        const next = new URL(res.headers.get('location')!, hop);
+        if ((next.protocol !== 'https:' && next.protocol !== 'http:') || !hostAllowed(next.hostname)) {
+          return NextResponse.json({ error: 'Redirect target not allowed' }, { status: 403 });
+        }
+        hop = next;
+        continue;
+      }
+      upstream = res;
+      break;
+    }
+    if (!upstream) return NextResponse.json({ error: 'Too many redirects' }, { status: 502 });
     if (!upstream.ok || !upstream.body) {
       return NextResponse.json({ error: `Upstream ${upstream.status}` }, { status: 502 });
     }
@@ -103,6 +120,9 @@ export async function GET(request: NextRequest) {
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=86400, s-maxage=604800', // cache a day client / a week edge
       'X-Content-Type-Options': 'nosniff',
+      // Proxied files are third-party content served from our origin: sandbox
+      // them so any script inside can never run with our cookies/session.
+      'Content-Security-Policy': "sandbox; default-src 'none'; img-src data:; style-src 'unsafe-inline'",
       'Accept-Ranges': 'bytes',
     };
     const contentRange = upstream.headers.get('content-range');

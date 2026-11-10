@@ -49,8 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async (userId: string, force = false) => {
     if (!force && lastLoadedUserId.current === userId) return;
     lastLoadedUserId.current = userId;
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    setProfile(data as Profile | null);
+    // Own row incl. private columns comes from a server function; the table itself
+    // no longer exposes email/referral/premium columns to API roles.
+    const { data } = await supabase.rpc('get_my_profile').maybeSingle();
+    setProfile((data as Profile | null) ?? null);
   }, [supabase]);
 
   const refreshProfile = useCallback(async () => {
@@ -88,11 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const needsConfirmation = !data.session;
 
     if (referralCode && data.user) {
-      const { data: referrer } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('referral_code', referralCode)
-        .single();
+      const { data: referrerId } = await supabase.rpc('lookup_referrer', { p_code: referralCode });
+      const referrer = referrerId ? { id: referrerId as string } : null;
 
       if (referrer) {
         await supabase.from('profiles').update({ referred_by: referrer.id }).eq('id', data.user.id);

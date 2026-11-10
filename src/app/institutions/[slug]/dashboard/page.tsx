@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getInstitutionBySlug, getInstitutionPublications, getInstitutionClassrooms, getInstitutionComments, getMyRole } from '@/lib/institutions/server';
-import type { InstitutionMember } from '@/lib/institutions/client';
+import { fetchMembersWithProfiles } from '@/lib/institutions/members';
 import { DashboardClient } from './DashboardClient';
 
 export const dynamic = 'force-dynamic';
@@ -20,11 +20,7 @@ export default async function InstitutionDashboardPage({ params }: { params: { s
   const role = await getMyRole(institution.id, user.id);
   if (!role || !['owner', 'admin', 'teacher'].includes(role)) redirect(`/institutions/${params.slug}`);
 
-  const { data: membersRaw } = await sb
-    .from('institution_members')
-    .select('*, profile:profiles(display_name, email, avatar_url)')
-    .eq('institution_id', institution.id)
-    .order('joined_at', { ascending: true });
+  const members = await fetchMembersWithProfiles(sb, institution.id);
 
   const [publications, classrooms, comments, templates] = await Promise.all([
     getInstitutionPublications(institution.id),
@@ -40,7 +36,7 @@ export default async function InstitutionDashboardPage({ params }: { params: { s
     <DashboardClient
       institution={institution}
       myRole={role}
-      initialMembers={(membersRaw as unknown as InstitutionMember[]) || []}
+      initialMembers={members}
       publications={publications}
       classrooms={classrooms}
       comments={comments}

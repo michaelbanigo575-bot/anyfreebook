@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { fetchMembersWithProfiles } from './members';
 
 export interface Institution {
   id: string;
@@ -86,13 +87,7 @@ export async function listMyInstitutions(): Promise<(InstitutionMember & { insti
 }
 
 export async function getMembers(institutionId: string): Promise<InstitutionMember[]> {
-  const sb = createClient();
-  const { data } = await sb
-    .from('institution_members')
-    .select('*, profile:profiles(display_name, email, avatar_url)')
-    .eq('institution_id', institutionId)
-    .order('joined_at', { ascending: true });
-  return (data as unknown as InstitutionMember[]) || [];
+  return fetchMembersWithProfiles(createClient(), institutionId);
 }
 
 export async function updateMemberRole(institutionId: string, profileId: string, role: InstitutionRole): Promise<{ error: string | null }> {

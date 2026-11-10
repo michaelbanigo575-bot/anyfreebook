@@ -10,7 +10,6 @@ export interface Classroom {
   title: string;
   description: string | null;
   room_code: string;
-  invite_token: string | null;
   publication_id: string | null;
   visibility: 'public' | 'private';
   status: 'scheduled' | 'live' | 'ended';
@@ -112,20 +111,25 @@ export async function createClassroom(input: {
   const roomCode = randomCode(8);
   const inviteToken = input.visibility === 'private' ? randomCode(16) : null;
 
-  const { error } = await sb.from('classrooms').insert({
+  const { data: created, error } = await sb.from('classrooms').insert({
     host_id: user.id,
     title: input.title.trim(),
     description: input.description || null,
     room_code: roomCode,
-    invite_token: inviteToken,
     publication_id: input.publicationId || null,
     visibility: input.visibility,
     scheduled_at: input.scheduledAt,
     duration_min: input.durationMin || 60,
     institution_id: input.institutionId || null,
-  });
+  }).select('id').single();
 
-  if (error) return { error: error.message };
+  if (error || !created) return { error: error?.message ?? 'Could not create class' };
+
+  // Invite tokens live in their own host-only table, never in the public classrooms row
+  if (inviteToken) {
+    const { error: invErr } = await sb.from('classroom_invites').insert({ classroom_id: created.id, token: inviteToken });
+    if (invErr) return { error: invErr.message };
+  }
   return { error: null, roomCode, inviteToken };
 }
 

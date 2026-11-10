@@ -10,10 +10,11 @@ import { CategoryMenu } from './CategoryMenu';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTheme } from './ThemeProvider';
 import { MoreMenu, AccountMenu } from './NavMenus';
+import { MobileMenuSheet, MobileBottomNav } from './MobileNav';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, profile, signOut } = useAuth();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, setTheme, isCustom } = useTheme();
@@ -140,109 +141,28 @@ export function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu button */}
+            {/* Phone / tablet actions: search, notifications, menu */}
+            <div className="flex md:hidden items-center gap-1">
+              <Link href="/search" aria-label="Search" className="p-2.5 rounded-xl text-[var(--text)] hover:bg-[var(--surface-hover)]">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              </Link>
+              <NotificationsBell />
+            </div>
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]"
-              aria-label="Toggle menu"
+              onClick={() => setMobileMenuOpen(true)}
+              className="lg:hidden ml-1 px-3.5 py-2 rounded-xl bg-[var(--bg-secondary)] text-sm font-bold text-[var(--text)] flex items-center gap-1.5"
+              aria-label="Open menu"
+              aria-haspopup="dialog"
             >
-              {mobileMenuOpen ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 8h16"/><path d="M4 16h16"/></svg>
-              )}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/></svg>
+              Menu
             </button>
           </div>
         </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden glass border-t border-[var(--border-subtle)] animate-slide-down">
-            <div className="content-wrapper py-4 space-y-2">
-              <div className="pb-3">
-                <SearchBar />
-              </div>
-              <div className="flex items-center justify-between px-3 pb-1">
-                <Link href="/explore" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-[var(--primary)]">
-                  📚 All categories
-                </Link>
-                <LanguageSwitcher compact />
-              </div>
-              {navLinks.map(link => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <button
-                onClick={toggleTheme}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-              >
-                {isDark ? 'Light mode' : 'Dark mode'}
-              </button>
-              {user ? (
-                <>
-                  <Link
-                    href="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                  >
-                    {profile?.display_name || user.email}
-                  </Link>
-                  <Link
-                    href={profile?.is_creator ? '/creators/dashboard' : '/creators'}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                  >
-                    {profile?.is_creator ? 'Creator dashboard' : 'Become a creator'}
-                  </Link>
-                  <button
-                    onClick={() => { signOut(); setMobileMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] rounded-lg text-center"
-                >
-                  Sign In
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-[var(--border-subtle)] safe-area-bottom">
-        <div className="flex items-center justify-around h-14">
-          {[
-            { icon: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z', label: 'Home', href: '/' },
-            { icon: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35', label: 'Search', href: '/search' },
-            { icon: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20', label: 'Library', href: '/explore' },
-            { icon: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z', label: 'Audio', href: '/audiobooks' },
-          ].map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={item.icon}/>
-              </svg>
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <MobileMenuSheet open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} isDark={isDark} onToggleTheme={toggleTheme} />
+      <MobileBottomNav />
 
       {/* Spacer for fixed navbar */}
       <div className="h-16 md:h-20" />

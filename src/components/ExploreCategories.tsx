@@ -21,7 +21,7 @@ export function ExploreCategories({ categories }: { categories: Category[] }) {
     return categories.filter(c =>
       (tab === 'all' || (c.group || 'subject') === tab) &&
       (!needle || c.name.toLowerCase().includes(needle))
-    );
+    ).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
   }, [categories, q, tab]);
 
   return (

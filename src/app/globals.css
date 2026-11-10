@@ -9,22 +9,22 @@
 
 @layer base {
   :root {
-    --bg: #ffffff;
-    --bg-secondary: #f8fafc;
-    --surface: #ffffff;
-    --surface-hover: #f1f5f9;
-    --border: #e2e8f0;
-    --border-subtle: #f1f5f9;
-    --text: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --primary-light: #eff6ff;
-    --accent: #10b981;
+    --bg: #e6ecf4;
+    --bg-secondary: #d9e1ec;
+    --surface: #f8fafd;
+    --surface-hover: #dbe4f0;
+    --border: #bcc8d9;
+    --border-subtle: #cdd7e5;
+    --text: #0a1020;
+    --text-secondary: #2b3a52;
+    --text-muted: #52627c;
+    --primary: #1d4ed8;
+    --primary-hover: #1e40af;
+    --primary-light: #dbe7ff;
+    --accent: #047857;
     --accent-light: #ecfdf5;
-    --gradient-start: #3b82f6;
-    --gradient-end: #10b981;
+    --gradient-start: #1d4ed8;
+    --gradient-end: #047857;
 
     /* Mobile chrome stacking. The bottom nav is 4rem tall; anything that
        floats above it uses --stack-1, and the next bar up uses --stack-2.
@@ -59,15 +59,15 @@
   }
 
   .dark {
-    --bg: #0a0f1a;
-    --bg-secondary: #111827;
-    --surface: #1e293b;
-    --surface-hover: #334155;
-    --border: #1e293b;
-    --border-subtle: #1e293b;
-    --text: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --bg: #151d2e;
+    --bg-secondary: #1c263b;
+    --surface: #263350;
+    --surface-hover: #33446a;
+    --border: #38496e;
+    --border-subtle: #2e3d5c;
+    --text: #ffffff;
+    --text-secondary: #d5deec;
+    --text-muted: #a3b2cb;
     --primary: #59b0ff;
     --primary-hover: #338dff;
     --primary-light: rgba(51, 141, 255, 0.1);
@@ -91,6 +91,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  /* Dark mode: heavier, crisper text so it reads cleanly on the lighter background */
+  .dark body { font-weight: 500; letter-spacing: 0.005em; text-rendering: optimizeLegibility; }
+  .dark .font-normal { font-weight: 500; }
+  .dark .font-medium { font-weight: 600; }
+  .dark .font-semibold { font-weight: 700; }
 }
 
 @layer components {

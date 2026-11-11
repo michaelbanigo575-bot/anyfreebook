@@ -2,6 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "anyfreebook",
   "main": "cf-worker.mjs",
+  // Run the worker near Supabase instead of near each visitor: fewer slow round trips per page
+  "placement": { "mode": "smart" },
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {

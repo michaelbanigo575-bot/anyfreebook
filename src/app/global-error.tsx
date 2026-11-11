@@ -17,6 +17,17 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // A deploy removes old script files; an open or cached page then fails to load them.
+    // One automatic reload fetches the fresh page (guarded so it can never loop).
+    try {
+      const msg = String(error?.message || '');
+      if (/Loading chunk|ChunkLoadError|Failed to fetch dynamically imported|is not a function|reading 'get'/i.test(msg)
+          && !sessionStorage.getItem('afb-reloaded')) {
+        sessionStorage.setItem('afb-reloaded', '1');
+        window.location.reload();
+        return;
+      }
+    } catch { /* ignore */ }
     // Root-layout crashes were invisible: report them like every other client error.
     try {
       fetch('/api/log-error', {

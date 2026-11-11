@@ -59,12 +59,12 @@
   }
 
   .dark {
-    --bg: #151d2e;
-    --bg-secondary: #1c263b;
-    --surface: #263350;
-    --surface-hover: #33446a;
+    --bg: #0d1424;
+    --bg-secondary: #141c2f;
+    --surface: #1d2942;
+    --surface-hover: #2a3a5c;
     --border: #38496e;
-    --border-subtle: #2e3d5c;
+    --border-subtle: #263555;
     --text: #ffffff;
     --text-secondary: #d5deec;
     --text-muted: #a3b2cb;
@@ -93,7 +93,9 @@
   }
 
   /* Dark mode: heavier, crisper text so it reads cleanly on the lighter background */
-  .dark body { font-weight: 500; letter-spacing: 0.005em; text-rendering: optimizeLegibility; }
+  body { line-height: 1.6; font-feature-settings: 'cv11', 'ss01'; }
+  .dark body { font-weight: 500; letter-spacing: 0.01em; text-rendering: optimizeLegibility; }
+  :root:not(.dark) body { font-weight: 500; }
   .dark .font-normal { font-weight: 500; }
   .dark .font-medium { font-weight: 600; }
   .dark .font-semibold { font-weight: 700; }

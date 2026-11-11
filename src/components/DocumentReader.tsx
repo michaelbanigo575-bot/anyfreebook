@@ -123,7 +123,7 @@ function ImageStage({ url, title, height }: { url: string; title?: string; heigh
 
 /** Trim Project Gutenberg's license boilerplate to the actual work. */
 function cleanGutenbergText(raw: string): string {
-  let t = raw.replace(/\r\n/g, '\n');
+  let t = raw.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
   const start = t.match(/\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG[\s\S]*?\*\*\*/i);
   if (start) t = t.slice((start.index || 0) + start[0].length);
   const end = t.match(/\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG[\s\S]*?\*\*\*/i);
@@ -131,10 +131,46 @@ function cleanGutenbergText(raw: string): string {
   return t.trim();
 }
 
+/** HTML (a reading page served where plain text was expected) → readable text, never raw markup. */
+function htmlToReadable(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,style,noscript,nav,header,footer,form,svg,iframe').forEach(n => n.remove());
+  doc.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+  doc.querySelectorAll('p,div,h1,h2,h3,h4,h5,h6,li,tr,blockquote,pre,section,article').forEach(b => b.append('\n\n'));
+  return (doc.body?.textContent || '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function looksLikeHtml(sample: string): boolean {
+  return /^\s*(<!doctype html|<html|<head|<body)/i.test(sample) || (sample.match(/<\/?[a-z][a-z0-9]*[\s>]/gi) || []).length > 12;
+}
+
+/** Hard-wrapped plain text (Gutenberg wraps at ~70 columns) reflows to the screen width; verse and lists keep their breaks. */
+function reflow(text: string): string {
+  return text.split(/\n{2,}/).map(par => {
+    const lines = par.split('\n');
+    if (lines.length < 2) return par;
+    const avg = lines.reduce((n, l) => n + l.trim().length, 0) / lines.length;
+    const indented = lines.filter(l => /^\s{2,}\S/.test(l)).length > lines.length / 2;
+    return avg > 48 && !indented ? lines.map(l => l.trim()).join(' ') : par;
+  }).join('\n\n');
+}
+
+/** Raw bytes → clean readable text, or null when the file is not text at all (PDF, EPUB/zip, binary). */
+function bytesToReadable(buf: ArrayBuffer): string | null {
+  const magic = String.fromCharCode(...Array.from(new Uint8Array(buf.slice(0, 4))));
+  if (magic.startsWith('%PDF') || magic.startsWith('PK')) return null;
+  let raw = new TextDecoder('utf-8').decode(buf);
+  const bad = (raw.slice(0, 4000).match(/[�\u0000-\u0008\u000E-\u001F]/g) || []).length;
+  if (bad > 40) return null;
+  if (looksLikeHtml(raw.slice(0, 3000))) raw = htmlToReadable(raw);
+  const out = reflow(cleanGutenbergText(raw));
+  return out.length > 200 ? out : null;
+}
+
 function TextStage({ url, title, height }: { url: string; title?: string; height: string }) {
   const [text, setText] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
-  const [fontSize, setFontSize] = useState(18);
+  const [fontSize, setFontSize] = useState(19);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,8 +178,9 @@ function TextStage({ url, title, height }: { url: string; title?: string; height
       try {
         const res = await fetch(proxied(url));
         if (!res.ok) throw new Error(String(res.status));
-        const raw = await res.text();
-        if (!cancelled) setText(cleanGutenbergText(raw));
+        const readable = bytesToReadable(await res.arrayBuffer());
+        if (readable === null) throw new Error('not-text');
+        if (!cancelled) setText(readable);
       } catch {
         if (!cancelled) setFailed(true);
       }
@@ -157,7 +194,12 @@ function TextStage({ url, title, height }: { url: string; title?: string; height
     return (
       <div className="rounded-2xl overflow-hidden border border-[var(--border-subtle)] bg-[var(--surface)]">
         <ReaderBar title={title} url={url} />
-        <iframe src={proxied(url)} title={title || 'Document'} className="w-full bg-white" style={{ height }} />
+        <div className="flex flex-col items-center justify-center text-center gap-3 p-8" style={{ minHeight: 240 }}>
+          <p className="text-4xl">📖</p>
+          <p className="text-base font-semibold text-[var(--text)]">This book can&apos;t be shown as text here</p>
+          <p className="text-sm text-[var(--text-secondary)] max-w-sm">Open the original file instead. It will open in your browser or reading app.</p>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Open original</a>
+        </div>
       </div>
     );
   }
@@ -176,8 +218,8 @@ function TextStage({ url, title, height }: { url: string; title?: string; height
           </div>
         ) : (
           <article
-            className="mx-auto max-w-2xl px-6 py-8 whitespace-pre-wrap font-serif text-[var(--text)] leading-relaxed"
-            style={{ fontSize, lineHeight: 1.7 }}
+            className="mx-auto max-w-2xl px-4 sm:px-6 py-6 sm:py-8 whitespace-pre-wrap break-words font-serif font-medium text-[var(--text)]"
+            style={{ fontSize, lineHeight: 1.75, hyphens: 'auto' }}
           >
             {text}
           </article>

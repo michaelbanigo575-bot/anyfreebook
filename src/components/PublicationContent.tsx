@@ -22,7 +22,37 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
   return nodes;
 }
 
-export function PublicationContent({ body }: { body: string }) {
+/** Publication bodies are sometimes stored as HTML (<p>, <strong>…). Convert that to the
+ *  markdown subset this renderer understands so readers never see raw tags. */
+function decodeEntities(s: string): string {
+  const named: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', mdash: '—', ndash: '–', hellip: '…' };
+  return s
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&([a-z]+);/gi, (m, n) => named[n.toLowerCase()] ?? m);
+}
+
+function htmlToMarkdown(html: string): string {
+  const t = html
+    .replace(/\r\n?/g, '\n')
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n\n# $1\n\n')
+    .replace(/<h[2-6][^>]*>([\s\S]*?)<\/h[2-6]>/gi, '\n\n## $1\n\n')
+    .replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (_m, inner: string) => '\n\n> ' + inner.replace(/<\/?p[^>]*>/gi, ' ').trim() + '\n\n')
+    .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '\n- $1\n')
+    .replace(/<\/(ul|ol)>/gi, '\n\n')
+    .replace(/<(strong|b)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, '**$3**')
+    .replace(/<(em|i)(\s[^>]*)?>([\s\S]*?)<\/\1>/gi, '*$3*')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|section|article|tr)>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '');
+  return decodeEntities(t).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+const HAS_HTML = /<\/?(p|div|br|strong|em|b|i|h[1-6]|ul|ol|li|blockquote|span|a|section|article)[\s>/]/i;
+
+export function PublicationContent({ body: rawBody }: { body: string }) {
+  const body = HAS_HTML.test(rawBody) ? htmlToMarkdown(rawBody) : rawBody;
   const blocks = body.replace(/\r\n/g, '\n').split(/\n\n+/);
   const out: React.ReactNode[] = [];
   let listBuffer: string[] = [];
@@ -30,7 +60,7 @@ export function PublicationContent({ body }: { body: string }) {
   const flushList = (key: string) => {
     if (listBuffer.length) {
       out.push(
-        <ul key={`ul-${key}`} className="list-disc pl-6 space-y-1.5 my-4 text-[var(--text-secondary)]">
+        <ul key={`ul-${key}`} className="list-disc pl-6 space-y-1.5 my-4 text-[var(--text)] font-medium leading-[1.8]">
           {listBuffer.map((li, i) => <li key={i}>{renderInline(li.replace(/^[-*]\s+/, ''), `li-${key}-${i}`)}</li>)}
         </ul>
       );
@@ -55,9 +85,9 @@ export function PublicationContent({ body }: { body: string }) {
     } else if (trimmed.startsWith('## ')) {
       out.push(<h3 key={bi} className="text-xl font-display font-bold text-[var(--text)] mt-6 mb-2">{renderInline(trimmed.slice(3), `h${bi}`)}</h3>);
     } else if (trimmed.startsWith('> ')) {
-      out.push(<blockquote key={bi} className="border-l-4 border-[var(--primary)] pl-4 italic text-[var(--text-secondary)] my-4">{renderInline(trimmed.slice(2), `q${bi}`)}</blockquote>);
+      out.push(<blockquote key={bi} className="border-l-4 border-[var(--primary)] pl-4 italic font-medium text-[var(--text)] my-4">{renderInline(trimmed.slice(2), `q${bi}`)}</blockquote>);
     } else {
-      out.push(<p key={bi} className="text-[var(--text-secondary)] leading-relaxed my-4 whitespace-pre-line">{renderInline(trimmed, `p${bi}`)}</p>);
+      out.push(<p key={bi} className="text-[var(--text)] text-[17px] sm:text-lg font-medium leading-[1.8] my-4 whitespace-pre-line">{renderInline(trimmed, `p${bi}`)}</p>);
     }
   });
   flushList('final');

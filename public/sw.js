@@ -1,4 +1,4 @@
-const CACHE_NAME = 'anyfreebook-v3';
+const CACHE_NAME = 'anyfreebook-v4'; // bumped: drops any cached HTML that was stored under a script URL
 const OFFLINE_FALLBACK = '/offline.html';
 const PRECACHE = [
   '/',
@@ -79,9 +79,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
-          cached ||
+          (cached && !(cached.headers.get('content-type') || '').includes('text/html') ? cached : null) ||
           fetch(request).then((response) => {
-            if (response.ok) {
+            // Only cache a real asset: an HTML error page served for a stale
+            // script URL must never be stored, or that script stays broken forever.
+            const type = response.headers.get('content-type') || '';
+            if (response.ok && !type.includes('text/html')) {
               const clone = response.clone();
               caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
             }

@@ -7,6 +7,8 @@
  * site's header, fonts or theme — it has to stand on its own with inline
  * styles.
  */
+import { useEffect } from 'react';
+
 export default function GlobalError({
   error,
   reset,
@@ -14,6 +16,22 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Root-layout crashes were invisible: report them like every other client error.
+    try {
+      fetch('/api/log-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'ROOT: ' + (error?.message || 'Unhandled root exception'),
+          stack: error?.stack,
+          url: window.location.pathname,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch { /* ignore */ }
+  }, [error]);
+
   return (
     <html lang="en">
       <body

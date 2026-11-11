@@ -56,7 +56,7 @@ export function NotificationsBell() {
     load().catch(() => {});
     const sb = createClient();
     const channel = sb
-      .channel(`notif-${user.id}`)
+      .channel(`notif-${user.id}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         payload => {
           setItems(prev => [payload.new as Notification, ...prev].slice(0, 15));

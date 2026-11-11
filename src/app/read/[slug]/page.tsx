@@ -165,6 +165,29 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
         title={pub.title}
       />
 
+      {/* The book itself comes first: read it in the Reader, or take a copy */}
+      {pub.external_url && (
+        <section id="book" className="mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h2 className="text-base font-bold text-[var(--text)]">Read or download</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <a
+                href={`/api/publications/${pub.slug}/download?format=pdf`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-lg transition-all"
+              >
+                ⬇ Download
+              </a>
+              {(pub.body || chapters.length > 0) && (
+                <a href="#text" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--border)] text-sm font-semibold text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors">
+                  Read the text ↓
+                </a>
+              )}
+            </div>
+          </div>
+          <DocumentReader url={pub.external_url} title={pub.title} height="75vh" />
+        </section>
+      )}
+
       {/* Chapters TOC */}
       {chapters.length > 0 && (
         <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
@@ -191,7 +214,8 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
         </div>
       )}
 
-      {/* Reading surface with comfort settings */}
+      {/* Reading surface with comfort settings, on a faint darker panel so the text stands out */}
+      <div id="text" className="scroll-mt-24 rounded-3xl bg-black/[0.06] dark:bg-black/30 border border-[var(--border-subtle)] px-4 py-6 sm:px-9 sm:py-9">
       <ReaderSurface>
         {activeChapter ? (
           <>
@@ -204,6 +228,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
           pub.body && <PublicationContent body={pub.body} />
         )}
       </ReaderSurface>
+      </div>
 
       {/* Chapter prev/next */}
       {chapters.length > 0 && (
@@ -226,13 +251,6 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
               Next: Ch. {activeIdx + 2} →
             </Link>
           ) : <span />}
-        </div>
-      )}
-
-      {/* Attached file: the ANYFREEBOOK Reader */}
-      {pub.external_url && (
-        <div className="mt-8">
-          <DocumentReader url={pub.external_url} title={pub.title} height="75vh" />
         </div>
       )}
 

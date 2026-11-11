@@ -12,7 +12,7 @@ function renderInline(text: string, keyBase: string): React.ReactNode[] {
   const parts = text.split(regex);
   parts.forEach((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
-      nodes.push(<strong key={`${keyBase}-b${i}`}>{part.slice(2, -2)}</strong>);
+      nodes.push(<strong key={`${keyBase}-b${i}`} className="font-extrabold text-[var(--text)] bg-[var(--primary-light)] rounded px-0.5">{part.slice(2, -2)}</strong>);
     } else if (part.startsWith('*') && part.endsWith('*')) {
       nodes.push(<em key={`${keyBase}-i${i}`}>{part.slice(1, -1)}</em>);
     } else if (part) {
@@ -81,11 +81,11 @@ export function PublicationContent({ body: rawBody }: { body: string }) {
     flushList(String(bi));
 
     if (trimmed.startsWith('# ')) {
-      out.push(<h2 key={bi} className="text-2xl font-display font-bold text-[var(--text)] mt-8 mb-3">{renderInline(trimmed.slice(2), `h${bi}`)}</h2>);
+      out.push(<h2 key={bi} className="text-2xl sm:text-3xl font-display font-extrabold gradient-text mt-10 mb-4">{renderInline(trimmed.slice(2), `h${bi}`)}</h2>);
     } else if (trimmed.startsWith('## ')) {
-      out.push(<h3 key={bi} className="text-xl font-display font-bold text-[var(--text)] mt-6 mb-2">{renderInline(trimmed.slice(3), `h${bi}`)}</h3>);
+      out.push(<h3 key={bi} className="text-xl sm:text-2xl font-display font-bold text-[var(--primary)] mt-8 mb-3">{renderInline(trimmed.slice(3), `h${bi}`)}</h3>);
     } else if (trimmed.startsWith('> ')) {
-      out.push(<blockquote key={bi} className="border-l-4 border-[var(--primary)] pl-4 italic font-medium text-[var(--text)] my-4">{renderInline(trimmed.slice(2), `q${bi}`)}</blockquote>);
+      out.push(<blockquote key={bi} className="border-l-4 border-[var(--primary)] bg-[var(--primary-light)] rounded-r-xl pl-4 pr-3 py-3 italic font-semibold text-[var(--text)] my-5">{renderInline(trimmed.slice(2), `q${bi}`)}</blockquote>);
     } else {
       out.push(<p key={bi} className="text-[var(--text)] text-[17px] sm:text-lg font-medium leading-[1.8] my-4 whitespace-pre-line">{renderInline(trimmed, `p${bi}`)}</p>);
     }

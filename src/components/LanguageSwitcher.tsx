@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { storageGet, storageSet } from '@/lib/safeStorage';
 
 /**
  * ANYFREEBOOK's own translation system (free, keyless): walks the page's text
@@ -139,14 +140,14 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORE_KEY) || '';
+    const saved = storageGet(STORE_KEY) || '';
     setLang(saved);
     if (saved) applyLanguage(saved);
   }, []);
 
   const change = async (code: string) => {
     setLang(code);
-    localStorage.setItem(STORE_KEY, code);
+    storageSet(STORE_KEY, code);
     setBusy(true);
     await applyLanguage(code);
     setBusy(false);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { cardClass, primaryButtonClass } from '@/lib/ui';
+import { storageGet, storageSet } from '@/lib/safeStorage';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -57,7 +58,7 @@ export function PWAInstallPrompt() {
     }
 
     // The banner was dismissed before; leave it dismissed but keep the SW.
-    if (localStorage.getItem(DISMISS_KEY)) {
+    if (storageGet(DISMISS_KEY)) {
       setDismissed(true);
       setReady(true);
       return;
@@ -81,7 +82,7 @@ export function PWAInstallPrompt() {
 
   const dismiss = () => {
     setDismissed(true);
-    localStorage.setItem(DISMISS_KEY, '1');
+    storageSet(DISMISS_KEY, '1');
   };
 
   const install = async () => {

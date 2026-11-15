@@ -98,7 +98,7 @@ export default function SettingsPage() {
   const update = <S extends keyof Settings, K extends keyof Settings[S]>(section: S, key: K, value: Settings[S][K]) => {
     setSettings(prev => {
       const next = { ...prev, [section]: { ...prev[section], [key]: value } };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* storage blocked: applies for this visit only */ }
       return next;
     });
   };
@@ -106,7 +106,7 @@ export default function SettingsPage() {
   /** The site translator applies its choice when the page loads, so reload after saving. */
   const setLanguage = (code: string) => {
     const next = { ...settings, content: { ...settings.content, language: code } };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* storage blocked */ }
     setSettings(next);
     try { localStorage.setItem(LANG_KEY, code === 'en' ? '' : code); } catch {}
     window.location.reload();

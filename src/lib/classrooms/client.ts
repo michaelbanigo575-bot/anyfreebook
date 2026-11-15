@@ -78,13 +78,19 @@ export interface ClassroomSessionWithAttendance extends ClassroomSession {
  * attendee is the same person across sessions — the host sees a returning
  * guest as the same guest rather than a new stranger each time.
  */
+let memoryGuestId: string | null = null;
+
 export function getGuestId(): string {
   const KEY = 'afb_guest_id';
   if (typeof window === 'undefined') return 'guest-server';
-  let id = localStorage.getItem(KEY);
+  // Storage can be blocked (private window, in-app browsers): fall back to an id kept for this page only
+  // rather than throwing and breaking the class page for exactly the guests it is meant for.
+  let id: string | null = null;
+  try { id = localStorage.getItem(KEY); } catch { /* blocked */ }
   if (!id) {
-    id = `g_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
-    localStorage.setItem(KEY, id);
+    id = memoryGuestId || `g_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+    memoryGuestId = id;
+    try { localStorage.setItem(KEY, id); } catch { /* blocked */ }
   }
   return id;
 }

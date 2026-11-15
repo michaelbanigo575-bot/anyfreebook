@@ -29,9 +29,11 @@ export function ReferralSystem() {
     // Remember who referred a visitor so signup can credit them later
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
-    if (ref && !localStorage.getItem('afb_referred_by')) {
-      localStorage.setItem('afb_referred_by', ref);
-    }
+    try {
+      if (ref && !localStorage.getItem('afb_referred_by')) {
+        localStorage.setItem('afb_referred_by', ref);
+      }
+    } catch { /* storage blocked (private window / in-app browser): the referral just isn't remembered */ }
   }, []);
 
   useEffect(() => {

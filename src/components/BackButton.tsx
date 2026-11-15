@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { storageGet, storageSet } from '@/lib/safeStorage';
 
 const NAV_COUNT_KEY = 'afb_nav_count';
 
@@ -23,12 +24,12 @@ export function BackButton() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    let count = parseInt(sessionStorage.getItem(NAV_COUNT_KEY) || '0', 10);
+    let count = parseInt(storageGet(NAV_COUNT_KEY, 'session') || '0', 10);
     if (!Number.isFinite(count) || count < 0) count = 0;
 
     if (lastPathRef.current !== null && lastPathRef.current !== pathname) {
       count += 1;
-      sessionStorage.setItem(NAV_COUNT_KEY, String(count));
+      storageSet(NAV_COUNT_KEY, String(count), 'session');
     }
     lastPathRef.current = pathname;
     setNavCount(count);
@@ -41,7 +42,7 @@ export function BackButton() {
       // Consume one in-app history entry. Without this the counter only ever
       // grows, so a second Back would walk out of the site via the referrer.
       const remaining = navCount - 1;
-      sessionStorage.setItem(NAV_COUNT_KEY, String(remaining));
+      storageSet(NAV_COUNT_KEY, String(remaining), 'session');
       setNavCount(remaining);
       router.back();
     } else {

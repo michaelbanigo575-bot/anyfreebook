@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthProvider';
 import { createClient } from '@/lib/supabase/client';
+import { storageSet } from '@/lib/safeStorage';
 
 interface Interactions {
   liked: Set<string>;
@@ -27,7 +28,7 @@ function loadLocalInteractions(): Interactions {
 }
 
 function saveLocalInteractions(i: Interactions) {
-  localStorage.setItem('anyfreebook-interactions', JSON.stringify({
+  storageSet('anyfreebook-interactions', JSON.stringify({
     liked: Array.from(i.liked),
     wishlisted: Array.from(i.wishlisted),
     favorited: Array.from(i.favorited),

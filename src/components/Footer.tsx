@@ -95,12 +95,12 @@ const linkGroups = [
           {linkGroups.map(group => (
             <div key={group.title}>
               <h4 className="font-semibold text-sm text-[var(--text)] mb-3">{group.title}</h4>
-              <ul className="space-y-2">
+              <ul className="space-y-0.5">
                 {group.links.map(link => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                      className="inline-block py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
                     >
                       {link.label}
                     </Link>

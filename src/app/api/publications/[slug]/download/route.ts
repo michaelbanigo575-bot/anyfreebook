@@ -99,6 +99,29 @@ function safeFilename(name: string): string {
   );
 }
 
+const MAX_ATTACHED_BYTES = 40 * 1024 * 1024;
+
+async function fetchAttachedFile(url: string): Promise<{ buf: ArrayBuffer; type: string; ext: string } | null> {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') return null;
+    const upstream = await fetch(u.toString(), { redirect: 'follow', signal: AbortSignal.timeout(20000) });
+    if (!upstream.ok) return null;
+    const declared = Number(upstream.headers.get('content-length') || 0);
+    if (declared > MAX_ATTACHED_BYTES) return null;
+    const buf = await upstream.arrayBuffer();
+    if (buf.byteLength > MAX_ATTACHED_BYTES) return null;
+    const head = String.fromCharCode(...Array.from(new Uint8Array(buf.slice(0, 4))));
+    const ct = (upstream.headers.get('content-type') || '').toLowerCase();
+    if (head.startsWith('%PDF') || ct.includes('pdf')) return { buf, type: 'application/pdf', ext: 'pdf' };
+    if (head.startsWith('PK') || ct.includes('epub')) return { buf, type: 'application/epub+zip', ext: 'epub' };
+    if (ct.startsWith('text/html')) return null; // an HTML page is not a book file
+    return { buf, type: 'text/plain; charset=utf-8', ext: 'txt' };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
@@ -123,46 +146,22 @@ export async function GET(
   // A work with an attached PDF can always be fetched as that PDF, whether or
   // not it also has text of its own. The guide is laid out as a document, and
   // the PDF is the document.
-  if (format === 'pdf' && pub.external_url) {
-    try {
-      const upstream = await fetch(pub.external_url, { redirect: 'follow' });
-      if (!upstream.ok) {
-        return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
-      }
-      const buf = await upstream.arrayBuffer();
-      return new NextResponse(buf, {
+  // The attached file is served as itself: its real type and extension, never
+  // relabelled as a PDF (a Gutenberg .txt or an EPUB is not a PDF), https only,
+  // and size-capped. Anything else falls through to the generated text/EPUB.
+  if (pub.external_url && (format === 'pdf' || !(Boolean(pub.body) || chapters.length > 0))) {
+    const file = await fetchAttachedFile(pub.external_url);
+    if (file) {
+      return new NextResponse(file.buf, {
         headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${filename}.pdf"`,
+          'Content-Type': file.type,
+          'Content-Disposition': `attachment; filename="${filename}.${file.ext}"`,
+          'X-Content-Type-Options': 'nosniff',
           'Cache-Control': 'public, max-age=300',
         },
       });
-    } catch {
-      return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
     }
-  }
-
-  // A book published as an attached file has no body and no chapters: the
-  // file IS the work. Serve it as the download, so "Download EPUB" gives the
-  // reader the book the author uploaded rather than nothing.
-  const hasOwnText = Boolean(pub.body) || chapters.length > 0;
-  if (!hasOwnText && pub.external_url) {
-    try {
-      const upstream = await fetch(pub.external_url, { redirect: 'follow' });
-      if (!upstream.ok) {
-        return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
-      }
-      const type = upstream.headers.get('content-type') || 'application/octet-stream';
-      const ext = type.includes('pdf') ? 'pdf' : type.includes('epub') ? 'epub' : 'bin';
-      const buf = await upstream.arrayBuffer();
-      return new NextResponse(buf, {
-        headers: {
-          'Content-Type': type,
-          'Content-Disposition': `attachment; filename="${filename}.${ext}"`,
-          'Cache-Control': 'public, max-age=300',
-        },
-      });
-    } catch {
+    if (format === 'pdf' || !(Boolean(pub.body) || chapters.length > 0)) {
       return NextResponse.json({ error: 'The attached file is not available' }, { status: 502 });
     }
   }

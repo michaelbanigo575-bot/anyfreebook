@@ -49,3 +49,21 @@ export function clientIp(headers: Headers): string {
     || headers.get('x-real-ip')
     || 'unknown';
 }
+
+/**
+ * Edge-wide limiter: uses the Workers Rate Limiting bindings (shared across every
+ * isolate, so a burst can't dodge the limit by landing on a fresh worker).
+ * Falls back to the in-memory limiter when the binding is missing (local dev, tests).
+ */
+export async function rateLimitEdge(key: string, limit: number, windowMs: number): Promise<{ ok: boolean; retryAfterSec: number }> {
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare');
+    const env = getCloudflareContext().env as unknown as Record<string, { limit: (o: { key: string }) => Promise<{ success: boolean }> } | undefined>;
+    const binding = limit <= 15 ? env.RL_TIGHT : env.RL_NORMAL;
+    if (binding) {
+      const { success } = await binding.limit({ key });
+      return { ok: success, retryAfterSec: success ? 0 : 60 };
+    }
+  } catch { /* no Cloudflare context: use the in-memory limiter */ }
+  return rateLimit(key, limit, windowMs);
+}

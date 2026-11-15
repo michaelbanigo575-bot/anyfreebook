@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,7 +41,7 @@ function hostAllowed(hostname: string): boolean {
 
 export async function GET(request: NextRequest) {
   // 60 fetches/min per IP — a reader turning pages never approaches this
-  const rl = rateLimit(`bp:${clientIp(request.headers)}`, 60, 60_000);
+  const rl = await rateLimitEdge(`bp:${clientIp(request.headers)}`, 60, 60_000);
   if (!rl.ok) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
   }

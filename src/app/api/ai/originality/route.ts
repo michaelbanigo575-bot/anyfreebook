@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
 /**
  * Originality check, two layers:
@@ -92,6 +93,10 @@ function samplePhrases(body: string, count = 3): string[] {
 }
 
 export async function POST(request: NextRequest) {
+  // Each check fans out to Open Library + Google Books: keep it to a few a minute per IP
+  const rl = await rateLimitEdge(`orig:${clientIp(request.headers)}`, 8, 60_000);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } });
+
   const { title, body } = await request.json().catch(() => ({}));
   if (!title || typeof title !== 'string' || title.trim().length < 3) {
     return NextResponse.json({ status: 'checked_clear', severity: 'none', matches: [] } satisfies CheckResult);

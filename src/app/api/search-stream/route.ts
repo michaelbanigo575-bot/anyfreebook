@@ -11,7 +11,7 @@ import { searchEuropeana } from '@/lib/api/europeana';
 import { searchZenodo } from '@/lib/api/zenodo';
 import { searchOpenTextbooks } from '@/lib/api/opentextbooks';
 import { searchBooks as searchLocal, type Book } from '@/lib/data';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
 interface SourceJob {
   id: string;
@@ -22,7 +22,7 @@ interface SourceJob {
 export async function GET(request: NextRequest) {
   // Each request fans out to up to 11 external book APIs at once — cap per-IP
   // so a traffic spike can't get those providers to rate-limit or block us.
-  const rl = rateLimit(`search:${clientIp(request.headers)}`, 30, 60_000);
+  const rl = await rateLimitEdge(`search:${clientIp(request.headers)}`, 30, 60_000);
   if (!rl.ok) {
     return new Response(JSON.stringify({ error: 'Too many requests' }), {
       status: 429,

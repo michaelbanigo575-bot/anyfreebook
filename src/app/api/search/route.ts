@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchAllSources, SEARCH_SOURCES, type SearchSource } from '@/lib/api/searchAll';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
 /** Every request here fans out to as many as 7 third-party APIs, so cap it. */
 const MAX_QUERY_LENGTH = 200;
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   // Each call is a multi-provider fan-out. 30/min per IP keeps a single client
   // from becoming a load problem for the upstreams while staying generous for
   // real browsing (paging + retries rarely exceed a few calls a minute).
-  const limit = rateLimit(`search:${clientIp(request.headers)}`, 30, 60_000);
+  const limit = await rateLimitEdge(`search:${clientIp(request.headers)}`, 30, 60_000);
   if (!limit.ok) {
     return NextResponse.json(
       { error: 'Too many searches. Please slow down.' },

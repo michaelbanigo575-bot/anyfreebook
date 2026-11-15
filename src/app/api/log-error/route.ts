@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 /** Own error monitoring: browsers report uncaught errors here → client_errors table. */
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(`err:${clientIp(request.headers)}`, 10, 60_000);
+  const rl = await rateLimitEdge(`err:${clientIp(request.headers)}`, 10, 60_000);
   if (!rl.ok) return NextResponse.json({ ok: false }, { status: 429 });
 
   const { message, stack, url } = await request.json().catch(() => ({}));

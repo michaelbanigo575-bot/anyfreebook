@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +39,7 @@ async function cloudConvert(path: string, apiKey: string, init?: RequestInit) {
 }
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(`c2pdf:${clientIp(request.headers)}`, 10, 60_000);
+  const rl = await rateLimitEdge(`c2pdf:${clientIp(request.headers)}`, 10, 60_000);
   if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
   const apiKey = process.env.CLOUDCONVERT_API_KEY;

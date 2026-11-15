@@ -10,6 +10,11 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Edge-wide rate limits (shared by every worker instance), used by src/lib/rateLimit.ts
+  "ratelimits": [
+    { "name": "RL_TIGHT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "RL_NORMAL", "namespace_id": "1002", "simple": { "limit": 40, "period": 60 } }
+  ],
   "kv_namespaces": [
     { "binding": "NEXT_INC_CACHE_KV", "id": "9c522d0e098a4ed5911fdc7ee1e34041" }
   ],

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { rateLimit, clientIp } from '@/lib/rateLimit';
+import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * route re-verifies the caller is institution staff before doing so.
  */
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(`assign-plan:${clientIp(request.headers)}`, 20, 60_000);
+  const rl = await rateLimitEdge(`assign-plan:${clientIp(request.headers)}`, 20, 60_000);
   if (!rl.ok) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
   const { templateId, studentIds } = await request.json().catch(() => ({}));

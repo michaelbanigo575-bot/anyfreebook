@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { pingIndexNow } from '@/lib/indexnow';
+import { isPublicHttpsUrl } from '@/lib/safeUrl';
 import type { Publication, PublicationType, OriginalityStatus } from './types';
 
 function slugify(s: string): string {
@@ -48,6 +49,7 @@ export async function createPublication(input: {
   const { data: { user } } = await sb.auth.getUser();
   if (!user) return { error: 'Not signed in' };
   if (!input.title.trim()) return { error: 'Title is required' };
+  if (input.externalUrl && !isPublicHttpsUrl(input.externalUrl)) return { error: 'The file link must be a public https:// address' };
 
   const slug = `${slugify(input.title)}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -76,6 +78,7 @@ export async function createPublication(input: {
 
 export async function updatePublication(id: string, patch: Partial<Publication> & { publish?: boolean; slug?: string; institution_id?: string | null }): Promise<{ error: string | null }> {
   const sb = createClient();
+  if (patch.external_url && !isPublicHttpsUrl(patch.external_url)) return { error: 'The file link must be a public https:// address' };
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const k of ['title', 'subtitle', 'description', 'category', 'content_type', 'publication_type', 'originality_status', 'body', 'cover_url', 'external_url', 'institution_id'] as const) {
     if (patch[k] !== undefined) update[k] = patch[k];

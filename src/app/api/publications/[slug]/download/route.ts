@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPublicationBySlug, getPublishedChapters } from '@/lib/creators/server';
 import { buildEpub } from '@/lib/creators/epub';
+import { isPublicHttpsUrl } from '@/lib/safeUrl';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,8 +104,8 @@ const MAX_ATTACHED_BYTES = 40 * 1024 * 1024;
 
 async function fetchAttachedFile(url: string): Promise<{ buf: ArrayBuffer; type: string; ext: string } | null> {
   try {
+    if (!isPublicHttpsUrl(url)) return null;
     const u = new URL(url);
-    if (u.protocol !== 'https:') return null;
     const upstream = await fetch(u.toString(), { redirect: 'follow', signal: AbortSignal.timeout(20000) });
     if (!upstream.ok) return null;
     const declared = Number(upstream.headers.get('content-length') || 0);

@@ -163,7 +163,7 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
         {/* Preview body — the ANYFREEBOOK Reader when the source has readable content */}
         {readerTarget ? (
           <div className="flex-1 overflow-hidden p-2 bg-[var(--bg-secondary)]">
-            <DocumentReader url={readerTarget.url} mode={readerTarget.mode} title={book.title} height="100%" />
+            <DocumentReader url={readerTarget.url} mode={readerTarget.mode} title={book.title} height="min(calc(100vh - 230px), calc(90vh - 130px))" />
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4">

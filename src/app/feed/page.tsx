@@ -6,7 +6,7 @@ import { AutoLoadMore } from '@/components/AutoLoadMore';
 import { ShareButton } from '@/components/ShareSheet';
 import { Icon } from '@/components/icons';
 import { SponsorStrip } from '@/components/Sponsors';
-import { placeholderGradient } from '@/components/BookCover';
+import { placeholderGradient } from '@/lib/covers';
 import { FeedPubActions } from '@/components/FeedPubActions';
 
 export const dynamic = 'force-dynamic';

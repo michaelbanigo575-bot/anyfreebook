@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchBooks, type Book } from '@/lib/data';
-import { placeholderGradient } from './BookCover';
+import { placeholderGradient } from '@/lib/covers';
 import { CATALOGUE } from '@/lib/catalogueStats';
 
 interface SearchBarProps {

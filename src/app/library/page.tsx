@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { createClient } from '@/lib/supabase/client';
 import { readingHistory, type ReadingItem } from '@/lib/continueReading';
-import { placeholderGradient } from '@/components/BookCover';
+import { placeholderGradient } from '@/lib/covers';
 
 interface Shelf { href: string; title: string; note: string }
 type Tab = 'reading' | 'saved';

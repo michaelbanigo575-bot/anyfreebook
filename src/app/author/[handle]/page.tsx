@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getAuthorByHandle, getAuthorPosts } from '@/lib/creators/server';
 import { ShareButton } from '@/components/ShareSheet';
 import { Icon } from '@/components/icons';
-import { placeholderGradient } from '@/components/BookCover';
+import { placeholderGradient } from '@/lib/covers';
 import { getLiveClassForAuthor } from '@/lib/classrooms/server';
 import { tierForReads } from '@/lib/creators/types';
 import { FollowButton } from '@/components/FollowButton';

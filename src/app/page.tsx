@@ -93,7 +93,7 @@ export default async function HomePage() {
       {/* HERO — no overflow-hidden here: the Category dropdown is absolutely
           positioned inside this section and would be clipped by it. The
           decorative blur layer below has its own overflow-hidden. */}
-      <section className="relative pt-5 pb-4 md:pt-24 md:pb-20">
+      <section className="relative pt-5 pb-3 md:pt-7 md:pb-4">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl animate-pulse-slow" />
           <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
@@ -101,7 +101,7 @@ export default async function HomePage() {
         </div>
 
         <div className="content-wrapper text-center">
-          <div className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6 animate-fade-in">
+          <div className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-3 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--primary)] font-mono text-xs tracking-widest font-semibold">
               {CATALOGUE.liveBooksShort} FREE BOOKS & PAPERS FROM {CATALOGUE.fields} FIELDS
@@ -114,13 +114,13 @@ export default async function HomePage() {
             {' '}One place.
           </h1>
 
-          <p className="hidden md:block mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <p className="hidden md:block mt-3 text-lg text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
             The free book aggregator — pulling live from
             Open Library, Project Gutenberg, Google Books, Internet Archive, LibriVox, PubMed Central, and DOAJ.
           </p>
 
           {/* Main search + Category dropdown side by side */}
-          <div className="mt-5 md:mt-10 max-w-2xl mx-auto flex items-stretch gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="mt-4 md:mt-5 max-w-2xl mx-auto flex items-stretch gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex-1 min-w-0">
               <SearchBar />
             </div>
@@ -139,7 +139,7 @@ export default async function HomePage() {
       </section>
 
       {/* NEW ON ANYFREEBOOK — feature showcase */}
-      <section className="content-wrapper py-10">
+      <section className="content-wrapper py-5">
         <SectionHeader title="New on ANYFREEBOOK" icon="🚀" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
@@ -168,7 +168,7 @@ export default async function HomePage() {
       </section>
 
       {/* TRENDING — Live from APIs */}
-      <section className="content-wrapper py-10">
+      <section className="content-wrapper py-5">
         <SectionHeader title="Trending now — Live" icon="🔥" action={{ label: 'Search more', href: '/search' }} />
         <LiveTrendingSection books={allTrending} />
       </section>
@@ -176,25 +176,25 @@ export default async function HomePage() {
       <SponsorShelf />
 
       {/* RECENTLY ADDED */}
-      <section className="content-wrapper py-10">
+      <section className="content-wrapper py-5">
         <SectionHeader title="Just added" icon="✨" action={{ label: 'See all', href: '/new' }} />
         <BookGrid books={newBooks} layout="carousel" />
       </section>
 
       {/* AUDIOBOOKS */}
-      <section className="content-wrapper py-10">
+      <section className="content-wrapper py-5">
         <SectionHeader title="Free audiobooks" icon="🎧" action={{ label: 'Browse all', href: '/audiobooks' }} />
         <BookGrid books={audiobooks} layout="shelf" />
       </section>
 
       {/* CURATED COLLECTIONS */}
-      <section className="content-wrapper py-10">
+      <section className="content-wrapper py-5">
         <SectionHeader title="Curated collections" icon="📚" />
         <CollectionGrid collections={collections} />
       </section>
 
       {/* STATS BAR */}
-      <section className="bg-[var(--bg-secondary)] py-16 mt-12 border-y border-[var(--border-subtle)]">
+      <section className="bg-[var(--bg-secondary)] py-8 mt-6 border-y border-[var(--border-subtle)]">
         <div className="content-wrapper">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <StatBlock number={CATALOGUE.liveBooksShort} label="Free Books & Papers" />
@@ -206,7 +206,7 @@ export default async function HomePage() {
       </section>
 
       {/* FAQ for SEO */}
-      <section className="content-wrapper py-12">
+      <section className="content-wrapper py-7">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -242,7 +242,7 @@ export default async function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="content-wrapper py-20 text-center">
+      <section className="content-wrapper py-10 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-4">
           Start reading for free today
         </h2>

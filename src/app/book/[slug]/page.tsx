@@ -95,7 +95,7 @@ export default async function BookPage({ params }: { params: { slug: string } })
         <script key={`schema-${i}`} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
 
-      <div className="content-wrapper py-3 md:py-8">
+      <div className="content-wrapper py-3 md:py-5">
         {/* Breadcrumb */}
         <nav className="hidden sm:flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
           <a href="/" className="hover:text-[var(--text)] transition-colors">Home</a>
@@ -248,7 +248,7 @@ export default async function BookPage({ params }: { params: { slug: string } })
 
         {/* Related books */}
         {relatedBooks.length > 0 && (
-          <section className="mt-16">
+          <section className="mt-8">
             <SectionHeader title={`More ${book.category.name} books`} icon="📖" action={{ label: 'See all', href: `/category/${book.category.slug}` }} />
             <BookGrid books={relatedBooks} layout="carousel" />
           </section>

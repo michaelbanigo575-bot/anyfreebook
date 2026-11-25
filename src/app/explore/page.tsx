@@ -19,8 +19,8 @@ export default function ExplorePage() {
   const curated = getAllBooks().length;
 
   return (
-    <div className="content-wrapper py-8">
-      <div className="mb-10">
+    <div className="content-wrapper py-5">
+      <div className="mb-5">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           Browse by profession
         </h1>

@@ -89,7 +89,7 @@ function LoginForm() {
 
   if (awaitingConfirmation) {
     return (
-      <div className="content-wrapper py-16 flex items-center justify-center min-h-[70vh]">
+      <div className="content-wrapper py-8 flex items-center justify-center min-h-[70vh]">
         <div className="w-full max-w-md text-center">
           <p className="text-5xl mb-4">📧</p>
           <h1 className="text-2xl font-display font-bold text-[var(--text)] mb-2">Check your email</h1>
@@ -108,7 +108,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="content-wrapper py-16 flex items-center justify-center min-h-[70vh]">
+    <div className="content-wrapper py-8 flex items-center justify-center min-h-[70vh]">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

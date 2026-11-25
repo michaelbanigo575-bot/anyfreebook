@@ -80,8 +80,8 @@ export default function SourcesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <div className="content-wrapper py-8">
-        <div className="max-w-3xl mx-auto mb-12">
+      <div className="content-wrapper py-5">
+        <div className="max-w-3xl mx-auto mb-6">
           <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)] mb-4">
             Where the books come from
           </h1>
@@ -107,7 +107,7 @@ export default function SourcesPage() {
           ))}
         </div>
 
-        <section className="max-w-3xl mx-auto mt-12">
+        <section className="max-w-3xl mx-auto mt-6">
           <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">
             And our own catalogue
           </h2>

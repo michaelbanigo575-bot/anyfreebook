@@ -56,7 +56,7 @@ const SOURCES = SOURCE_REGISTRY.map(s => s.label);
 
 export default function DevelopersPage() {
   return (
-    <div className="content-wrapper py-10">
+    <div className="content-wrapper py-5">
       <div className="max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)] mb-3">
           For developers
@@ -75,7 +75,7 @@ export default function DevelopersPage() {
           catalogue record — before you ship a link to it.
         </p>
 
-        <div className="flex flex-wrap gap-3 mb-10">
+        <div className="flex flex-wrap gap-3 mb-5">
           <a
             href="https://github.com/michaelbanigo575-bot/anyfreebook-cli"
             className={primaryButtonClass()}
@@ -96,7 +96,7 @@ export default function DevelopersPage() {
       </div>
 
       {/* Quick start */}
-      <section className="mb-12">
+      <section className="mb-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">Quick start</h2>
         <pre className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-4 text-sm text-[var(--text-secondary)]">
 {`curl "https://anyfreebook.com/api/v1/search?q=pride+and+prejudice&limit=3"
@@ -109,7 +109,7 @@ export default function DevelopersPage() {
       </section>
 
       {/* Endpoints */}
-      <section className="mb-12">
+      <section className="mb-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-4">Endpoints</h2>
         <div className="space-y-3">
           {ENDPOINTS.map(e => (
@@ -127,7 +127,7 @@ export default function DevelopersPage() {
       </section>
 
       {/* Tiers */}
-      <section className="mb-12">
+      <section className="mb-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">The tier system</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
           The tier comes from the source&rsquo;s own metadata — for the Internet Archive we read
@@ -147,7 +147,7 @@ export default function DevelopersPage() {
       </section>
 
       {/* Sources */}
-      <section className="mb-12">
+      <section className="mb-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">Sources</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-3">
           {SOURCE_REGISTRY.length} open-access sources, asked in parallel. When one does not answer, the response
@@ -167,7 +167,7 @@ export default function DevelopersPage() {
       </section>
 
       {/* Clients */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-4">Clients</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className={cardClass({ hover: false })}>

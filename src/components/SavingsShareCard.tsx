@@ -87,7 +87,7 @@ export function SavingsShareCard({ bookTitle, bookAuthor, retailPrice, onClose }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden">
         {/* Celebration header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-8 text-center text-white">
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5 text-center text-white">
           {price ? (
             <>
               <p className="text-sm font-medium opacity-90 mb-1">🎉 You just saved</p>

@@ -90,7 +90,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
         }}
       />
 
-      <article className="content-wrapper py-8">
+      <article className="content-wrapper py-5">
         <nav className="text-sm text-[var(--text-muted)] mb-5">
           <Link href="/guides" className="hover:underline">
             ← All guides

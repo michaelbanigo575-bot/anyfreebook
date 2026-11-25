@@ -130,7 +130,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <script key={`schema-${i}`} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
 
-      <div className="content-wrapper py-8">
+      <div className="content-wrapper py-5">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
           <a href="/" className="hover:text-[var(--text)] transition-colors">Home</a>
@@ -139,7 +139,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         </nav>
 
         {/* Header */}
-        <div className={`rounded-2xl p-8 md:p-12 bg-gradient-to-br ${category.gradient} border border-[var(--border-subtle)] mb-10`}>
+        <div className={`rounded-2xl p-8 md:p-12 bg-gradient-to-br ${category.gradient} border border-[var(--border-subtle)] mb-5`}>
           <span className="text-5xl mb-4 block">{category.icon}</span>
           <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
             Free {category.name} Books
@@ -167,7 +167,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <BookGrid books={books} layout="grid" />
 
         {books.length === 0 && (
-          <div className="text-center py-20">
+          <div className="text-center py-10">
             <p className="text-5xl mb-4">📚</p>
             <p className="text-lg font-medium text-[var(--text-secondary)]">Books coming soon</p>
             <p className="text-sm text-[var(--text-muted)] mt-2">We&apos;re adding {name} books daily.</p>
@@ -183,7 +183,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
         <SponsorStrip offset={5} />
 
         {/* FAQ section */}
-        <section className="mt-16 max-w-3xl">
+        <section className="mt-8 max-w-3xl">
           <h2 className="text-xl font-display font-bold text-[var(--text)] mb-6">
             Frequently asked questions
           </h2>

@@ -58,7 +58,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
         <div className="absolute -bottom-32 left-1/3 w-[500px] h-[300px] bg-emerald-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative px-4 md:px-8 py-8 max-w-6xl mx-auto space-y-6">
+      <div className="relative px-4 md:px-8 py-5 max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -177,7 +177,7 @@ export function DashboardClient({ handle, displayName, pubs, stats, earnings, ti
           </div>
 
           {pubs.length === 0 ? (
-            <div className="text-center py-16 rounded-3xl border border-white/10 bg-white/[0.03]">
+            <div className="text-center py-8 rounded-3xl border border-white/10 bg-white/[0.03]">
               <p className="text-5xl mb-3">✨</p>
               <p className="font-semibold text-white/90">Your studio is ready</p>
               <p className="text-sm text-white/50 mt-1 mb-5">Publish your first work and start building readers and earnings.</p>

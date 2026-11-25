@@ -87,7 +87,7 @@ export default function ProfilePage() {
 
   if (loading || !user) {
     return (
-      <div className="content-wrapper py-20 text-center text-[var(--text-muted)]">
+      <div className="content-wrapper py-10 text-center text-[var(--text-muted)]">
         Loading...
       </div>
     );
@@ -121,7 +121,7 @@ export default function ProfilePage() {
   const displayName = profile?.display_name || user.email?.split('@')[0] || 'Reader';
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       {/* Profile header */}
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ export default function ProfilePage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">{tabs.find(t => t.id === activeTab)?.icon}</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">
             No {activeTab === 'history' ? 'liked books' : activeTab} yet

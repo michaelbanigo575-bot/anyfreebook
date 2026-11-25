@@ -27,7 +27,7 @@ export default function NewInstitutionPage() {
 
   if (!loading && !user) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">🏛</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to add your institution</h1>
         <a href="/login?redirect=/institutions/new" className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Sign In</a>
@@ -46,7 +46,7 @@ export default function NewInstitutionPage() {
   };
 
   return (
-    <div className="content-wrapper py-8 max-w-xl mx-auto">
+    <div className="content-wrapper py-5 max-w-xl mx-auto">
       <h1 className="text-2xl font-display font-bold text-[var(--text)] mb-1">🏛 Add your institution</h1>
       <p className="text-sm text-[var(--text-muted)] mb-6">Free forever — manage members, assign reading, host classes, and publish under your institution&apos;s name.</p>
 

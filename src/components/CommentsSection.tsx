@@ -83,7 +83,7 @@ export function CommentsSection({ publicationId }: { publicationId: string }) {
   };
 
   return (
-    <section id="comments" className="mt-12 scroll-mt-20">
+    <section id="comments" className="mt-6 scroll-mt-20">
       <h2 className="text-lg font-bold text-[var(--text)] mb-4">
         Comments {comments.length > 0 && <span className="text-[var(--text-muted)] font-normal">({comments.length})</span>}
       </h2>

@@ -6,7 +6,7 @@ import { SavingsBadge } from '@/components/SavingsShareCard';
 
 export default function RewardsPage() {
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">
           Rewards & Referrals

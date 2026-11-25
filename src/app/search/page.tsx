@@ -123,7 +123,7 @@ function SearchResults() {
   };
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <div className="mb-8 max-w-2xl">
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-6">
           Search 7 million+ free books and papers
@@ -325,7 +325,7 @@ function SearchResults() {
       )}
 
       {!loading && query && results.length === 0 && (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">🔍</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No books found</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">Try different keywords or browse categories</p>
@@ -333,7 +333,7 @@ function SearchResults() {
       )}
 
       {!query && (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">📚</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">Search millions of free books, textbooks & research papers</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">
@@ -358,7 +358,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="content-wrapper py-8"><p>Loading...</p></div>}>
+    <Suspense fallback={<div className="content-wrapper py-5"><p>Loading...</p></div>}>
       <SearchResults />
     </Suspense>
   );

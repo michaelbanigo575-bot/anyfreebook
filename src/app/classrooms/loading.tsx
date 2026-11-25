@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function ClassroomsLoading() {
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex items-center justify-between gap-4 mb-8">
         <Skeleton className="h-9 w-56 rounded-xl" />
         <Skeleton className="h-10 w-40 rounded-xl" />

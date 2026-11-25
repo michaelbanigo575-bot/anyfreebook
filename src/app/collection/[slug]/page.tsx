@@ -29,7 +29,7 @@ export default function CollectionPage({ params }: { params: { slug: string } })
   const books = getCollectionBooks(params.slug);
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
         <a href="/" className="hover:text-[var(--text)] transition-colors">Home</a>
         <span>/</span>
@@ -38,7 +38,7 @@ export default function CollectionPage({ params }: { params: { slug: string } })
         <span className="text-[var(--text-secondary)] line-clamp-1">{collection.title}</span>
       </nav>
 
-      <div className="max-w-2xl mb-10">
+      <div className="max-w-2xl mb-5">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary-light)] text-[var(--primary)] mb-3">
           📚 Curated Collection
         </span>
@@ -56,7 +56,7 @@ export default function CollectionPage({ params }: { params: { slug: string } })
       {books.length > 0 ? (
         <BookGrid books={books} layout="grid" />
       ) : (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">📭</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No books found in this collection yet</p>
         </div>

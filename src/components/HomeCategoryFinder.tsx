@@ -103,7 +103,7 @@ export function HomeCategoryFinder({ categories }: { categories: Category[] }) {
           </div>
           <div className="max-h-[46vh] overflow-y-auto p-1.5">
             {groups.length === 0 && (
-              <p className="text-center text-sm text-[var(--text-muted)] py-8">Nothing matches &ldquo;{q}&rdquo;</p>
+              <p className="text-center text-sm text-[var(--text-muted)] py-5">Nothing matches &ldquo;{q}&rdquo;</p>
             )}
             {groups.map(group => (
               <div key={group.key}>

@@ -45,7 +45,7 @@ export function DashboardClient({
   };
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
         <Link href={`/institutions/${institution.slug}`} className="text-sm text-[var(--text-muted)] hover:text-[var(--text)]">← {institution.name}</Link>
       </div>

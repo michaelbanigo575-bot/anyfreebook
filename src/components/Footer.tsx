@@ -58,8 +58,8 @@ const linkGroups = [
   ];
 
   return (
-    <footer className="bg-[var(--bg-secondary)] border-t border-[var(--border)] mt-20 pb-20 md:pb-0">
-      <div className="content-wrapper py-16">
+    <footer className="bg-[var(--bg-secondary)] border-t border-[var(--border)] mt-10 pb-20 md:pb-0">
+      <div className="content-wrapper py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-4 lg:mb-0">
@@ -112,7 +112,7 @@ const linkGroups = [
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-6 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[var(--text-muted)]">
             &copy; {new Date().getFullYear()} ANYFREEBOOK. All books sourced from legal, open-access repositories.
           </p>

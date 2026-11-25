@@ -59,7 +59,7 @@ export default function LibraryPage() {
   }, [user]);
 
   const empty = (text: string) => (
-    <div className="text-center py-16">
+    <div className="text-center py-8">
       <p className="text-[var(--text-secondary)]">{text}</p>
       <Link href="/explore" className="inline-flex items-center min-h-[44px] mt-4 px-6 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Find a book</Link>
     </div>
@@ -82,12 +82,12 @@ export default function LibraryPage() {
         : empty('What you read on this device shows up here.'))}
 
       {tab === 'saved' && !loading && !user && (
-        <div className="text-center py-16">
+        <div className="text-center py-8">
           <p className="text-[var(--text-secondary)]">Sign in to see the books you saved.</p>
           <Link href="/login?redirect=/library" className="inline-flex items-center min-h-[44px] mt-4 px-6 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Sign in</Link>
         </div>
       )}
-      {tab === 'saved' && user && saved === null && <p className="py-16 text-center text-[var(--text-muted)]">Loading your shelf…</p>}
+      {tab === 'saved' && user && saved === null && <p className="py-8 text-center text-[var(--text-muted)]">Loading your shelf…</p>}
       {tab === 'saved' && user && saved !== null && (
         <>
           {failed && <p role="alert" className="mb-3 text-sm text-red-600">Some saved items couldn&apos;t load. Refresh to try again.</p>}

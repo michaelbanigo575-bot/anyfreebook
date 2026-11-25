@@ -16,8 +16,8 @@ export default function TrendingPage() {
   const books = getTrendingBooks();
 
   return (
-    <div className="content-wrapper py-8">
-      <div className="mb-10">
+    <div className="content-wrapper py-5">
+      <div className="mb-5">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           🔥 Trending this week
         </h1>

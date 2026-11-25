@@ -25,7 +25,7 @@ export default function NewFeedPostPage() {
 
   if (!loading && !user) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">✍️</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to post to the feed</h1>
         <a href="/login?redirect=/feed/new" className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Sign In</a>
@@ -35,7 +35,7 @@ export default function NewFeedPostPage() {
 
   if (!loading && user && !profile?.is_creator) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">🚀</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Become an author to post</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">The feed is for ANYFREEBOOK authors to share updates with their readers.</p>
@@ -71,7 +71,7 @@ export default function NewFeedPostPage() {
   };
 
   return (
-    <div className="content-wrapper py-8 max-w-2xl mx-auto">
+    <div className="content-wrapper py-5 max-w-2xl mx-auto">
       <h1 className="text-2xl font-display font-bold text-[var(--text)] mb-6">New feed post</h1>
 
       <div className="flex gap-2 mb-5">

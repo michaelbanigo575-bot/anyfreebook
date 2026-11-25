@@ -53,7 +53,7 @@ export default function FAQPage() {
       {schemas.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
-      <div className="content-wrapper py-8 max-w-3xl mx-auto">
+      <div className="content-wrapper py-5 max-w-3xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)] mb-8">
           Frequently asked questions
         </h1>

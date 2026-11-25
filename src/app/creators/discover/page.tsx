@@ -16,7 +16,7 @@ export default async function DiscoverPage() {
   const pubs = await getRecentPublications(48);
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Published on ANYFREEBOOK</h1>
@@ -26,7 +26,7 @@ export default async function DiscoverPage() {
       </div>
 
       {pubs.length === 0 ? (
-        <div className="text-center py-20 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)]">
+        <div className="text-center py-10 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)]">
           <p className="text-5xl mb-3">✍️</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No published works yet — be the first</p>
           <p className="text-sm text-[var(--text-muted)] mt-1 mb-5">Publish your book, story, or guide and start earning from readers.</p>

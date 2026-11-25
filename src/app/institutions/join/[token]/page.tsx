@@ -23,7 +23,7 @@ export default function JoinInstitutionPage() {
 
   if (!loading && !user) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">🏛</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to join</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">You&apos;ve been invited to join an institution on ANYFREEBOOK.</p>
@@ -34,7 +34,7 @@ export default function JoinInstitutionPage() {
 
   if (status === 'error') {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">⚠️</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Couldn&apos;t join</h1>
         <p className="text-sm text-[var(--text-muted)]">{error}</p>
@@ -43,7 +43,7 @@ export default function JoinInstitutionPage() {
   }
 
   return (
-    <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+    <div className="content-wrapper py-10 text-center max-w-md mx-auto">
       <p className="text-5xl mb-4">🏛</p>
       <p className="text-[var(--text-muted)]">Joining…</p>
     </div>

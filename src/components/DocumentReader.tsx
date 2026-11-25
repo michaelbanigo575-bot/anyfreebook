@@ -218,7 +218,7 @@ function TextStage({ url, title, height }: { url: string; title?: string; height
           </div>
         ) : (
           <article
-            className="mx-auto max-w-2xl px-4 sm:px-6 py-6 sm:py-8 whitespace-pre-wrap break-words font-serif font-medium text-[var(--text)]"
+            className="mx-auto max-w-2xl px-4 sm:px-6 py-6 sm:py-5 whitespace-pre-wrap break-words font-serif font-medium text-[var(--text)]"
             style={{ fontSize, lineHeight: 1.75, hyphens: 'auto' }}
           >
             {text}

@@ -35,7 +35,7 @@ export default async function InstitutionProfilePage({ params }: { params: { slu
   const upcomingClasses = classrooms.filter(c => c.status !== 'ended');
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
@@ -72,7 +72,7 @@ export default async function InstitutionProfilePage({ params }: { params: { slu
       )}
 
       {upcomingClasses.length > 0 && (
-        <section className="mb-10">
+        <section className="mb-5">
           <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Classes</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             {upcomingClasses.map(c => (

@@ -15,7 +15,7 @@ export function BecomeCreator({ config }: { config: { pool_percentage: number; m
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto text-center py-16">
+      <div className="max-w-md mx-auto text-center py-8">
         <p className="text-5xl mb-4">✍️</p>
         <h1 className="text-2xl font-bold text-[var(--text)] mb-2">Sign in to start publishing</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">Create your author account and start earning from your writing.</p>
@@ -36,7 +36,7 @@ export function BecomeCreator({ config }: { config: { pool_percentage: number; m
   };
 
   return (
-    <div className="max-w-lg mx-auto py-8">
+    <div className="max-w-lg mx-auto py-5">
       <div className="text-center mb-8">
         <p className="text-5xl mb-3">🚀</p>
         <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Become an ANYFREEBOOK author</h1>

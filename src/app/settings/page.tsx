@@ -166,7 +166,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-8">Settings</h1>
 
       <div className="flex flex-col md:flex-row gap-8">

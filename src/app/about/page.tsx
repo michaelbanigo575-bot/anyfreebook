@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)] text-center">
           Making knowledge free for{' '}
@@ -21,7 +21,7 @@ export default function AboutPage() {
           worldwide — {CATALOGUE.liveBooks} books and papers across {CATALOGUE.fields} fields and
           professions. Our mission is simple: no one should be priced out of knowledge.        </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-12 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center my-16 py-7 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-subtle)]">
           <StatBlock number={CATALOGUE.liveBooksShort} label="Free Books & Papers" />
           <StatBlock number={CATALOGUE.gutenbergTitles} label="Gutenberg Titles" />
           <StatBlock number={CATALOGUE.categories} label="Categories" />

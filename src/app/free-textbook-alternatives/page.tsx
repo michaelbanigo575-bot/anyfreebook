@@ -39,7 +39,7 @@ export default function FreeTextbookAlternativesPage() {
   const totalSavings = POPULAR_TEXTBOOKS.reduce((sum, t) => sum + t.savings, 0);
 
   return (
-    <div className="content-wrapper py-12 max-w-4xl mx-auto">
+    <div className="content-wrapper py-7 max-w-4xl mx-auto">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -93,7 +93,7 @@ export default function FreeTextbookAlternativesPage() {
       </div>
 
       {/* Sources */}
-      <div className="mt-12">
+      <div className="mt-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-4">
           Where we find free textbooks
         </h2>
@@ -111,7 +111,7 @@ export default function FreeTextbookAlternativesPage() {
       </div>
 
       {/* How it works */}
-      <div className="mt-12">
+      <div className="mt-6">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-4">
           How to find free textbooks on ANYFREEBOOK
         </h2>
@@ -135,7 +135,7 @@ export default function FreeTextbookAlternativesPage() {
       </div>
 
       {/* CTA */}
-      <div className="mt-12 text-center py-10 px-6 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
+      <div className="mt-6 text-center py-5 px-6 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
         <h2 className="text-2xl font-display font-bold mb-2">Stop overpaying for textbooks</h2>
         <p className="opacity-90 mb-6">Search 7 million+ free books right now. No sign-up required.</p>
         <Link

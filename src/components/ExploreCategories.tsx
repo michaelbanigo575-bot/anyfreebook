@@ -51,7 +51,7 @@ export function ExploreCategories({ categories }: { categories: Category[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="text-center text-[var(--text-muted)] py-16">No category matches &ldquo;{q}&rdquo; — try another word.</p>
+        <p className="text-center text-[var(--text-muted)] py-8">No category matches &ldquo;{q}&rdquo; — try another word.</p>
       ) : (
         <CategoryGrid categories={filtered} />
       )}

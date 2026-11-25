@@ -18,7 +18,7 @@ export default async function InstitutionsPage() {
   const institutions = await listInstitutions();
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">🏛 Institutions</h1>

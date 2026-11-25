@@ -41,7 +41,7 @@ export default function RootError({
   }, [error]);
 
   return (
-    <div className="content-wrapper py-16 max-w-lg mx-auto text-center">
+    <div className="content-wrapper py-8 max-w-lg mx-auto text-center">
       <p className="text-5xl mb-4">⚠️</p>
       <h1 className="text-xl font-bold text-[var(--text)] mb-2">Something went wrong on this page</h1>
       <p className="text-sm text-[var(--text-muted)] mb-6">

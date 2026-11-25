@@ -16,7 +16,7 @@ export default async function EditPublicationPage({ params }: { params: { id: st
   if (pub.author_id !== user.id) redirect('/creators/dashboard');
 
   return (
-    <div className="content-wrapper py-8">
+    <div className="content-wrapper py-5">
       <h1 className="text-2xl font-display font-bold text-[var(--text)] text-center mb-8">Edit publication</h1>
       <PublishForm existing={pub as Publication} />
     </div>

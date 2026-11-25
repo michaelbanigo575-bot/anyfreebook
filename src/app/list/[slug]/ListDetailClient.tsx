@@ -89,7 +89,7 @@ export function ListDetailClient({ list, initialBooks }: { list: ListInfo; initi
   };
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="mb-8">
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary-light)] text-[var(--primary)] mb-3">
           📋 Reading List
@@ -158,7 +158,7 @@ export function ListDetailClient({ list, initialBooks }: { list: ListInfo; initi
       )}
 
       {books.length === 0 ? (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">📭</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No books in this list yet</p>
         </div>

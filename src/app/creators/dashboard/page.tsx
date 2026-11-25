@@ -16,7 +16,7 @@ export default async function CreatorDashboardPage() {
   const config = await getProgramConfig();
 
   if (!user) {
-    return <div className="content-wrapper py-8"><BecomeCreator config={config} /></div>;
+    return <div className="content-wrapper py-5"><BecomeCreator config={config} /></div>;
   }
 
   const { data: profile } = await supabase
@@ -26,7 +26,7 @@ export default async function CreatorDashboardPage() {
     .single();
 
   if (!profile?.is_creator) {
-    return <div className="content-wrapper py-8"><BecomeCreator config={config} /></div>;
+    return <div className="content-wrapper py-5"><BecomeCreator config={config} /></div>;
   }
 
   const dash = await getCreatorDashboard(user.id);

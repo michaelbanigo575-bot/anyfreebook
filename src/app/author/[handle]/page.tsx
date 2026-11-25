@@ -94,7 +94,7 @@ export default async function AuthorPage({ params, searchParams }: { params: { h
       </nav>
 
       {tab === 'works' && (pubs.length === 0 ? (
-        <p className="text-center py-16 text-[var(--text-muted)]">No published works yet.</p>
+        <p className="text-center py-8 text-[var(--text-muted)]">No published works yet.</p>
       ) : (
         <ul className="grid grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           {pubs.map(p => (
@@ -114,7 +114,7 @@ export default async function AuthorPage({ params, searchParams }: { params: { h
       ))}
 
       {tab === 'posts' && (posts.length === 0 ? (
-        <p className="text-center py-16 text-[var(--text-muted)]">No posts yet.</p>
+        <p className="text-center py-8 text-[var(--text-muted)]">No posts yet.</p>
       ) : (
         <div className="space-y-3">
           {posts.map(p => (

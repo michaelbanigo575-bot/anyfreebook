@@ -92,7 +92,7 @@ export function InstitutionJoin({
   const isMember = role !== null;
 
   return (
-    <div className="mb-10">
+    <div className="mb-5">
       <div className="flex flex-wrap items-center gap-3">
         {isMember ? (
           <>

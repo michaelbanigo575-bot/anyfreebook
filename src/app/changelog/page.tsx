@@ -38,11 +38,11 @@ export default function ChangelogPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <div className="content-wrapper py-8 max-w-3xl mx-auto">
+      <div className="content-wrapper py-5 max-w-3xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)] mb-4">
           What&rsquo;s new
         </h1>
-        <p className="text-[var(--text-secondary)] leading-relaxed mb-10">
+        <p className="text-[var(--text-secondary)] leading-relaxed mb-5">
           Every change that reached production, newest first. Dates are the day the change went
           live, not the day it was written. The full list of open sources is on the{' '}
           <Link href="/sources" className="text-[var(--primary)] hover:underline">

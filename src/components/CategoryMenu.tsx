@@ -62,7 +62,7 @@ export function CategoryMenu() {
           </div>
           <div className="max-h-[55vh] overflow-y-auto p-1.5">
             {filtered.length === 0 && (
-              <p className="text-center text-sm text-[var(--text-muted)] py-8">No category matches &ldquo;{q}&rdquo;</p>
+              <p className="text-center text-sm text-[var(--text-muted)] py-5">No category matches &ldquo;{q}&rdquo;</p>
             )}
             {filtered.map(group => (
               <div key={group.key}>

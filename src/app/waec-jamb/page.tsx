@@ -53,14 +53,14 @@ const RESOURCES = [
 
 export default function WaecJambPage() {
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
         <Link href="/" className="hover:text-[var(--text)]">Home</Link>
         <span>/</span>
         <span className="text-[var(--text-secondary)]">WAEC & JAMB Resources</span>
       </nav>
 
-      <div className="rounded-2xl p-8 md:p-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-[var(--border-subtle)] mb-10">
+      <div className="rounded-2xl p-8 md:p-12 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-[var(--border-subtle)] mb-5">
         <span className="text-5xl mb-4 block">🎓</span>
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           Free WAEC & JAMB Past Questions

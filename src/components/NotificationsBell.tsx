@@ -120,7 +120,7 @@ export function NotificationsBell() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {items.length === 0 ? (
-              <p className="text-xs text-[var(--text-muted)] text-center py-10">
+              <p className="text-xs text-[var(--text-muted)] text-center py-5">
                 Nothing yet — follow authors to hear when they publish or go live.
               </p>
             ) : (

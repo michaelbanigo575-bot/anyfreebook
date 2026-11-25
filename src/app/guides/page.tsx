@@ -42,8 +42,8 @@ export default function GuidesIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
 
-      <div className="content-wrapper py-10">
-        <div className="max-w-3xl mb-10">
+      <div className="content-wrapper py-5">
+        <div className="max-w-3xl mb-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)] mb-3">
             Free PDF guides
           </p>
@@ -103,7 +103,7 @@ export default function GuidesIndexPage() {
           ))}
         </div>
 
-        <section className="max-w-3xl mt-14">
+        <section className="max-w-3xl mt-7">
           <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">
             What is in them
           </h2>

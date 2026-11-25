@@ -91,7 +91,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
     : chapters.map(c => `${c.title}\n\n${htmlToText(c.body || '')}`).join('\n\n').trim();
 
   return (
-    <article className="content-wrapper py-8 max-w-3xl mx-auto">
+    <article className="content-wrapper py-5 max-w-3xl mx-auto">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <ReadTracker slug={pub.slug} title={pub.title} />
 

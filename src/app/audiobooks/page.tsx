@@ -38,8 +38,8 @@ export default async function AudiobooksPage() {
   }
 
   return (
-    <div className="content-wrapper py-8">
-      <div className="mb-10">
+    <div className="content-wrapper py-5">
+      <div className="mb-5">
         <div className="rounded-2xl p-8 md:p-12 bg-gradient-to-br from-purple-500/10 to-violet-500/10 border border-[var(--border-subtle)]">
           <span className="text-5xl block mb-4">🎧</span>
           <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">

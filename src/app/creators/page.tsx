@@ -34,7 +34,7 @@ export default async function CreatorProgramPage() {
           <div className="absolute -top-32 left-1/3 w-[500px] h-[500px] bg-[var(--primary)]/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-32 right-1/4 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-3xl" />
         </div>
-        <div className="content-wrapper text-center py-16 md:py-24">
+        <div className="content-wrapper text-center py-8 md:py-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--primary)] font-mono text-xs tracking-widest font-semibold">CREATOR PROGRAM — NOW OPEN</span>
@@ -58,7 +58,7 @@ export default async function CreatorProgramPage() {
       </section>
 
       {/* THE PITCH — 3 reasons */}
-      <section className="content-wrapper py-12">
+      <section className="content-wrapper py-7">
         <div className="grid md:grid-cols-3 gap-6">
           {[
             { icon: '💰', title: 'Earn from every read', desc: `Every reader who spends real time on your work earns you a slice of the ${config.pool_percentage}% creator pool. The more people read, the more you make.` },
@@ -75,8 +75,8 @@ export default async function CreatorProgramPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="content-wrapper py-12">
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] text-center mb-10">How you get paid</h2>
+      <section className="content-wrapper py-7">
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] text-center mb-5">How you get paid</h2>
         <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {[
             { n: '1', title: 'Publish', desc: 'Post your book, story or guide in minutes. It goes live on your author page and in the feed.' },
@@ -94,7 +94,7 @@ export default async function CreatorProgramPage() {
       </section>
 
       {/* REVENUE SPLIT — transparency framed as generosity */}
-      <section className="content-wrapper py-12">
+      <section className="content-wrapper py-7">
         <div className="max-w-2xl mx-auto rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-8 text-center">
           <h2 className="text-xl font-bold text-[var(--text)] mb-2">A fair, transparent split</h2>
           <p className="text-sm text-[var(--text-muted)] mb-6">We put a full <strong className="text-[var(--primary)]">{config.pool_percentage}%</strong> of the ad revenue your content generates back into the creator pool. We keep {config.platform_percentage}% to run the platform, keep the lights on, and bring you more readers.</p>
@@ -110,9 +110,9 @@ export default async function CreatorProgramPage() {
       </section>
 
       {/* TIERS */}
-      <section className="content-wrapper py-12">
+      <section className="content-wrapper py-7">
         <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] text-center mb-3">Creator tiers</h2>
-        <p className="text-center text-[var(--text-muted)] mb-10">Grow your readership to climb tiers and unlock more.</p>
+        <p className="text-center text-[var(--text-muted)] mb-5">Grow your readership to climb tiers and unlock more.</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {CREATOR_TIERS.map(t => (
             <div key={t.id} className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-5 text-center">
@@ -127,7 +127,7 @@ export default async function CreatorProgramPage() {
 
       {/* RECENT WORKS */}
       {recent.length > 0 && (
-        <section className="content-wrapper py-12">
+        <section className="content-wrapper py-7">
           <h2 className="text-xl font-bold text-[var(--text)] mb-6">Recently published by authors</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {recent.map(p => (
@@ -146,7 +146,7 @@ export default async function CreatorProgramPage() {
       )}
 
       {/* FINAL CTA */}
-      <section className="content-wrapper py-16 text-center">
+      <section className="content-wrapper py-8 text-center">
         <h2 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)] mb-3">Publish free. Earn from every verified read.</h2>
         <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">Join the Creator Program free and start earning from your writing today.</p>
         <Link href="/creators/dashboard" className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">

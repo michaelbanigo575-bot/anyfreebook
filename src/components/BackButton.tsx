@@ -51,7 +51,7 @@ export function BackButton() {
   };
 
   return (
-    <div className="content-wrapper pt-4">
+    <div className="content-wrapper pt-2">
       <button
         onClick={handleBack}
         aria-label="Go back"

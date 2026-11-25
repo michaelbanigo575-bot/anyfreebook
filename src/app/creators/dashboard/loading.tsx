@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="min-h-screen bg-[#0c0a1d] px-4 md:px-8 py-8">
+    <div className="min-h-screen bg-[#0c0a1d] px-4 md:px-8 py-5">
       <div className="max-w-6xl mx-auto space-y-6 animate-pulse">
         <div className="flex items-center justify-between">
           <div>

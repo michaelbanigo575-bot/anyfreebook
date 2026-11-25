@@ -19,7 +19,7 @@ export default async function ClassroomsPage() {
   const scheduled = upcoming.filter(c => c.status === 'scheduled');
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">🎓 Live Classrooms</h1>
@@ -51,7 +51,7 @@ export default async function ClassroomsPage() {
         </section>
       )}
 
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Upcoming</h2>
         {scheduled.length === 0 ? (
           <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-10 text-center">

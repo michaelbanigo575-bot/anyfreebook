@@ -42,9 +42,9 @@ const SUBJECTS = [
 
 export default function UniversitiesPage() {
   return (
-    <div className="content-wrapper py-12">
+    <div className="content-wrapper py-7">
       {/* Hero */}
-      <div className="text-center max-w-3xl mx-auto mb-16">
+      <div className="text-center max-w-3xl mx-auto mb-8">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-6">
           <span className="text-blue-600 dark:text-blue-400 text-xs font-bold tracking-wide">FOR UNIVERSITIES & PROFESSORS</span>
         </div>
@@ -68,7 +68,7 @@ export default function UniversitiesPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {[
           { number: '7M+', label: 'Free books & papers' },
           { number: '7', label: 'Open-access sources searched live' },
@@ -83,7 +83,7 @@ export default function UniversitiesPage() {
       </div>
 
       {/* Features */}
-      <div className="mb-16">
+      <div className="mb-8">
         <h2 className="text-2xl font-display font-bold text-[var(--text)] text-center mb-8">
           Built for academic institutions
         </h2>
@@ -99,7 +99,7 @@ export default function UniversitiesPage() {
       </div>
 
       {/* Subject areas */}
-      <div className="mb-16">
+      <div className="mb-8">
         <h2 className="text-2xl font-display font-bold text-[var(--text)] text-center mb-2">
           Free textbooks by subject
         </h2>
@@ -119,7 +119,7 @@ export default function UniversitiesPage() {
       </div>
 
       {/* How to get started */}
-      <div className="mb-16">
+      <div className="mb-8">
         <h2 className="text-2xl font-display font-bold text-[var(--text)] text-center mb-8">
           Set up in three steps
         </h2>
@@ -142,7 +142,7 @@ export default function UniversitiesPage() {
       </div>
 
       {/* CTA */}
-      <div className="text-center py-12 px-8 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
+      <div className="text-center py-7 px-8 rounded-2xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white">
         <h2 className="text-2xl md:text-3xl font-display font-bold mb-3">
           Ready to bring free reading to your students?
         </h2>

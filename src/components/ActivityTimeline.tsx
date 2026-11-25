@@ -96,7 +96,7 @@ export function ActivityTimeline({ userId }: { userId: string }) {
 
   if (items === null) {
     return (
-      <div className="flex items-center justify-center gap-2 py-16 text-[var(--text-muted)] text-sm">
+      <div className="flex items-center justify-center gap-2 py-8 text-[var(--text-muted)] text-sm">
         <span className="w-5 h-5 rounded-full border-2 border-[var(--border)] border-t-[var(--primary)] animate-spin" />
         Loading your activity…
       </div>
@@ -105,7 +105,7 @@ export function ActivityTimeline({ userId }: { userId: string }) {
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-10">
         <p className="text-5xl mb-4">🕓</p>
         <p className="text-lg font-medium text-[var(--text-secondary)]">No activity yet</p>
         <p className="text-sm text-[var(--text-muted)] mt-2">Attend a class or explore books — your history builds here.</p>

@@ -68,7 +68,7 @@ function Table({ head, rows }: { head: string[]; rows: (string | JSX.Element)[][
 
 export default function ApiReferencePage() {
   return (
-    <div className="content-wrapper py-10">
+    <div className="content-wrapper py-5">
       <div className="max-w-3xl mb-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-[var(--primary)] mb-3">
           API reference
@@ -88,7 +88,7 @@ export default function ApiReferencePage() {
       </div>
 
       {/* Try it */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">Try it</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
           No key needed for the first try — the anonymous tier allows 30 requests a minute. The same
@@ -103,7 +103,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* Sources */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">Sources</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-4">
           Twelve live upstreams behind one query. This table is rendered from the same registry the
@@ -154,7 +154,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* GET /search */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">
           <code className="font-mono">GET /search</code>
         </h2>
@@ -215,7 +215,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* GET /resolve */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">
           <code className="font-mono">GET /resolve</code>
         </h2>
@@ -268,7 +268,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* GET /health */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">
           <code className="font-mono">GET /health</code>
         </h2>
@@ -281,7 +281,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* Auth */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">Authentication</h2>
         <p className="text-sm text-[var(--text-secondary)] mb-3">
           Optional. The anonymous tier works with no setup. A key is sent as a bearer token:{' '}
@@ -295,7 +295,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* Errors */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-3">Errors</h2>
         <div className={cardClass({ hover: false, padding: 'p-4' })}>
           <Table head={['Status', 'Meaning']} rows={ERRORS} />
@@ -303,7 +303,7 @@ export default function ApiReferencePage() {
       </section>
 
       {/* CORS */}
-      <section className="mb-10">
+      <section className="mb-5">
         <h2 className="text-xl font-display font-bold text-[var(--text)] mb-2">CORS</h2>
         <p className="text-sm text-[var(--text-secondary)]">
           Closed by default. The allowlist comes from{' '}

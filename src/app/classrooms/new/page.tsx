@@ -36,7 +36,7 @@ export default function NewClassroomPage() {
 
   if (!loading && !user) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">🎓</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to host a class</h1>
         <a href="/login?redirect=/classrooms/new" className="inline-flex px-6 py-2.5 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Sign In</a>
@@ -46,7 +46,7 @@ export default function NewClassroomPage() {
 
   if (!loading && user && !profile?.is_creator) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">🚀</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Classrooms are for authors</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">Create your free author account first, then host live classes for your readers.</p>
@@ -100,7 +100,7 @@ export default function NewClassroomPage() {
     const base = typeof window !== 'undefined' ? window.location.origin : 'https://anyfreebook.com';
     const link = `${base}/class/${created.roomCode}${created.inviteToken ? `?t=${created.inviteToken}` : ''}`;
     return (
-      <div className="content-wrapper py-16 max-w-lg mx-auto text-center">
+      <div className="content-wrapper py-8 max-w-lg mx-auto text-center">
         <p className="text-5xl mb-4">🎉</p>
         <h1 className="text-2xl font-display font-bold text-[var(--text)] mb-2">Class scheduled!</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">
@@ -128,7 +128,7 @@ export default function NewClassroomPage() {
   }
 
   return (
-    <div className="content-wrapper py-8 max-w-xl mx-auto">
+    <div className="content-wrapper py-5 max-w-xl mx-auto">
       <h1 className="text-2xl font-display font-bold text-[var(--text)] mb-1">🎓 Host a live class</h1>
       <p className="text-sm text-[var(--text-muted)] mb-6">Teach from your published work — live video, screen sharing, and chat, right on ANYFREEBOOK.</p>
 

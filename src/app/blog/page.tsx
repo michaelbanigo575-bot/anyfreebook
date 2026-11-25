@@ -26,8 +26,8 @@ export default function BlogPage() {
   const posts = [...BLOG_POSTS].sort((a, b) => +new Date(b.date) - +new Date(a.date));
 
   return (
-    <div className="content-wrapper py-8">
-      <div className="mb-10">
+    <div className="content-wrapper py-5">
+      <div className="mb-5">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           Blog
         </h1>

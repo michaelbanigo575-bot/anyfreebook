@@ -71,7 +71,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
   )).slice(0, 4);
 
   return (
-    <div className="content-wrapper py-4 md:py-8">
+    <div className="content-wrapper py-4 md:py-5">
       <div className="mx-auto max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_280px] lg:gap-6">
         {/* Desktop navigation */}
         <nav aria-label="Library" className="hidden lg:block">
@@ -140,9 +140,9 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
       )}
 
       {tab === 'live' ? (
-        live.length === 0 && soon.length === 0 && <p className="py-16 text-center text-[var(--text-muted)]">No classes are live or starting soon. <Link href="/classrooms" className="text-[var(--primary)] font-semibold">See all classes</Link></p>
+        live.length === 0 && soon.length === 0 && <p className="py-8 text-center text-[var(--text-muted)]">No classes are live or starting soon. <Link href="/classrooms" className="text-[var(--primary)] font-semibold">See all classes</Link></p>
       ) : items.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-8">
           <p className="text-lg font-medium text-[var(--text-secondary)]">
             {tab !== 'following' ? 'Nothing in the feed yet' : followed === null ? 'Sign in to see the authors you follow' : 'Nothing from authors you follow yet'}
           </p>

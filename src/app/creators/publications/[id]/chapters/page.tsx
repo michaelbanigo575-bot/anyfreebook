@@ -15,7 +15,7 @@ export default async function ChaptersPage({ params }: { params: { id: string } 
   if (pub.author_id !== user.id) redirect('/creators/dashboard');
 
   return (
-    <div className="content-wrapper py-8 max-w-3xl mx-auto">
+    <div className="content-wrapper py-5 max-w-3xl mx-auto">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Chapters — serialized releases</p>
         <h1 className="text-2xl font-display font-bold text-[var(--text)] mt-1">{pub.title}</h1>

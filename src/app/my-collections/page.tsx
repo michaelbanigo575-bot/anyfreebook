@@ -97,7 +97,7 @@ export default function MyCollectionsPage() {
 
   if (!authLoading && !user) {
     return (
-      <div className="content-wrapper py-20 text-center max-w-md mx-auto">
+      <div className="content-wrapper py-10 text-center max-w-md mx-auto">
         <p className="text-5xl mb-4">📋</p>
         <h1 className="text-xl font-bold text-[var(--text)] mb-2">Sign in to create reading lists</h1>
         <p className="text-sm text-[var(--text-muted)] mb-6">
@@ -111,7 +111,7 @@ export default function MyCollectionsPage() {
   }
 
   return (
-    <div className="content-wrapper py-8 max-w-4xl mx-auto">
+    <div className="content-wrapper py-5 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">
@@ -165,9 +165,9 @@ export default function MyCollectionsPage() {
       )}
 
       {loading ? (
-        <p className="text-center py-20 text-[var(--text-muted)]">Loading...</p>
+        <p className="text-center py-10 text-[var(--text-muted)]">Loading...</p>
       ) : collections.length === 0 ? (
-        <div className="text-center py-20">
+        <div className="text-center py-10">
           <p className="text-5xl mb-4">📋</p>
           <p className="text-lg font-medium text-[var(--text-secondary)]">No reading lists yet</p>
           <p className="text-sm text-[var(--text-muted)] mt-2">
@@ -229,7 +229,7 @@ export default function MyCollectionsPage() {
         </div>
       )}
 
-      <div className="mt-12">
+      <div className="mt-6">
         <h2 className="text-lg font-bold text-[var(--text)] mb-4">📖 Suggested Reading Lists</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[

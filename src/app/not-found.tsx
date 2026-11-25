@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: 'Page not found', robots: { index: fa
 
 export default function NotFound() {
   return (
-    <div className="content-wrapper py-20 text-center">
+    <div className="content-wrapper py-10 text-center">
       <p className="text-6xl mb-6">📖</p>
       <h1 className="text-3xl font-display font-bold text-[var(--text)] mb-3">
         Page not found

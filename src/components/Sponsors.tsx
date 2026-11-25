@@ -124,7 +124,7 @@ function Dots({ count, index, pick }: { count: number; index: number; pick: (i: 
     <div className="flex items-center">
       {Array.from({ length: count }, (_, i) => (
         <button key={i} type="button" onClick={() => pick(i)} aria-label={`Show ad ${i + 1} of ${count}`} aria-current={i === index} className="p-1.5">
-          <span className={`block h-1.5 rounded-full transition-all ${i === index ? 'w-4 bg-[var(--primary)]' : 'w-1.5 bg-[var(--border)]'}`} />
+          <span className={`block h-1.5 rounded-full transition-all ${i === index ? 'w-4 bg-[var(--primary)]' : 'w-1.5 bg-[var(--text-muted)]'}`} />
         </button>
       ))}
     </div>

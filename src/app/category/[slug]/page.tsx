@@ -23,6 +23,13 @@ type LiveCategory = {
   total: number;
 };
 
+/** The longest a category page waits for any one source; a late one is simply left out. */
+const SOURCE_BUDGET_MS = 4500;
+
+function withBudget<T>(request: Promise<T>): Promise<T> {
+  return Promise.race([request, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('source too slow')), SOURCE_BUDGET_MS))]);
+}
+
 /**
  * Live results for a category. The counts come from the sources themselves
  * (numFound / totalItems), never from a hardcoded number.
@@ -36,11 +43,11 @@ async function fetchLiveCategoryBooks(query: string, categoryName?: string): Pro
     const wikisource = categoryName ? WIKISOURCE_CATEGORY_LANGUAGES[categoryName] : undefined;
 
     const [ol, archive, gb, ws] = await Promise.allSettled([
-      searchOpenLibrary(query, 30, 1),
-      searchArchive(query, 1, 24),
-      searchGoogleBooks(query, 0, 20),
+      withBudget(searchOpenLibrary(query, 30, 1)),
+      withBudget(searchArchive(query, 1, 24)),
+      withBudget(searchGoogleBooks(query, 0, 20)),
       wikisource
-        ? searchWikisourceLanguage(wikisource.query, { code: wikisource.code, label: wikisource.code }, 1, 24, { exactTitleOnly: false })
+        ? withBudget(searchWikisourceLanguage(wikisource.query, { code: wikisource.code, label: wikisource.code }, 1, 24, { exactTitleOnly: false }))
         : Promise.resolve({ books: [] as Book[], total: 0 }),
     ]);
     const olTotal = ol.status === 'fulfilled' ? ol.value.total : 0;

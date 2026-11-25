@@ -92,11 +92,13 @@ export async function checkAllApis(): Promise<ApiHealth[]> {
     }),
     checkApi('daily-distribution', 'Daily distribution cron', async () => {
       const res = await fetch(`${SITE_URL}/api/cron/daily-distribution`, { signal: AbortSignal.timeout(10000), cache: 'no-store' });
-      return { ok: res.ok, detail: res.ok ? 'Responding' : `HTTP ${res.status}` };
+      const guarded = res.status === 401;
+      return { ok: res.ok || guarded, detail: guarded ? 'Protected: only the scheduler can run it (not tested here)' : res.ok ? 'Responding' : `HTTP ${res.status}` };
     }),
     checkApi('end-stale-classes', 'Stale classroom cleanup cron', async () => {
       const res = await fetch(`${SITE_URL}/api/cron/end-stale-classes`, { signal: AbortSignal.timeout(10000), cache: 'no-store' });
-      return { ok: res.ok, detail: res.ok ? 'Responding' : `HTTP ${res.status}` };
+      const guarded = res.status === 401;
+      return { ok: res.ok || guarded, detail: guarded ? 'Protected: only the scheduler can run it (not tested here)' : res.ok ? 'Responding' : `HTTP ${res.status}` };
     }),
   ]);
 }

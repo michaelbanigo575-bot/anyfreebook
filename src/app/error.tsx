@@ -23,6 +23,14 @@ export default function RootError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Usually an open tab meeting a newer build: one fresh load fixes it
+    try {
+      if (/Loading chunk|ChunkLoadError|Failed to fetch dynamically imported|is not a function|reading 'get'/i.test(String(error?.message || ''))
+          && Date.now() - Number(sessionStorage.getItem('afb-reloaded') || 0) > 60_000) {
+        sessionStorage.setItem('afb-reloaded', String(Date.now()));
+        window.location.reload();
+      }
+    } catch { /* storage blocked */ }
     // Report it, but never let the report itself break the page.
     try {
       fetch('/api/log-error', {

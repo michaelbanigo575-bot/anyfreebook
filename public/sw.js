@@ -1,7 +1,6 @@
-const CACHE_NAME = 'anyfreebook-v4'; // bumped: drops any cached HTML that was stored under a script URL
+const CACHE_NAME = 'anyfreebook-v5'; // bumped: drops saved pages, which could outlive the scripts they need
 const OFFLINE_FALLBACK = '/offline.html';
 const PRECACHE = [
-  '/',
   OFFLINE_FALLBACK,
   '/manifest.json',
   '/favicon.ico',
@@ -10,24 +9,6 @@ const PRECACHE = [
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
 ];
-
-// 1x1 transparent PNG — returned with HTTP 200 when an asset is unreachable
-// offline, so a TWA never sees a failed network resource request.
-const BLANK_PNG_B64 =
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-
-let blankBytes = null;
-function blankResponse() {
-  if (!blankBytes) {
-    const bin = atob(BLANK_PNG_B64);
-    blankBytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) blankBytes[i] = bin.charCodeAt(i);
-  }
-  return new Response(blankBytes, {
-    status: 200,
-    headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' },
-  });
-}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -95,23 +76,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Pages & everything else: network-first, then the cached page, then the
-  // offline page. Error statuses (404/5xx) are passed through untouched so
-  // real 404s stay real 404s.
+  // Pages: always from the network, so they match the current build. Offline gets a clear
+  // offline page. Everything else (including the router's data requests) is left to the
+  // browser: answering those with a saved page or a placeholder breaks navigation.
+  if (request.mode !== 'navigate') return;
+
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && request.mode === 'navigate') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      })
-      .catch(() =>
-        caches
-          .match(request)
-          .then((cached) => cached || caches.match(OFFLINE_FALLBACK))
-          .then((cached) => cached || blankResponse())
+    fetch(request).catch(() =>
+      caches.match(OFFLINE_FALLBACK).then(
+        (cached) =>
+          cached ||
+          new Response('<!doctype html><meta name=viewport content="width=device-width"><title>Offline</title><p style="font:16px system-ui;padding:24px">You are offline. <a href="">Try again</a></p>', {
+            status: 503,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
+          })
       )
+    )
   );
 });

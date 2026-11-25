@@ -13,6 +13,13 @@ const CRON_ROUTES = {
  * after a deploy. Hashed scripts and styles are unaffected and stay cached for a year.
  */
 async function freshPages(request, env, ctx) {
+  const url = new URL(request.url);
+  // App-link verification files must answer on every host without a redirect
+  if (url.hostname === 'www.anyfreebook.com' && !url.pathname.startsWith('/.well-known/')) {
+    url.hostname = 'anyfreebook.com';
+    return Response.redirect(url.toString(), 308);
+  }
+
   const response = await worker.fetch(request, env, ctx);
   const cache = response.headers.get('cache-control') || '';
   const isPage = (response.headers.get('content-type') || '').startsWith('text/html')

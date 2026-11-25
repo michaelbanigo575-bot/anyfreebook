@@ -22,8 +22,8 @@ export default function GlobalError({
     try {
       const msg = String(error?.message || '');
       if (/Loading chunk|ChunkLoadError|Failed to fetch dynamically imported|is not a function|reading 'get'/i.test(msg)
-          && !sessionStorage.getItem('afb-reloaded')) {
-        sessionStorage.setItem('afb-reloaded', '1');
+          && Date.now() - Number(sessionStorage.getItem('afb-reloaded') || 0) > 60_000) {
+        sessionStorage.setItem('afb-reloaded', String(Date.now()));
         window.location.reload();
         return;
       }

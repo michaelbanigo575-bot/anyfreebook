@@ -11,10 +11,12 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { useTheme } from './ThemeProvider';
 import { MoreMenu, AccountMenu } from './NavMenus';
 import { MobileMenuSheet, MobileBottomNav } from './MobileNav';
+import { SectionSwitch, useSection } from './SectionSwitch';
 
 export function Navbar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const section = useSection();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, setTheme, isCustom } = useTheme();
@@ -36,25 +38,16 @@ export function Navbar() {
 
   if (pathname?.startsWith('/admin')) return null;
 
-  const navLinks = [
-    { label: 'Home', href: '/' },
-    { label: 'Explore', href: '/explore' },
-    { label: 'Trending', href: '/trending' },
-    { label: 'Audiobooks', href: '/audiobooks' },
-    { label: 'Feed', href: '/feed' },
-    { label: 'Classrooms', href: '/classrooms' },
-    { label: 'Institutions', href: '/institutions' },
-    { label: 'Free Guides', href: '/guides' },
-    // Signed-in users reach Publish & Earn from their profile dashboard instead
-    ...(user ? [] : [{ label: 'Publish & Earn', href: '/creators' }]),
+  // Desktop shows the section's main links; everything else lives under "More"
+  const primaryLinks = section === 'community'
+    ? [{ label: 'Feed', href: '/feed' }, { label: 'Classes', href: '/classrooms' }, { label: 'Institutions', href: '/institutions' }, { label: 'Publish & Earn', href: '/creators' }]
+    : [{ label: 'Explore', href: '/explore' }, { label: 'Trending', href: '/trending' }, { label: 'Audiobooks', href: '/audiobooks' }];
+  const moreLinks = [
+    ...(section === 'community' ? [{ label: 'Find authors', href: '/creators/discover' }] : [{ label: 'New books', href: '/new' }, { label: 'Free Guides', href: '/guides' }]),
+    { label: 'My library', href: '/library' },
     { label: 'Study Plan', href: '/study-plan' },
     { label: 'Rewards', href: '/rewards' },
   ];
-
-  // Desktop shows five primary links; the rest live under "More" so the bar never overflows.
-  const primaryHrefs = ['/explore', '/audiobooks', '/classrooms', user ? '/feed' : '/creators'];
-  const primaryLinks = navLinks.filter(l => primaryHrefs.includes(l.href));
-  const moreLinks = navLinks.filter(l => !primaryHrefs.includes(l.href) && l.href !== '/');
 
   return (
     <>
@@ -68,7 +61,7 @@ export function Navbar() {
         `}
       >
         <div className="content-wrapper">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 flex-shrink-0">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center shadow-sm">
@@ -100,7 +93,7 @@ export function Navbar() {
                   </Link>
                 );
               })}
-              <CategoryMenu />
+              {section === 'discover' && <CategoryMenu />}
               <MoreMenu links={moreLinks} />
             </nav>
 
@@ -158,14 +151,16 @@ export function Navbar() {
               Menu
             </button>
           </div>
+          <SectionSwitch section={section} />
         </div>
       </header>
 
-      <MobileMenuSheet open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} isDark={isDark} onToggleTheme={toggleTheme} />
-      <MobileBottomNav />
+      <MobileMenuSheet section={section} open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} isDark={isDark} onToggleTheme={toggleTheme} />
+      <MobileBottomNav section={section} />
 
       {/* Spacer for fixed navbar */}
-      <div className="h-16 md:h-20" />
+      {/* header row (56/64px) plus the section switch row (52px) */}
+      <div className="h-[108px] md:h-[116px]" />
     </>
   );
 }

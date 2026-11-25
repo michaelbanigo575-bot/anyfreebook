@@ -125,7 +125,7 @@ export function ReaderSurface({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
       {/* Aa trigger */}
-      <div className="sticky top-20 z-30 flex justify-end -mb-10 pointer-events-none">
+      <div className="sticky top-28 md:top-32 z-30 flex justify-end -mb-10 pointer-events-none">
         <button
           ref={triggerRef}
           onClick={() => setOpen(o => !o)}

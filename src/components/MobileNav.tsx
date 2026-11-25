@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import type { Section } from '@/lib/sections';
 
 /** Bottom sheet: backdrop, Escape / swipe-down to close, locks page scroll while open. */
 function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
@@ -57,15 +58,20 @@ function Row({ href, children, onClick }: { href: string; children: ReactNode; o
 }
 
 /** The "Menu" sheet: big tiles for the main destinations, small links for the rest. */
-export function MobileMenuSheet({ open, onClose, isDark, onToggleTheme }: { open: boolean; onClose: () => void; isDark: boolean; onToggleTheme: () => void }) {
-  const { user } = useAuth();
-  const tiles = [
-    { label: 'Live classes', href: '/classrooms', emoji: '🎓' },
-    { label: 'Audiobooks', href: '/audiobooks', emoji: '🎧' },
-    { label: 'Feed', href: '/feed', emoji: '📰' },
-    { label: 'Trending', href: '/trending', emoji: '🔥' },
-    { label: 'Free Guides', href: '/guides', emoji: '📘' },
-  ];
+export function MobileMenuSheet({ section, open, onClose, isDark, onToggleTheme }: { section: Section; open: boolean; onClose: () => void; isDark: boolean; onToggleTheme: () => void }) {
+  const tiles = section === 'community'
+    ? [
+      { label: 'Live classes', href: '/classrooms', emoji: '🎓' },
+      { label: 'Find authors', href: '/creators/discover', emoji: '✍️' },
+      { label: 'Institutions', href: '/institutions', emoji: '🏛️' },
+      { label: 'Publish & Earn', href: '/creators', emoji: '💸' },
+    ]
+    : [
+      { label: 'Audiobooks', href: '/audiobooks', emoji: '🎧' },
+      { label: 'Trending', href: '/trending', emoji: '🔥' },
+      { label: 'Free Guides', href: '/guides', emoji: '📘' },
+      { label: 'All categories', href: '/explore', emoji: '📚' },
+    ];
   return (
     <Sheet open={open} onClose={onClose} title="Menu">
       <div className="grid grid-cols-2 gap-3 mb-3">
@@ -82,11 +88,8 @@ export function MobileMenuSheet({ open, onClose, isDark, onToggleTheme }: { open
         ))}
       </div>
       <Row href="/library" onClick={onClose}>My library</Row>
-      <Row href="/explore" onClick={onClose}>All categories</Row>
-      <Row href="/institutions" onClick={onClose}>Institutions</Row>
       <Row href="/study-plan" onClick={onClose}>Study Plan</Row>
       <Row href="/rewards" onClick={onClose}>Rewards</Row>
-      {!user && <Row href="/creators" onClick={onClose}>Publish &amp; Earn</Row>}
       <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-[var(--border-subtle)]">
         <LanguageSwitcher compact />
         <button onClick={onToggleTheme} className="px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] text-sm font-semibold text-[var(--text)] active:scale-95 transition-transform">
@@ -101,21 +104,33 @@ const TabIcon = ({ d }: { d: string }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
 );
 
-/** Phone bottom bar: Home · Explore · Search · Library · Me. */
-export function MobileBottomNav() {
+/** Phone bottom bar. Discover: Home, Explore, Search, Library. Community: Feed, Classes, Create, Library. Then Me. */
+export function MobileBottomNav({ section }: { section: Section }) {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [meOpen, setMeOpen] = useState(false);
   const close = () => setMeOpen(false);
   const name = profile?.display_name || user?.email || 'Account';
 
-  const tabs = [
-    { label: 'Home', href: '/', d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
-    { label: 'Explore', href: '/explore', d: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20' },
-    { label: 'Search', href: '/search', d: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35', center: true },
-    { label: 'Library', href: '/library', d: 'M4 4v16M9 4v16M14 5l5 15' },
-  ];
-  const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(href + '/'));
+  const library = { label: 'Library', href: '/library', d: 'M4 4v16M9 4v16M14 5l5 15' };
+  const tabs: { label: string; href: string; d: string; center?: boolean }[] = section === 'community'
+    ? [
+      { label: 'Feed', href: '/feed', d: 'M4 5h16v6H4zM4 15h16M4 19h10' },
+      { label: 'Classes', href: '/classrooms', d: 'M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z' },
+      { label: 'Create', href: '/feed/new', d: 'M12 5v14M5 12h14', center: true },
+      library,
+    ]
+    : [
+      { label: 'Home', href: '/', d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
+      { label: 'Explore', href: '/explore', d: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20' },
+      { label: 'Search', href: '/search', d: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35', center: true },
+      library,
+    ];
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    if (href === '/feed' && pathname === '/feed/new') return false;
+    return pathname === href || !!pathname?.startsWith(href + '/');
+  };
   const tabClass = (active: boolean) =>
     `relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[11px] font-semibold transition-colors ${active ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`;
 

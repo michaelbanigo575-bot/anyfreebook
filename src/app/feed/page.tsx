@@ -75,7 +75,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
       <div className="mx-auto max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_280px] lg:gap-6">
         {/* Desktop navigation */}
         <nav aria-label="Library" className="hidden lg:block">
-          <ul className="sticky top-24 space-y-1">
+          <ul className="sticky top-32 space-y-1">
             {SIDE_LINKS.map(l => (
               <li key={l.href}><Link href={l.href} className="flex items-center min-h-[44px] px-3 rounded-xl text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">{l.label}</Link></li>
             ))}
@@ -84,9 +84,17 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
 
         <div className="min-w-0">
           <div className="flex items-center justify-between gap-3 mb-3">
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Feed</h1>
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Community</h1>
             <Link href="/feed/new" className="inline-flex items-center min-h-[44px] px-4 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-sm font-semibold whitespace-nowrap">Post</Link>
           </div>
+          <ul className="flex gap-2 overflow-x-auto scrollbar-none mb-3 lg:hidden">
+            {[['/classrooms', 'Live classes'], ['/creators/discover', 'Find authors'], ['/institutions', 'Institutions'], ['/creators', 'Publish & Earn']].map(([href, label]) => (
+              <li key={href} className="flex-shrink-0">
+                <Link href={href} className="inline-flex items-center h-9 px-4 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs font-semibold text-[var(--text-secondary)]">{label}</Link>
+              </li>
+            ))}
+          </ul>
+
           <nav aria-label="Feed filters" className="grid grid-cols-3 mb-4 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
             {([['foryou', 'For you', '/feed'], ['following', 'Following', '/feed?tab=following'], ['live', 'Live', '/feed?tab=live']] as const).map(([id, label, href]) => (
               <Link key={id} href={href} aria-current={tab === id ? 'page' : undefined}
@@ -260,7 +268,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
 
         {/* Desktop side column */}
         <aside className="hidden xl:block">
-          <div className="sticky top-24 space-y-4">
+          <div className="sticky top-32 space-y-4">
             <section className="premium-card rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
               <h2 className="text-sm font-bold text-[var(--text)] mb-2">Live classes</h2>
               {[...live, ...soon].slice(0, 3).map(c => (

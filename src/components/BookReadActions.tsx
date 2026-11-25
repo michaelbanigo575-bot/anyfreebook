@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BookPreviewModal } from './BookPreviewModal';
-import { primaryButtonClass } from '@/lib/ui';
+import { BookPreviewModal, getReaderTarget } from './BookPreviewModal';
 import type { Book } from '@/lib/data';
 
 interface BookReadActionsProps {
@@ -12,54 +11,34 @@ interface BookReadActionsProps {
 
 export function BookReadActions({ book, formats }: BookReadActionsProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const readable = !!getReaderTarget(book);
   const primaryLink = book.downloadLinks?.[0];
-  const otherLinks = book.downloadLinks?.slice(1) || [];
+  const links = readable ? book.downloadLinks || [] : book.downloadLinks?.slice(1) || [];
+  const main = 'flex flex-1 items-center justify-center gap-2 min-h-[48px] px-6 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold';
 
   return (
-    <div className="mt-6">
-      <h3 className="text-sm font-semibold text-[var(--text)] mb-3">Read or download</h3>
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={() => setPreviewOpen(true)}
-          // The sitewide animated-gradient rule paints an opaque surface layer
-          // over outline buttons, so a hover:bg-* tint is invisible here —
-          // the lift and shadow are what the user actually sees.
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary-light)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5 transition-all"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          Read in ANYFREEBOOK Reader
-        </button>
-
-        {primaryLink ? (
-          <a
-            href={primaryLink.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={primaryButtonClass() + ' inline-flex items-center gap-2 shadow-md hover:-translate-y-0.5'}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>
-            </svg>
-            {primaryLink.label}
-          </a>
+    <div className="mt-4">
+      <div className="flex items-center gap-2 max-w-md">
+        {readable ? (
+          <button type="button" onClick={() => setPreviewOpen(true)} className={main}>Read free</button>
+        ) : primaryLink ? (
+          <a href={primaryLink.url} target="_blank" rel="noopener noreferrer" className={main}>{primaryLink.label}</a>
         ) : (
-          <span className="text-sm text-[var(--text-muted)]">
-            Source link unavailable — try the Preview or search for this title
-          </span>
+          <span className="text-sm text-[var(--text-muted)]">No readable copy found yet. Try searching for this title.</span>
         )}
-
-        {otherLinks.map(link => (
-          <a
-            key={link.url}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors"
-          >
-            {link.label}
-          </a>
-        ))}
       </div>
+      {readable && <p className="mt-2 text-xs text-[var(--text-muted)]">Opens in the ANYFREEBOOK Reader.</p>}
+
+      {links.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {links.map(link => (
+            <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center min-h-[40px] px-4 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
 
       {formats.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-3">
@@ -69,9 +48,7 @@ export function BookReadActions({ book, formats }: BookReadActionsProps) {
         </div>
       )}
 
-      {previewOpen && (
-        <BookPreviewModal book={book} onClose={() => setPreviewOpen(false)} />
-      )}
+      {previewOpen && <BookPreviewModal book={book} onClose={() => setPreviewOpen(false)} />}
     </div>
   );
 }

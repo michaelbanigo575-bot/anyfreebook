@@ -119,7 +119,7 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-black/70 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[75] flex items-end sm:items-center justify-center pt-6 sm:p-6 focus-veil animate-fade-in"
       onMouseDown={e => { backdropDownRef.current = e.target; }}
       onClick={e => { if (backdropDownRef.current === e.currentTarget) onClose(); }}
     >
@@ -129,7 +129,7 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
         aria-modal="true"
         aria-label={`Preview of ${book.title}`}
         tabIndex={-1}
-        className="relative w-full max-w-4xl h-[90vh] bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden flex flex-col"
+        className="relative w-full max-w-4xl h-full sm:h-[90vh] bg-[var(--surface)] rounded-t-3xl sm:rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -193,6 +193,15 @@ export function BookPreviewModal({ book, onClose }: BookPreviewModalProps) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
               </a>
             )}
+          </div>
+        )}
+
+        {/* Phones: the way out to the full book stays within thumb reach */}
+        {readerTarget && externalUrl && (
+          <div className="sm:hidden p-3 border-t border-[var(--border-subtle)]" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+            <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center min-h-[46px] rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
+              Open at source
+            </a>
           </div>
         )}
       </div>

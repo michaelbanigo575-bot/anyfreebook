@@ -166,3 +166,20 @@ export async function getCreatorDashboard(authorId: string): Promise<{
     dailyReads,
   };
 }
+
+/** An author's published feed posts, newest first. */
+export async function getAuthorPosts(authorId: string): Promise<{ id: string; title: string; body: string | null; post_type: string; published_at: string | null }[]> {
+  try {
+    const sb = createClient();
+    const { data } = await sb
+      .from('feed_posts')
+      .select('id, title, body, post_type, published_at')
+      .eq('author_id', authorId)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(30);
+    return data || [];
+  } catch {
+    return [];
+  }
+}

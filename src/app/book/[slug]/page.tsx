@@ -1,6 +1,9 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BookCover } from '@/components/BookCover';
+import { BookStage } from '@/components/BookStage';
+import { ShareButton } from '@/components/ShareSheet';
+import { Icon } from '@/components/icons';
 import { BookGrid } from '@/components/BookGrid';
 import { SectionHeader } from '@/components/SectionHeader';
 import { getBookBySlug, getBooksByCategory, formatCount, getAllBooks, type Book } from '@/lib/data';
@@ -64,6 +67,15 @@ export default async function BookPage({ params }: { params: { slug: string } })
     }
   }
 
+  // Previous and next book on the same shelf
+  const shelf = getBooksByCategory(book.category.slug);
+  const at = shelf.findIndex(b => b.id === book.id);
+  const neighbour = (step: number) => {
+    if (at < 0 || shelf.length < 2) return null;
+    const b = shelf[(at + step + shelf.length) % shelf.length];
+    return { slug: b.slug, title: b.title };
+  };
+
   const relatedBooks = getBooksByCategory(book.category.slug)
     .filter(b => b.id !== book.id)
     .slice(0, 6);
@@ -83,9 +95,9 @@ export default async function BookPage({ params }: { params: { slug: string } })
         <script key={`schema-${i}`} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
 
-      <div className="content-wrapper py-8">
+      <div className="content-wrapper py-3 md:py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
+        <nav className="hidden sm:flex items-center gap-2 text-sm text-[var(--text-muted)] mb-8">
           <a href="/" className="hover:text-[var(--text)] transition-colors">Home</a>
           <span>/</span>
           <a href={`/category/${book.category.slug}`} className="hover:text-[var(--text)] transition-colors">{book.category.name}</a>
@@ -94,16 +106,13 @@ export default async function BookPage({ params }: { params: { slug: string } })
         </nav>
 
         {/* Book detail */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-12">
-          {/* Cover */}
-          <div className="flex-shrink-0 self-center md:self-start">
-            <div className="relative">
-              <div className="absolute -right-[3px] top-2 bottom-2 w-[6px]
-                bg-gradient-to-l from-neutral-300 via-neutral-200 to-neutral-100
-                dark:from-neutral-600 dark:via-neutral-500 dark:to-neutral-400
-                rounded-r-sm" />
-              <BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="xl" />
-            </div>
+        <div className="flex flex-col md:flex-row gap-4 md:gap-12">
+          {/* Cover: a stage on phones with the book at a size that leaves room for the title */}
+          <div className="md:flex-shrink-0 md:self-start md:w-[340px]">
+            <BookStage prev={neighbour(-1)} next={neighbour(1)}>
+              <span className="md:hidden"><BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="lg" /></span>
+              <span className="hidden md:block"><BookCover title={book.title} author={book.author} coverUrl={book.coverUrl} size="xl" /></span>
+            </BookStage>
           </div>
 
           {/* Info */}
@@ -149,8 +158,11 @@ export default async function BookPage({ params }: { params: { slug: string } })
               <span className="text-[var(--text-secondary)]">{book.language.toUpperCase()}</span>
             </div>
 
+            {/* Read / Download comes first */}
+            <BookReadActions book={book} formats={book.formats} />
+
             {/* Interactions */}
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <BookInteractionButtons
                 bookId={book.id}
                 likeCount={book.likeCount ?? 0}
@@ -158,19 +170,19 @@ export default async function BookPage({ params }: { params: { slug: string } })
                 bookAuthor={book.author}
                 bookSlug={book.slug}
               />
+              <ShareButton path={`/book/${book.slug}`} title={book.title} className="inline-flex items-center gap-2 min-h-[40px] px-3 rounded-xl border border-[var(--border)] text-sm font-medium text-[var(--text-muted)]">
+                <Icon name="share" size={18} />Share
+              </ShareButton>
             </div>
 
             {/* Description */}
-            <div className="mt-6 p-4 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)]">
+            <div className="premium-card mt-6 p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border-subtle)]">
               <p className="text-[var(--text-secondary)] leading-relaxed">{book.description}</p>
             </div>
 
             <div className="mt-6 flex justify-center">
               <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_BOOK} />
             </div>
-
-            {/* Read / Download */}
-            <BookReadActions book={book} formats={book.formats} />
 
             {/* Price tag + share + savings */}
             <BookDetailClient bookTitle={book.title} bookAuthor={book.author} />

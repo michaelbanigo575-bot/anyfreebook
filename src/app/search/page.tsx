@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Fragment, Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { BookCover } from '@/components/BookCover';
-import { BookPreviewModal } from '@/components/BookPreviewModal';
+import { BookPreviewModal, getReaderTarget } from '@/components/BookPreviewModal';
 import { AdUnit } from '@/components/AdUnit';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { cardClass } from '@/lib/ui';
@@ -258,6 +258,7 @@ function SearchResults() {
 
               {/* Action buttons */}
               <div className="border-t border-[var(--border-subtle)] px-4 py-2.5 flex items-center gap-2">
+                {getReaderTarget(book) && (
                 <button
                   onClick={() => setPreviewBook(book)}
                   className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--primary)] text-[var(--primary)] text-xs font-semibold hover:bg-[var(--primary-light)] transition-colors"
@@ -265,6 +266,7 @@ function SearchResults() {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                   Preview
                 </button>
+                )}
                 {book.downloadLinks && book.downloadLinks.length > 0 ? (
                   <a
                     href={book.downloadLinks[0].url}

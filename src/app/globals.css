@@ -597,3 +597,17 @@ main h1, main h2 { letter-spacing: -0.005em; }
   -webkit-background-clip: text;
   background-clip: text;
 }
+
+/* Dark mode: gradient headings use the light blues so they stay readable on navy */
+
+.dark .gradient-text {
+
+  color: #8AD0F2;
+
+  background: linear-gradient(135deg, #BDE5F8, #4FB3E3);
+
+  -webkit-background-clip: text;
+
+  background-clip: text;
+
+}

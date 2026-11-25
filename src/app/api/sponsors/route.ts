@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
+import { unstable_noStore as noStore } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { Sponsor } from '@/lib/sponsors/types';
 
 export const dynamic = 'force-dynamic';
+// Never reuse an earlier database reply: a deleted or switched-off ad must disappear at once
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 /** The sponsor currently showing in each spot (last saved wins). Public, read-only. */
 export async function GET() {
+  noStore();
   const spots: Partial<Record<Sponsor['placement'], Sponsor>> = {};
   try {
     const sb = createServiceClient();

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 30%, #a855f7 60%, #d946ef 100%)',
+          background: 'linear-gradient(135deg, #050F26 0%, #0A1F4A 45%, #00486B 75%, #00628C 100%)',
           fontFamily: 'sans-serif',
           padding: '60px',
         }}

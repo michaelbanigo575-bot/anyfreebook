@@ -9,22 +9,22 @@
 
 @layer base {
   :root {
-    --bg: #e6ecf4;
-    --bg-secondary: #d9e1ec;
-    --surface: #f8fafd;
-    --surface-hover: #dbe4f0;
-    --border: #bcc8d9;
-    --border-subtle: #cdd7e5;
-    --text: #0a1020;
-    --text-secondary: #2b3a52;
-    --text-muted: #52627c;
-    --primary: #1d4ed8;
-    --primary-hover: #1e40af;
-    --primary-light: #dbe7ff;
-    --accent: #047857;
-    --accent-light: #ecfdf5;
-    --gradient-start: #1d4ed8;
-    --gradient-end: #047857;
+    --bg: #EDF3F9;
+    --bg-secondary: #E2ECF6;
+    --surface: #FFFFFF;
+    --surface-hover: #EAF2FA;
+    --border: #C5D6E8;
+    --border-subtle: #D9E5F1;
+    --text: #050F26;
+    --text-secondary: #24395E;
+    --text-muted: #4A5B7C;
+    --primary: #00628C;
+    --primary-hover: #00486B;
+    --primary-light: #DEEFF9;
+    --accent: #0A1F4A;
+    --accent-light: #E1EAF8;
+    --gradient-start: #00628C;
+    --gradient-end: #0A1F4A;
 
     /* Mobile chrome stacking. The bottom nav is 4rem tall; anything that
        floats above it uses --stack-1, and the next bar up uses --stack-2.
@@ -50,34 +50,36 @@
     --radius-lg: 16px;
     --radius-xl: 24px;
 
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(5, 15, 38, 0.08);
+    --shadow-md: 0 10px 24px rgba(5, 15, 38, 0.11);
+    --shadow-lg: 0 18px 40px rgba(5, 15, 38, 0.18);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
 
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .dark {
-    --bg: #0d1424;
-    --bg-secondary: #141c2f;
-    --surface: #1d2942;
-    --surface-hover: #2a3a5c;
-    --border: #38496e;
-    --border-subtle: #263555;
-    --text: #ffffff;
-    --text-secondary: #d5deec;
-    --text-muted: #a3b2cb;
-    --primary: #59b0ff;
-    --primary-hover: #338dff;
-    --primary-light: rgba(51, 141, 255, 0.1);
-    --accent: #34d399;
-    --accent-light: rgba(16, 185, 129, 0.1);
+    --bg: #030A1C;
+    --bg-secondary: #071330;
+    --surface: #0C1D42;
+    --surface-hover: #132A59;
+    --border: #1F3A70;
+    --border-subtle: #172E5C;
+    --text: #F5F9FF;
+    --text-secondary: #CFDDF2;
+    --text-muted: #9FB4D6;
+    --primary: #6EC1EA;
+    --primary-hover: #8AD0F2;
+    --primary-light: rgba(110, 193, 234, 0.14);
+    --accent: #8AD0F2;
+    --accent-light: rgba(138, 208, 242, 0.12);
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    --gradient-start: #0079A8;
+    --gradient-end: #004A78;
   }
 
   * {
@@ -147,7 +149,7 @@
   }
 
   .dark .glass {
-    background: rgba(15, 23, 42, 0.8);
+    background: rgba(5, 15, 38, 0.86);
   }
 
   .scrollbar-none {
@@ -530,3 +532,60 @@ a[class*=" bg-[var(--primary)] "] {
     animation: none;
   }
 }
+
+/* ---- Deep ocean: premium layer ------------------------------------------ */
+
+/* The header stays navy in both modes. It re-points the theme variables for
+   everything inside it, so its links and menus stay readable. */
+.ocean-header {
+  --text: #FFFFFF;
+  --text-secondary: #D5E6F7;
+  --text-muted: #A9C3E3;
+  --primary: #8AD0F2;
+  --primary-light: rgba(138, 208, 242, 0.16);
+  --surface: #0A1F4A;
+  --surface-hover: #14306B;
+  --bg: #07142F;
+  --bg-secondary: #0C2250;
+  --border: #284985;
+  --border-subtle: #1D3A70;
+  color: var(--text);
+  background: linear-gradient(135deg, #050F26 0%, #0A1F4A 62%, #00486B 100%) !important;
+  border-bottom: 2px solid #6EC1EA !important;
+}
+
+/* Headings read like a library: a classic serif */
+.font-serif-title { font-family: Georgia, 'Times New Roman', serif; }
+
+/* Premium buttons are still and deep: replaces the flowing gradient */
+button[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]),
+a[class*="from-[var(--gradient-start)]"]:not([class*="animate-"]),
+button[class*=" bg-[var(--primary)] "],
+a[class*=" bg-[var(--primary)] "] {
+  background-image: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background-size: 100% 100%;
+  animation: none;
+  box-shadow: 0 5px 14px rgba(5, 15, 38, 0.25);
+}
+
+/* Focus feel: whatever sits behind a popup is dimmed and blurred */
+.focus-veil {
+  background: rgba(3, 10, 28, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* One container style everywhere: soft depth, even corners. The attribute selectors
+   reach the cards that were written by hand across the site. */
+.premium-card,
+main [class*="bg-[var(--surface)]"][class*="rounded-2xl"],
+main [class*="bg-[var(--surface)]"][class*="rounded-xl"][class*="border"] {
+  box-shadow: 0 1px 2px rgba(5, 15, 38, 0.05), 0 10px 24px rgba(5, 15, 38, 0.08);
+}
+.dark .premium-card,
+.dark main [class*="bg-[var(--surface)]"][class*="rounded-2xl"],
+.dark main [class*="bg-[var(--surface)]"][class*="rounded-xl"][class*="border"] {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+main [class*="rounded-2xl"] { border-radius: 16px; }
+main h1, main h2 { letter-spacing: -0.005em; }

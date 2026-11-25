@@ -51,6 +51,9 @@ export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
     }
   }, [slot]);
 
+  // Nothing to show: render nothing rather than an empty placeholder box
+  if (!slot || !process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID) return null;
+
   return (
     <div
       ref={adRef}

@@ -12,10 +12,18 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
+        // Deep ocean palette: older decorative colour names resolve to it
+        sky: { 50: '#EEF8FD', 100: '#D9EFFA', 200: '#B7E0F5', 300: '#8AD0F2', 400: '#5BB8E8', 500: '#1E93C4', 600: '#00749F', 700: '#005F86', 800: '#00486B', 900: '#0A1F4A', 950: '#050F26' },
+        cyan: { 50: '#EEF8FD', 100: '#D9EFFA', 200: '#B7E0F5', 300: '#8AD0F2', 400: '#5BB8E8', 500: '#1E93C4', 600: '#00749F', 700: '#005F86', 800: '#00486B', 900: '#0A1F4A', 950: '#050F26' },
+        teal: { 50: '#EEF8FD', 100: '#D9EFFA', 200: '#B7E0F5', 300: '#8AD0F2', 400: '#5BB8E8', 500: '#1E93C4', 600: '#00749F', 700: '#005F86', 800: '#00486B', 900: '#0A1F4A', 950: '#050F26' },
+        blue: { 50: '#EEF3FC', 100: '#DCE6F8', 200: '#BACDF0', 300: '#93B2E8', 400: '#6590D6', 500: '#3C6DBA', 600: '#2A549B', 700: '#1D3F7C', 800: '#122D60', 900: '#0A1F4A', 950: '#050F26' },
+        indigo: { 50: '#EEF3FC', 100: '#DCE6F8', 200: '#BACDF0', 300: '#93B2E8', 400: '#6590D6', 500: '#3C6DBA', 600: '#2A549B', 700: '#1D3F7C', 800: '#122D60', 900: '#0A1F4A', 950: '#050F26' },
+        violet: { 50: '#EEF3FC', 100: '#DCE6F8', 200: '#BACDF0', 300: '#93B2E8', 400: '#6590D6', 500: '#3C6DBA', 600: '#2A549B', 700: '#1D3F7C', 800: '#122D60', 900: '#0A1F4A', 950: '#050F26' },
+        purple: { 50: '#EEF3FC', 100: '#DCE6F8', 200: '#BACDF0', 300: '#93B2E8', 400: '#6590D6', 500: '#3C6DBA', 600: '#2A549B', 700: '#1D3F7C', 800: '#122D60', 900: '#0A1F4A', 950: '#050F26' },
         brand: {
           50: '#eef7ff',
           100: '#d9ecff',

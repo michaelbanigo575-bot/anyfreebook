@@ -10,7 +10,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "theme_color": "#050F26",
   "orientation": "any",
   "categories": ["books", "education", "entertainment"],
   "icons": [

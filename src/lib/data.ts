@@ -13,6 +13,8 @@ export interface Book {
   formats: string[];
   viewCount: number;
   likeCount: number;
+  /** Editorial ordering weight for curated picks. Never displayed. */
+  rank?: number;
   pageCount?: number;
   publishYear?: number;
   isbn?: string;
@@ -152,12 +154,13 @@ function makeBook(title: string, author: string, catIndex: number, opts: Partial
     description: opts.description || `${title} by ${author}. A widely read reference work in ${cat.name.toLowerCase()}. Check the verified free sources listed on this page — many titles in this category are still in copyright.`,
     // 0 means "no verified figure". We never invent a rating or a view count:
     // a plausible-looking fake number is worse than an honest blank.
-    rating: opts.rating ?? 0,
-    ratingCount: opts.ratingCount ?? 0,
+    rating: 0,
+    ratingCount: 0,
     contentType: opts.contentType || 'BOOK',
     formats: opts.formats || ['PDF', 'EPUB'],
-    viewCount: opts.viewCount ?? 0,
-    likeCount: opts.likeCount ?? 0,
+    viewCount: 0,
+    likeCount: 0,
+    rank: opts.viewCount ?? 0,
     pageCount: opts.pageCount,
     publishYear: opts.publishYear,
     isbn: opts.isbn,
@@ -503,7 +506,7 @@ export function getCategory(slug: string): Category | undefined {
 }
 
 export function getTrendingBooks(): Book[] {
-  return [...BOOKS].sort((a, b) => b.viewCount - a.viewCount).slice(0, 20);
+  return [...BOOKS].sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0)).slice(0, 20);
 }
 
 export function getNewBooks(): Book[] {

@@ -5,14 +5,14 @@ import { useState } from 'react';
 /** Placeholder cover gradients — one source of truth, shared with the search
  *  dropdown's mini covers so the two can never drift apart. */
 export const PLACEHOLDER_COLORS = [
-  'from-blue-600 to-blue-800',
-  'from-emerald-600 to-emerald-800',
-  'from-purple-600 to-purple-800',
-  'from-amber-600 to-amber-800',
-  'from-rose-600 to-rose-800',
-  'from-cyan-600 to-cyan-800',
-  'from-indigo-600 to-indigo-800',
-  'from-teal-600 to-teal-800',
+  'from-[#00628C] to-[#050F26]',
+  'from-[#0A1F4A] to-[#050F26]',
+  'from-[#0079A8] to-[#0A1F4A]',
+  'from-[#1D3F7C] to-[#07142F]',
+  'from-[#005F86] to-[#022A41]',
+  'from-[#2A549B] to-[#0A1F4A]',
+  'from-[#14507A] to-[#050F26]',
+  'from-[#0B6E8F] to-[#06283D]',
 ];
 
 /** Deterministic placeholder gradient for a title. */

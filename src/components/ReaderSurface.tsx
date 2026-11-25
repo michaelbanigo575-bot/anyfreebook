@@ -18,7 +18,7 @@ const KEY = 'afb_reader_prefs';
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 const THEMES: Record<ReaderPrefs['theme'], { bg: string; text: string; muted: string; label: string; swatch: string }> = {
-  default: { bg: 'transparent', text: '', muted: '', label: 'Site', swatch: 'linear-gradient(135deg,#6366f1,#10b981)' },
+  default: { bg: 'transparent', text: '', muted: '', label: 'Site', swatch: 'linear-gradient(135deg,#6EC1EA,#0A1F4A)' },
   light:   { bg: '#ffffff', text: '#1a1a1a', muted: '#555555', label: 'Light', swatch: '#ffffff' },
   sepia:   { bg: '#f4ecd8', text: '#433422', muted: '#6b5d4b', label: 'Sepia', swatch: '#f4ecd8' },
   dark:    { bg: '#121212', text: '#e6e6e6', muted: '#a3a3a3', label: 'Dark', swatch: '#121212' },

@@ -24,6 +24,7 @@ const NAV: NavGroup[] = [
     items: [
       { href: '/admin/users', label: 'Users', icon: <IconUsers /> },
       { href: '/admin/referrals', label: 'Referrals', icon: <IconGift /> },
+      { href: '/admin/sponsors', label: 'Sponsors and ads', icon: <IconLink /> },
     ],
   },
   {

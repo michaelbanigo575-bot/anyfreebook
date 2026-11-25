@@ -12,6 +12,7 @@ import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchArchive } from '@/lib/api/archive';
 import { LiveTrendingSection } from '@/components/LiveTrendingSection';
 import { cardClass } from '@/lib/ui';
+import { ContinueReading } from '@/components/ContinueReading';
 import { SponsorLine, SponsorTile, SponsorShelf } from '@/components/Sponsors';
 import { CATALOGUE, CATALOGUE_SENTENCE } from '@/lib/catalogueStats';
 import { SOURCE_REGISTRY } from '@/lib/api/sources';
@@ -92,7 +93,7 @@ export default async function HomePage() {
       {/* HERO — no overflow-hidden here: the Category dropdown is absolutely
           positioned inside this section and would be clipped by it. The
           decorative blur layer below has its own overflow-hidden. */}
-      <section className="relative pt-16 pb-12 md:pt-24 md:pb-20">
+      <section className="relative pt-5 pb-4 md:pt-24 md:pb-20">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-blue-500/8 rounded-full blur-3xl animate-pulse-slow" />
           <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-emerald-500/8 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }} />
@@ -100,26 +101,26 @@ export default async function HomePage() {
         </div>
 
         <div className="content-wrapper text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6 animate-fade-in">
+          <div className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary-light)] border border-[var(--primary)]/20 mb-6 animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[var(--primary)] font-mono text-xs tracking-widest font-semibold">
               {CATALOGUE.liveBooksShort} FREE BOOKS & PAPERS FROM {CATALOGUE.fields} FIELDS
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[var(--text)] leading-[1.1] max-w-3xl mx-auto text-balance animate-slide-up">
+          <h1 className="text-[28px] sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-[var(--text)] leading-[1.1] max-w-3xl mx-auto text-balance animate-slide-up">
             Every profession.{' '}
             <span className="gradient-text">Every free book.</span>
             {' '}One place.
           </h1>
 
-          <p className="mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <p className="hidden md:block mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-xl mx-auto leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
             The free book aggregator — pulling live from
             Open Library, Project Gutenberg, Google Books, Internet Archive, LibriVox, PubMed Central, and DOAJ.
           </p>
 
           {/* Main search + Category dropdown side by side */}
-          <div className="mt-10 max-w-2xl mx-auto flex items-stretch gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <div className="mt-5 md:mt-10 max-w-2xl mx-auto flex items-stretch gap-2 animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex-1 min-w-0">
               <SearchBar />
             </div>
@@ -127,6 +128,14 @@ export default async function HomePage() {
           </div>
           <SponsorLine />
         </div>
+      </section>
+
+      <ContinueReading />
+
+      {/* Popular picks come early on phones: books before features */}
+      <section className="content-wrapper pt-2 pb-4 md:hidden">
+        <SectionHeader title="Popular picks" icon="📚" action={{ label: 'See all', href: '/trending' }} />
+        <BookGrid books={trending} layout="carousel" />
       </section>
 
       {/* NEW ON ANYFREEBOOK — feature showcase */}

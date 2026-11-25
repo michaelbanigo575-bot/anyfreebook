@@ -93,7 +93,7 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
   return (
     <article className="content-wrapper py-8 max-w-3xl mx-auto">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      <ReadTracker slug={pub.slug} />
+      <ReadTracker slug={pub.slug} title={pub.title} />
 
       <nav className="flex items-center gap-2 text-sm text-[var(--text-muted)] mb-6">
         <Link href="/" className="hover:text-[var(--text)]">Home</Link>

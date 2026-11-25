@@ -24,7 +24,7 @@ function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () 
 
   return (
     <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label={title}>
-      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/50 animate-fade-in" />
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 focus-veil animate-fade-in" />
       <div
         className="absolute left-0 right-0 bottom-0 max-h-[88vh] overflow-y-auto rounded-t-3xl bg-[var(--surface)] border-t border-[var(--border)] shadow-2xl animate-slide-up"
         style={{ transform: dragY ? `translateY(${dragY}px)` : undefined, transition: dragY ? 'none' : undefined, paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
@@ -60,6 +60,7 @@ function Row({ href, children, onClick }: { href: string; children: ReactNode; o
 export function MobileMenuSheet({ open, onClose, isDark, onToggleTheme }: { open: boolean; onClose: () => void; isDark: boolean; onToggleTheme: () => void }) {
   const { user } = useAuth();
   const tiles = [
+    { label: 'Live classes', href: '/classrooms', emoji: '🎓' },
     { label: 'Audiobooks', href: '/audiobooks', emoji: '🎧' },
     { label: 'Feed', href: '/feed', emoji: '📰' },
     { label: 'Trending', href: '/trending', emoji: '🔥' },
@@ -80,7 +81,8 @@ export function MobileMenuSheet({ open, onClose, isDark, onToggleTheme }: { open
           </Link>
         ))}
       </div>
-      <Row href="/explore" onClick={onClose}>📚 All categories</Row>
+      <Row href="/library" onClick={onClose}>My library</Row>
+      <Row href="/explore" onClick={onClose}>All categories</Row>
       <Row href="/institutions" onClick={onClose}>Institutions</Row>
       <Row href="/study-plan" onClick={onClose}>Study Plan</Row>
       <Row href="/rewards" onClick={onClose}>Rewards</Row>
@@ -99,7 +101,7 @@ const TabIcon = ({ d }: { d: string }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>
 );
 
-/** Phone bottom bar: Home · Explore · Search · Classes · Me. */
+/** Phone bottom bar: Home · Explore · Search · Library · Me. */
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
@@ -111,7 +113,7 @@ export function MobileBottomNav() {
     { label: 'Home', href: '/', d: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' },
     { label: 'Explore', href: '/explore', d: 'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20' },
     { label: 'Search', href: '/search', d: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.35-4.35', center: true },
-    { label: 'Classes', href: '/classrooms', d: 'M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H1a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z' },
+    { label: 'Library', href: '/library', d: 'M4 4v16M9 4v16M14 5l5 15' },
   ];
   const isActive = (href: string) => (href === '/' ? pathname === '/' : pathname === href || pathname?.startsWith(href + '/'));
   const tabClass = (active: boolean) =>

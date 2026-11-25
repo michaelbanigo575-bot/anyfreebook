@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { recordView, recordRead } from '@/lib/creators/client';
+import { saveReading } from '@/lib/continueReading';
 
 /**
  * Tracks a genuine read: time-on-page + max scroll depth. Sends the raw view
@@ -9,7 +10,7 @@ import { recordView, recordRead } from '@/lib/creators/client';
  * >=30s and >=50% scroll — that's what drives creator payouts, so bot/skim
  * traffic doesn't inflate earnings.
  */
-export function ReadTracker({ slug }: { slug: string }) {
+export function ReadTracker({ slug, title }: { slug: string; title: string }) {
   const startRef = useRef(Date.now());
   const maxScrollRef = useRef(0);
   const activeSecRef = useRef(0);
@@ -26,6 +27,9 @@ export function ReadTracker({ slug }: { slug: string }) {
       if (pct > maxScrollRef.current) maxScrollRef.current = pct;
     };
     computeScroll();
+    // Remember the place on this device, for "Continue reading" and the Library
+    const keepPlace = () => saveReading(`/read/${slug}`, title, maxScrollRef.current);
+    keepPlace();
     window.addEventListener('scroll', computeScroll, { passive: true });
 
     // Count only active (visible) seconds
@@ -43,6 +47,7 @@ export function ReadTracker({ slug }: { slug: string }) {
     }, 1000);
 
     const flush = () => {
+      keepPlace();
       recordRead(slug, activeSecRef.current, maxScrollRef.current);
     };
     const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
@@ -56,7 +61,7 @@ export function ReadTracker({ slug }: { slug: string }) {
       clearInterval(tick);
       flush();
     };
-  }, [slug]);
+  }, [slug, title]);
 
   return null;
 }

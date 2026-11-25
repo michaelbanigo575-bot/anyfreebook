@@ -589,3 +589,11 @@ main [class*="bg-[var(--surface)]"][class*="rounded-xl"][class*="border"] {
 }
 main [class*="rounded-2xl"] { border-radius: 16px; }
 main h1, main h2 { letter-spacing: -0.005em; }
+
+/* The logo's gradient word needs the light blues on the navy header */
+.ocean-header .gradient-text {
+  color: #8AD0F2;
+  background: linear-gradient(135deg, #BDE5F8, #6EC1EA);
+  -webkit-background-clip: text;
+  background-clip: text;
+}

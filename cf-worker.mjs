@@ -7,8 +7,24 @@ const CRON_ROUTES = {
   '0 8 * * *': '/api/cron/daily-distribution',
 };
 
+/**
+ * Browsers must ask again before reusing a page. The framework's own header lets them show a
+ * saved copy for up to 30 days, which keeps old pages (and links to removed style files) alive
+ * after a deploy. Hashed scripts and styles are unaffected and stay cached for a year.
+ */
+async function freshPages(request, env, ctx) {
+  const response = await worker.fetch(request, env, ctx);
+  const cache = response.headers.get('cache-control') || '';
+  const isPage = (response.headers.get('content-type') || '').startsWith('text/html')
+    || (response.headers.get('content-type') || '').startsWith('text/x-component');
+  if (!isPage || !cache.includes('stale-while-revalidate')) return response;
+  const headers = new Headers(response.headers);
+  headers.set('cache-control', 'public, max-age=0, must-revalidate');
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
-  fetch: worker.fetch,
+  fetch: freshPages,
   async scheduled(event, env, ctx) {
     const path = CRON_ROUTES[event.cron];
     if (!path) return;

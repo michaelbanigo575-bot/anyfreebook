@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { cardClass } from '@/lib/ui';
 import type { Book } from '@/lib/data';
 import { SOURCE_REGISTRY } from '@/lib/api/sources';
+import { SponsorStrip } from '@/components/Sponsors';
 
 function SourceBadge({ source }: { source?: string }) {
   const colors: Record<string, string> = {
@@ -343,6 +344,8 @@ function SearchResults() {
           </div>
         </div>
       )}
+
+      <SponsorStrip offset={1} />
 
       {previewBook && (
         <BookPreviewModal book={previewBook} onClose={() => setPreviewBook(null)} />

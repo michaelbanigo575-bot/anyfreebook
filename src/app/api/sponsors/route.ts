@@ -8,10 +8,10 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 export const revalidate = 0;
 
-/** The sponsor currently showing in each spot (last saved wins). Public, read-only. */
+/** Every live ad for each spot; the page rotates through them. Public, read-only. */
 export async function GET() {
   noStore();
-  const spots: Partial<Record<Sponsor['placement'], Sponsor>> = {};
+  const pools: Partial<Record<Sponsor['placement'], Sponsor[]>> = {};
   try {
     const sb = createServiceClient();
     const { data } = await sb
@@ -24,8 +24,9 @@ export async function GET() {
     for (const s of (data || []) as Sponsor[]) {
       if (s.starts_at && Date.parse(s.starts_at) > now) continue;
       if (s.ends_at && Date.parse(s.ends_at) <= now) continue;
-      spots[s.placement] ??= s;
+      const pool = (pools[s.placement] ??= []);
+      if (pool.length < 12) pool.push(s);
     }
   } catch { /* table not created yet or database down: the homepage simply shows no sponsors */ }
-  return NextResponse.json({ spots }, { headers: { 'Cache-Control': 'public, max-age=60' } });
+  return NextResponse.json({ pools }, { headers: { 'Cache-Control': 'public, max-age=60' } });
 }

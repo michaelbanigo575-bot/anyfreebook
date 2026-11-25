@@ -15,6 +15,7 @@ import { ReaderSurface } from '@/components/ReaderSurface';
 import { AiStudyAids } from '@/components/AiStudyAids';
 import { DocumentReader } from '@/components/DocumentReader';
 import { primaryButtonClass } from '@/lib/ui';
+import { SponsorStrip } from '@/components/Sponsors';
 
 export const dynamic = 'force-dynamic';
 
@@ -318,6 +319,8 @@ export default async function ReadPublicationPage({ params, searchParams }: { pa
           </div>
         </div>
       )}
+
+      <SponsorStrip offset={0} />
 
       {/* Comments */}
       <CommentsSection publicationId={pub.id} />

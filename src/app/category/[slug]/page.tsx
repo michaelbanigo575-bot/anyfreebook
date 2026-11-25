@@ -8,6 +8,7 @@ import { searchOpenLibrary } from '@/lib/api/openlibrary';
 import { searchArchive } from '@/lib/api/archive';
 import { searchGoogleBooks } from '@/lib/api/googlebooks';
 import { searchWikisourceLanguage, WIKISOURCE_CATEGORY_LANGUAGES } from '@/lib/api/wikisource';
+import { SponsorStrip } from '@/components/Sponsors';
 
 // Categories render on demand, cache each for an hour. Pre-rendering all of
 // them at build time would hammer the source APIs and slow every deploy.
@@ -178,6 +179,8 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             <AdUnit size="inline" slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CATEGORY} />
           </div>
         )}
+
+        <SponsorStrip offset={5} />
 
         {/* FAQ section */}
         <section className="mt-16 max-w-3xl">

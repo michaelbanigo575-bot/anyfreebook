@@ -11,6 +11,7 @@ import { BookDetailClient } from '@/components/BookDetailClient';
 import { resolveBookSource, type SourceTier } from '@/lib/api/resolveSource';
 import { AdUnit } from '@/components/AdUnit';
 import { getFreeAlternative, getBlogAlternativeSlug } from '@/lib/freeAlternatives';
+import { SponsorStrip } from '@/components/Sponsors';
 
 export async function generateStaticParams() {
   return getAllBooks().map(book => ({ slug: book.slug }));
@@ -240,6 +241,8 @@ export default async function BookPage({ params }: { params: { slug: string } })
             <BookGrid books={relatedBooks} layout="carousel" />
           </section>
         )}
+
+        <SponsorStrip offset={3} />
       </div>
     </>
   );

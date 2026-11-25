@@ -3,6 +3,7 @@ import { BookGrid } from '@/components/BookGrid';
 import { getAudiobooks } from '@/lib/data';
 import { searchLibrivox } from '@/lib/api/librivox';
 import { searchArchiveAudio } from '@/lib/api/archive';
+import { SponsorStrip } from '@/components/Sponsors';
 
 export const revalidate = 3600;
 
@@ -51,6 +52,8 @@ export default async function AudiobooksPage() {
       </div>
 
       <BookGrid books={audiobooks} layout="grid" />
+
+      <SponsorStrip offset={2} />
     </div>
   );
 }

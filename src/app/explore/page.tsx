@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ExploreCategories } from '@/components/ExploreCategories';
 import { getAllCategories, getAllBooks } from '@/lib/data';
 import { CATALOGUE } from '@/lib/catalogueStats';
+import { SponsorStrip } from '@/components/Sponsors';
 
 export const metadata: Metadata = {
   title: `Explore All Categories — ${CATALOGUE.categories} Categories`,
@@ -30,6 +31,8 @@ export default function ExplorePage() {
       </div>
 
       <ExploreCategories categories={categories} />
+
+      <SponsorStrip offset={6} />
     </div>
   );
 }

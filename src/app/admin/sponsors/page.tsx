@@ -7,7 +7,7 @@ import type { Placement, Sponsor, SponsorLink } from '@/lib/sponsors/types';
 const SPOTS: Record<Placement, { name: string; help: string }> = {
   support_line: { name: 'A. Support line', help: 'One line under the search bar. Uses the sponsor name, link and an optional small logo.' },
   tile: { name: 'B. Partner tile', help: 'Replaces the last feature tile. Headline, short text, link, image, GIF or video.' },
-  shelf: { name: 'C. Sponsored shelf', help: 'Wide block below Trending. Headline, text, media and up to 6 resource links.' },
+  shelf: { name: 'C. Sponsored shelf', help: 'Wide block below Trending, plus a compact strip on search, book, category, explore, audiobook and publication pages. Headline, text, media and up to 6 resource links (links show on the homepage block).' },
 };
 
 type Draft = Omit<Sponsor, 'id'> & { id?: string };
@@ -25,10 +25,10 @@ function downloadReport(sponsors: Sponsor[], totals: Record<string, Totals>) {
     const text = String(v);
     return `"${(/^[=+\-@]/.test(text) ? `'${text}` : text).replace(/"/g, '""')}"`;
   };
-  const rows: (string | number)[][] = [['Sponsor', 'Spot', 'Views', 'Clicks', 'Click rate', 'Views (7 days)', 'Clicks (7 days)']];
+  const rows: (string | number)[][] = [['Sponsor', 'Headline', 'Spot', 'Views', 'Clicks', 'Click rate', 'Views (7 days)', 'Clicks (7 days)']];
   for (const s of sponsors) {
     const t = totals[s.id] || NO_TOTALS;
-    rows.push([s.sponsor_name, SPOTS[s.placement].name, t.views, t.clicks, ctr(t.clicks, t.views), t.views_7d, t.clicks_7d]);
+    rows.push([s.sponsor_name, s.headline, SPOTS[s.placement].name, t.views, t.clicks, ctr(t.clicks, t.views), t.views_7d, t.clicks_7d]);
   }
   const url = URL.createObjectURL(new Blob([rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv' }));
   const a = document.createElement('a');
@@ -201,14 +201,14 @@ export default function SponsorsAdminPage() {
 
       <Panel title="Your ads" action={sponsors.length > 0 ? <button className={button} onClick={() => downloadReport(sponsors, totals)}>Download report</button> : undefined}>
         <div className="p-5 space-y-3">
-          <p className="text-xs text-slate-500">If two ads are on for the same spot, the one saved last shows.</p>
+          <p className="text-xs text-slate-500">All ads switched on for a spot take turns, up to 12 per spot. Each has its own numbers, so you can see which message works best.</p>
           {sponsors.length === 0 && <p className="text-sm text-slate-400">No ads yet. Create your first one.</p>}
           {sponsors.map(s => (
             <div key={s.id} className="rounded-xl border border-slate-800 p-3 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-white truncate">{s.sponsor_name}</div>
-                <div className="text-xs text-slate-500">{SPOTS[s.placement].name}</div>
+                <div className="text-xs text-slate-500 truncate">{SPOTS[s.placement].name}{s.headline ? ` · ${s.headline}` : ''}</div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <StatusPill {...state(s)} />

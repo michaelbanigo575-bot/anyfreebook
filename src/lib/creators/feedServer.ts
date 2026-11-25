@@ -19,6 +19,7 @@ export async function getFeedPosts(limit = 20, offset = 0): Promise<FeedPost[]> 
 
 export interface FeedPublication {
   id: string;
+  author_id: string;
   title: string;
   slug: string;
   description: string | null;
@@ -37,7 +38,7 @@ export async function getFeedPublications(limit = 20): Promise<FeedPublication[]
     const sb = createClient();
     const { data } = await sb
       .from('publications')
-      .select('id, title, slug, description, publication_type, cover_url, view_count, like_count, comment_count, published_at, author:profiles!publications_author_id_fkey(display_name, creator_handle)')
+      .select('id, author_id, title, slug, description, publication_type, cover_url, view_count, like_count, comment_count, published_at, author:profiles!publications_author_id_fkey(display_name, creator_handle)')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .limit(limit);
@@ -112,4 +113,17 @@ export async function getUnifiedFeed(limit = 30): Promise<{
     .slice(0, limit);
 
   return { live, soon, items };
+}
+
+/** Authors the signed-in reader follows. null means nobody is signed in. */
+export async function getFollowedAuthorIds(): Promise<string[] | null> {
+  try {
+    const sb = createClient();
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return null;
+    const { data } = await sb.from('author_follows').select('author_id').eq('follower_id', user.id).limit(500);
+    return (data || []).map(r => r.author_id as string);
+  } catch {
+    return null;
+  }
 }

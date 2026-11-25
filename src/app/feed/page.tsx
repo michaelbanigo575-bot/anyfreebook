@@ -1,7 +1,12 @@
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getUnifiedFeed } from '@/lib/creators/feedServer';
+import { getUnifiedFeed, getFollowedAuthorIds } from '@/lib/creators/feedServer';
+import { AutoLoadMore } from '@/components/AutoLoadMore';
+import { ShareButton } from '@/components/ShareSheet';
+import { Icon } from '@/components/icons';
+import { SponsorStrip } from '@/components/Sponsors';
+import { placeholderGradient } from '@/components/BookCover';
 import { FeedPubActions } from '@/components/FeedPubActions';
 
 export const dynamic = 'force-dynamic';
@@ -36,27 +41,64 @@ const PUB_TYPE_LABEL: Record<string, string> = {
   story: '📖 Story', guide: '🧭 Guide',
 };
 
-export default async function FeedPage({ searchParams }: { searchParams?: { limit?: string } }) {
-  // Pagination: ?limit grows by 30 per "Load more" click (capped at 300)
+type Tab = 'foryou' | 'following' | 'live';
+
+const SIDE_LINKS = [
+  { href: '/', label: 'Home' }, { href: '/explore', label: 'Explore' }, { href: '/library', label: 'My library' },
+  { href: '/classrooms', label: 'Live classes' }, { href: '/profile', label: 'Profile' },
+];
+
+export default async function FeedPage({ searchParams }: { searchParams?: { limit?: string; tab?: string } }) {
+  // Pagination: ?limit grows by 30 as the reader nears the end (capped at 300)
   const limit = Math.min(300, Math.max(30, parseInt(searchParams?.limit || '30', 10) || 30));
-  const { live, soon, items } = await getUnifiedFeed(limit);
-  const mayHaveMore = items.length >= limit;
+  const tab: Tab = searchParams?.tab === 'following' ? 'following' : searchParams?.tab === 'live' ? 'live' : 'foryou';
+  const [feed, followed] = await Promise.all([
+    getUnifiedFeed(tab === 'following' ? 300 : limit),
+    tab === 'following' ? getFollowedAuthorIds() : Promise.resolve(null),
+  ]);
+  const { live, soon } = feed;
+  const items = tab === 'live' ? []
+    : tab === 'following'
+      ? feed.items.filter(i => followed?.includes(i.kind === 'publication' ? i.publication.author_id : i.post.author_id))
+      : feed.items;
+  const mayHaveMore = tab === 'foryou' && limit < 300 && feed.items.length >= limit;
+
+  // Authors seen in the feed, for the desktop column
+  const authors = Array.from(new Map(
+    feed.items.map(i => (i.kind === 'publication' ? i.publication.author : i.post.author))
+      .filter(x => !!x?.creator_handle)
+      .map(x => [x!.creator_handle!, x!.display_name || x!.creator_handle!]),
+  )).slice(0, 4);
 
   return (
-    <div className="content-wrapper py-8 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">📰 Feed</h1>
-          <p className="text-[var(--text-muted)] mt-1">Live classes, new works, and updates from ANYFREEBOOK authors</p>
-        </div>
-        <Link href="/feed/new" className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold hover:shadow-lg transition-all whitespace-nowrap">
-          + Post
-        </Link>
-      </div>
+    <div className="content-wrapper py-4 md:py-8">
+      <div className="mx-auto max-w-2xl lg:max-w-6xl lg:grid lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_280px] lg:gap-6">
+        {/* Desktop navigation */}
+        <nav aria-label="Library" className="hidden lg:block">
+          <ul className="sticky top-24 space-y-1">
+            {SIDE_LINKS.map(l => (
+              <li key={l.href}><Link href={l.href} className="flex items-center min-h-[44px] px-3 rounded-xl text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]">{l.label}</Link></li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="min-w-0">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-[var(--text)]">Feed</h1>
+            <Link href="/feed/new" className="inline-flex items-center min-h-[44px] px-4 rounded-xl border border-[var(--primary)] text-[var(--primary)] text-sm font-semibold whitespace-nowrap">Post</Link>
+          </div>
+          <nav aria-label="Feed filters" className="grid grid-cols-3 mb-4 rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
+            {([['foryou', 'For you', '/feed'], ['following', 'Following', '/feed?tab=following'], ['live', 'Live', '/feed?tab=live']] as const).map(([id, label, href]) => (
+              <Link key={id} href={href} aria-current={tab === id ? 'page' : undefined}
+                className={`flex items-center justify-center gap-1.5 min-h-[46px] text-sm font-semibold border-b-[3px] ${tab === id ? 'border-[var(--primary)] text-[var(--text)]' : 'border-transparent text-[var(--text-muted)]'}`}>
+                {label}{id === 'live' && live.length > 0 && <span className="w-2 h-2 rounded-full bg-red-500" aria-label="classes live now" />}
+              </Link>
+            ))}
+          </nav>
 
       {/* 🔴 Live public classrooms — pinned, TikTok-Live style */}
-      {live.length > 0 && (
-        <div className="space-y-3 mb-6">
+      {tab !== 'following' && live.length > 0 && (
+        <div className="space-y-3 mb-4">
           {live.map(c => (
             <Link key={c.id} href={`/class/${c.room_code}`} className="block rounded-2xl overflow-hidden border-2 border-red-500/50 bg-gradient-to-r from-red-500/10 to-transparent hover:shadow-lg transition-all">
               <div className="p-4 flex items-center gap-3">
@@ -80,7 +122,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
       )}
 
       {/* Upcoming classes strip */}
-      {soon.length > 0 && (
+      {tab !== 'following' && soon.length > 0 && (
         <div className="mb-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">🗓 Classes starting soon</h2>
@@ -97,13 +139,15 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
         </div>
       )}
 
-      {items.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-5xl mb-4">📭</p>
-          <p className="text-lg font-medium text-[var(--text-secondary)]">Nothing in the feed yet</p>
-          <p className="text-sm text-[var(--text-muted)] mt-2">Be the first to share an update.</p>
-          <Link href="/feed/new" className="inline-flex mt-6 px-6 py-2.5 rounded-xl bg-[var(--primary)] text-white text-sm font-semibold hover:opacity-90">
-            Create a post
+      {tab === 'live' ? (
+        live.length === 0 && soon.length === 0 && <p className="py-16 text-center text-[var(--text-muted)]">No classes are live or starting soon. <Link href="/classrooms" className="text-[var(--primary)] font-semibold">See all classes</Link></p>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16">
+          <p className="text-lg font-medium text-[var(--text-secondary)]">
+            {tab !== 'following' ? 'Nothing in the feed yet' : followed === null ? 'Sign in to see the authors you follow' : 'Nothing from authors you follow yet'}
+          </p>
+          <Link href={tab === 'following' ? (followed === null ? '/login?redirect=/feed' : '/feed') : '/feed/new'} className="inline-flex items-center min-h-[44px] mt-5 px-6 rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">
+            {tab !== 'following' ? 'Create a post' : followed === null ? 'Sign in' : 'Find authors in For you'}
           </Link>
         </div>
       ) : (
@@ -112,37 +156,38 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
             if (item.kind === 'publication') {
               const pub = item.publication;
               return (
-                <article key={`pub-${pub.id}`} className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
-                  <div className="p-4 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <article key={`pub-${pub.id}`} className="premium-card rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
+                  <div className="p-4 pb-0 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-[#050F26] ring-2 ring-[#6EC1EA] flex items-center justify-center text-white font-serif-title font-bold flex-shrink-0">
                       {(pub.author?.display_name || 'A').slice(0, 1).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       {pub.author?.creator_handle ? (
-                        <Link href={`/author/${pub.author.creator_handle}`} className="text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">
-                          {pub.author.display_name || 'Author'}
-                        </Link>
+                        <Link href={`/author/${pub.author.creator_handle}`} className="block truncate text-sm font-semibold text-[var(--text)] hover:text-[var(--primary)]">{pub.author.display_name || 'Author'}</Link>
                       ) : (
-                        <span className="text-sm font-semibold text-[var(--text)]">{pub.author?.display_name || 'Author'}</span>
+                        <span className="block truncate text-sm font-semibold text-[var(--text)]">{pub.author?.display_name || 'Author'}</span>
                       )}
-                      <div className="text-[11px] text-[var(--text-muted)]">published {timeAgo(pub.published_at)}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{(PUB_TYPE_LABEL[pub.publication_type || ''] || 'Publication').replace(/^[^A-Za-z]+/, '')} · {timeAgo(pub.published_at)}</div>
                     </div>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold uppercase flex-shrink-0">
-                      {PUB_TYPE_LABEL[pub.publication_type || ''] || '📖 Publication'}
-                    </span>
                   </div>
-                  <Link href={`/read/${pub.slug}`}>
-                    <h2 className="px-4 text-lg font-bold text-[var(--text)] leading-snug hover:text-[var(--primary)] transition-colors">{pub.title}</h2>
+                  <Link href={`/read/${pub.slug}`} className="flex gap-4 p-4">
+                    <span className={`relative flex-shrink-0 w-24 h-36 overflow-hidden rounded-r-lg rounded-l-sm border-l-[3px] border-[#6EC1EA] bg-gradient-to-br ${placeholderGradient(pub.title)} shadow-book`}>
+                      {pub.cover_url
+                        ? <Image src={pub.cover_url} alt="" fill sizes="96px" className="object-cover object-top" />
+                        : <span className="absolute inset-0 flex items-end p-2 font-serif-title text-xs font-bold text-white line-clamp-4">{pub.title}</span>}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-serif-title text-lg font-bold leading-snug text-[var(--text)] line-clamp-3">{pub.title}</span>
+                      {pub.description && <span className="block mt-1.5 text-sm text-[var(--text-muted)] line-clamp-3">{pub.description}</span>}
+                    </span>
                   </Link>
-                  {pub.description && (
-                    <p className="px-4 mt-2 text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">{pub.description}</p>
-                  )}
-                  {pub.cover_url && (
-                    <Image src={pub.cover_url} alt={pub.title} width={672} height={320} className="w-full mt-3 max-h-80 object-cover" />
-                  )}
+                  <div className="px-4">
+                    <Link href={`/read/${pub.slug}`} className="flex items-center justify-center min-h-[46px] rounded-xl bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-sm font-semibold">Read free</Link>
+                  </div>
                   <FeedPubActions
                     publicationId={pub.id}
                     slug={pub.slug}
+                    title={pub.title}
                     initialLikes={pub.like_count}
                     commentCount={pub.comment_count}
                     viewCount={pub.view_count}
@@ -154,7 +199,7 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
             const post = item.post;
             const embed = post.video_url ? youtubeEmbed(post.video_url) : null;
             return (
-              <article key={`post-${post.id}`} className="rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
+              <article key={`post-${post.id}`} className="premium-card rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] overflow-hidden">
                 <div className="p-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                     {(post.author?.display_name || 'A').slice(0, 1).toUpperCase()}
@@ -198,10 +243,11 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
                   </div>
                 )}
 
-                <div className="px-4 py-3 mt-2 border-t border-[var(--border-subtle)] flex items-center gap-4 text-xs text-[var(--text-muted)]">
-                  <span>❤️ {post.like_count}</span>
-                  <span>💬 {post.comment_count}</span>
-                  <span>📖 {post.view_count} reads</span>
+                <div className="px-4 py-2 mt-2 border-t border-[var(--border-subtle)] flex items-center gap-5 text-xs text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-1.5"><Icon name="heart" size={17} />{post.like_count}</span>
+                  <span className="inline-flex items-center gap-1.5"><Icon name="comment" size={17} />{post.comment_count}</span>
+                  <span>{post.view_count} reads</span>
+                  <ShareButton path="/feed" title={post.title} className="ml-auto inline-flex items-center gap-1.5 min-h-[44px] px-2 font-semibold text-[var(--text-secondary)]"><Icon name="share" size={17} />Share</ShareButton>
                 </div>
               </article>
             );
@@ -209,17 +255,34 @@ export default async function FeedPage({ searchParams }: { searchParams?: { limi
         </div>
       )}
 
-      {/* Pagination */}
-      {mayHaveMore && (
-        <div className="text-center mt-8">
-          <a
-            href={`/feed?limit=${limit + 30}`}
-            className="inline-flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-[var(--primary)] text-[var(--primary)] text-sm font-semibold hover:bg-[var(--primary-light)] transition-colors"
-          >
-            Load more ↓
-          </a>
+      {mayHaveMore && <AutoLoadMore href={`/feed?limit=${limit + 30}`} />}
         </div>
-      )}
+
+        {/* Desktop side column */}
+        <aside className="hidden xl:block">
+          <div className="sticky top-24 space-y-4">
+            <section className="premium-card rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
+              <h2 className="text-sm font-bold text-[var(--text)] mb-2">Live classes</h2>
+              {[...live, ...soon].slice(0, 3).map(c => (
+                <Link key={c.id} href={`/class/${c.room_code}`} className="block py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--primary)] line-clamp-1">{c.title}</Link>
+              ))}
+              {live.length + soon.length === 0 && <Link href="/classrooms" className="text-sm text-[var(--primary)] font-semibold">Browse classes</Link>}
+            </section>
+            {authors.length > 0 && (
+              <section className="premium-card rounded-2xl bg-[var(--surface)] border border-[var(--border-subtle)] p-4">
+                <h2 className="text-sm font-bold text-[var(--text)] mb-2">Authors to explore</h2>
+                {authors.map(([handle, name]) => (
+                  <Link key={handle} href={`/author/${handle}`} className="flex items-center gap-2.5 min-h-[44px] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--primary)]">
+                    <span className="w-8 h-8 rounded-full bg-[#050F26] text-white text-xs flex items-center justify-center">{name.slice(0, 1).toUpperCase()}</span>
+                    <span className="truncate">{name}</span>
+                  </Link>
+                ))}
+              </section>
+            )}
+            <SponsorStrip offset={4} />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

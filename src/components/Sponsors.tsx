@@ -105,8 +105,12 @@ export function SponsorTile({ fallback }: { fallback: React.ReactNode }) {
   if (!s) return <>{fallback}</>;
   return (
     <div {...tracked} className="rounded-2xl border border-[var(--primary)] bg-[var(--surface)] p-4 overflow-hidden">
-      <Label text="Sponsored" />
-      <Media s={s} className="mt-2 w-full h-20 object-cover rounded-lg" />
+      {/* A picture sits at icon size so the tile stays as tall as its neighbours */}
+      <div className="flex items-center justify-between gap-2">
+        {s.media_type === 'image' ? <Media s={s} className="w-9 h-9 object-cover rounded-lg" /> : <span />}
+        <Label text="Sponsored" />
+      </div>
+      {s.media_type === 'video' && <Media s={s} className="mt-2 w-full h-20 object-cover rounded-lg" />}
       <Out href={s.link_url} className="block">
         <h3 className="text-sm font-bold text-[var(--text)] mt-2">{s.headline || s.sponsor_name}</h3>
         <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">{s.body}</p>

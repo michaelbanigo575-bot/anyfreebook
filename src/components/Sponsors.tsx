@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { Placement, Sponsor } from '@/lib/sponsors/types';
+import { storageGet, storageSet } from '@/lib/safeStorage';
 
 type Spots = Partial<Record<Placement, Sponsor>>;
 const SponsorContext = createContext<Spots>({});
@@ -16,6 +17,49 @@ export function SponsorProvider({ children }: { children: React.ReactNode }) {
 }
 
 const REL = 'sponsored noopener noreferrer';
+
+function track(id: string, event: 'view' | 'click') {
+  // keepalive lets the request finish even when the click leaves the page
+  fetch('/api/sponsors/track', {
+    method: 'POST', keepalive: true,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, event }),
+  }).catch(() => {});
+}
+
+/**
+ * A view counts only when at least half the ad is on screen for one second, once per ad per
+ * browsing session. A click counts for any link inside the ad, including open-in-new-tab.
+ */
+function useTracked(id: string | undefined) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!id || !el || typeof IntersectionObserver === 'undefined') return;
+    const key = `afb-ad-seen-${id}`;
+    if (storageGet(key, 'session')) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      clearTimeout(timer);
+      if (!entry.isIntersecting) return;
+      timer = setTimeout(() => {
+        if (document.visibilityState !== 'visible') return;
+        observer.disconnect();
+        storageSet(key, '1', 'session');
+        track(id, 'view');
+      }, 1000);
+    }, { threshold: 0.5 });
+    observer.observe(el);
+    return () => { clearTimeout(timer); observer.disconnect(); };
+  }, [id]);
+
+  const onClick = (e: React.MouseEvent) => {
+    // button 0 = normal click, 1 = middle click
+    if (id && e.button <= 1 && (e.target as HTMLElement).closest('a[href]')) track(id, 'click');
+  };
+  return { ref, onClick, onAuxClick: onClick };
+}
 
 function Out({ href, className, children }: { href: string; className?: string; children: React.ReactNode }) {
   return href
@@ -38,8 +82,9 @@ const Label = ({ text }: { text: string }) => (
 /** Spot A: one quiet line under the search bar. The height is reserved so nothing jumps. */
 export function SponsorLine() {
   const s = useContext(SponsorContext).support_line;
+  const tracked = useTracked(s?.id);
   return (
-    <div className="min-h-[24px] mt-3 text-xs text-[var(--text-muted)] flex flex-wrap items-center justify-center gap-1.5">
+    <div {...tracked} className="min-h-[24px] mt-3 text-xs text-[var(--text-muted)] flex flex-wrap items-center justify-center gap-1.5">
       {s && (
         <>
           <span>{s.headline || 'Free reading is supported by'}</span>
@@ -56,9 +101,10 @@ export function SponsorLine() {
 /** Spot B: takes the place of the last feature tile, so the grid stays even. */
 export function SponsorTile({ fallback }: { fallback: React.ReactNode }) {
   const s = useContext(SponsorContext).tile;
+  const tracked = useTracked(s?.id);
   if (!s) return <>{fallback}</>;
   return (
-    <div className="rounded-2xl border border-[var(--primary)] bg-[var(--surface)] p-4 overflow-hidden">
+    <div {...tracked} className="rounded-2xl border border-[var(--primary)] bg-[var(--surface)] p-4 overflow-hidden">
       <Label text="Sponsored" />
       <Media s={s} className="mt-2 w-full h-20 object-cover rounded-lg" />
       <Out href={s.link_url} className="block">
@@ -73,10 +119,11 @@ export function SponsorTile({ fallback }: { fallback: React.ReactNode }) {
 /** Spot C: a sponsored shelf of useful free resources. */
 export function SponsorShelf() {
   const s = useContext(SponsorContext).shelf;
+  const tracked = useTracked(s?.id);
   if (!s) return null;
   return (
     <section className="content-wrapper py-6" aria-label={`Partner: ${s.sponsor_name}`}>
-      <div className="rounded-2xl border border-[var(--primary)] bg-[var(--surface)] p-5 flex flex-col md:flex-row gap-5 md:items-center">
+      <div {...tracked} className="rounded-2xl border border-[var(--primary)] bg-[var(--surface)] p-5 flex flex-col md:flex-row gap-5 md:items-center">
         {s.media_type !== 'none' && (
           <div className="md:w-72 flex-shrink-0">
             <Media s={s} className="w-full max-h-48 object-cover rounded-xl" />

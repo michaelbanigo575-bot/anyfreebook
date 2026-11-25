@@ -10,8 +10,14 @@ const failed = (message: string) => NextResponse.json({ error: message }, { stat
 
 export async function GET() {
   if (!(await requireAdmin())) return denied();
-  const { data, error } = await createServiceClient().from('sponsors').select('*').order('updated_at', { ascending: false });
-  return error ? failed(error.message) : NextResponse.json({ sponsors: data });
+  const sb = createServiceClient();
+  const [list, totals] = await Promise.all([
+    sb.from('sponsors').select('*').order('updated_at', { ascending: false }),
+    sb.rpc('sponsor_totals'),
+  ]);
+  if (list.error) return failed(list.error.message);
+  // The ads still load if the stats script has not been run yet
+  return NextResponse.json({ sponsors: list.data, totals: totals.data || [], statsReady: !totals.error });
 }
 
 export async function POST(request: NextRequest) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Panel, StatusPill } from '../ui';
+import { Panel, Stat, StatusPill } from '../ui';
 import type { Placement, Sponsor, SponsorLink } from '@/lib/sponsors/types';
 
 const SPOTS: Record<Placement, { name: string; help: string }> = {
@@ -11,6 +11,32 @@ const SPOTS: Record<Placement, { name: string; help: string }> = {
 };
 
 type Draft = Omit<Sponsor, 'id'> & { id?: string };
+
+interface Totals { sponsor_id: string; views: number; clicks: number; views_7d: number; clicks_7d: number }
+
+const NO_TOTALS = { views: 0, clicks: 0, views_7d: 0, clicks_7d: 0 };
+const num = (n: number) => Number(n).toLocaleString('en-US');
+/** Click-through rate: clicks as a share of views. */
+const ctr = (clicks: number, views: number) => (views > 0 ? `${((clicks / views) * 100).toFixed(1)}%` : '—');
+
+/** A spreadsheet to send to sponsors. Cells that could run as formulas are neutralised. */
+function downloadReport(sponsors: Sponsor[], totals: Record<string, Totals>) {
+  const cell = (v: string | number) => {
+    const text = String(v);
+    return `"${(/^[=+\-@]/.test(text) ? `'${text}` : text).replace(/"/g, '""')}"`;
+  };
+  const rows: (string | number)[][] = [['Sponsor', 'Spot', 'Views', 'Clicks', 'Click rate', 'Views (7 days)', 'Clicks (7 days)']];
+  for (const s of sponsors) {
+    const t = totals[s.id] || NO_TOTALS;
+    rows.push([s.sponsor_name, SPOTS[s.placement].name, t.views, t.clicks, ctr(t.clicks, t.views), t.views_7d, t.clicks_7d]);
+  }
+  const url = URL.createObjectURL(new Blob([rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sponsor-report-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const EMPTY: Draft = {
   placement: 'support_line', sponsor_name: '', headline: '', body: '', link_url: '', cta_label: '',
@@ -37,6 +63,8 @@ function state(s: Sponsor): { status: 'ok' | 'warn' | 'neutral'; label: string }
 
 export default function SponsorsAdminPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [totals, setTotals] = useState<Record<string, Totals>>({});
+  const [statsReady, setStatsReady] = useState(true);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -44,8 +72,11 @@ export default function SponsorsAdminPage() {
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/sponsors', { cache: 'no-store' }).catch(() => null);
     const data = await res?.json().catch(() => ({}));
-    if (res?.ok) setSponsors(data.sponsors || []);
-    else setMessage(`Could not load ads: ${data?.error || res?.status || 'network error'}. Has 018_sponsors.sql been run?`);
+    if (res?.ok) {
+      setSponsors(data.sponsors || []);
+      setTotals(Object.fromEntries(((data.totals || []) as Totals[]).map(t => [t.sponsor_id, t])));
+      setStatsReady(data.statsReady !== false);
+    } else setMessage(`Could not load ads: ${data?.error || res?.status || 'network error'}. Has 018_sponsors.sql been run?`);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -88,7 +119,19 @@ export default function SponsorsAdminPage() {
     }
   };
 
+  const sum = Object.values(totals).reduce(
+    (a, t) => ({ views: a.views + Number(t.views), clicks: a.clicks + Number(t.clicks), views_7d: a.views_7d + Number(t.views_7d), clicks_7d: a.clicks_7d + Number(t.clicks_7d) }),
+    NO_TOTALS,
+  );
+
   return (
+    <div className="space-y-5">
+    {!statsReady && <p role="status" className="text-sm text-amber-300">Counts are not available yet. Run 019_sponsor_stats.sql in Supabase.</p>}
+    <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+      <Stat label="Views" value={num(sum.views)} sub={`${num(sum.views_7d)} in the last 7 days`} />
+      <Stat label="Clicks" value={num(sum.clicks)} sub={`${num(sum.clicks_7d)} in the last 7 days`} />
+      <Stat label="Click rate" value={ctr(sum.clicks, sum.views)} sub={`${ctr(sum.clicks_7d, sum.views_7d)} in the last 7 days`} />
+    </div>
     <div className="grid gap-5 xl:grid-cols-2">
       <Panel title={draft.id ? 'Edit ad' : 'New ad'}>
         <form onSubmit={save} className="p-5 space-y-3">
@@ -156,12 +199,13 @@ export default function SponsorsAdminPage() {
         </form>
       </Panel>
 
-      <Panel title="Your ads">
+      <Panel title="Your ads" action={sponsors.length > 0 ? <button className={button} onClick={() => downloadReport(sponsors, totals)}>Download report</button> : undefined}>
         <div className="p-5 space-y-3">
           <p className="text-xs text-slate-500">If two ads are on for the same spot, the one saved last shows.</p>
           {sponsors.length === 0 && <p className="text-sm text-slate-400">No ads yet. Create your first one.</p>}
           {sponsors.map(s => (
-            <div key={s.id} className="rounded-xl border border-slate-800 p-3 flex items-center justify-between gap-3">
+            <div key={s.id} className="rounded-xl border border-slate-800 p-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-white truncate">{s.sponsor_name}</div>
                 <div className="text-xs text-slate-500">{SPOTS[s.placement].name}</div>
@@ -172,9 +216,32 @@ export default function SponsorsAdminPage() {
                 <button className={button} disabled={busy} onClick={() => remove(s)}>Delete</button>
               </div>
             </div>
+              <AdNumbers t={totals[s.id] || NO_TOTALS} />
+            </div>
           ))}
         </div>
       </Panel>
+    </div>
+    <p className="text-xs text-slate-500">A view counts when half the ad is on screen for one second, once per ad per browsing session. Your own visits count too. No visitor details are stored.</p>
+    </div>
+  );
+}
+
+function AdNumbers({ t }: { t: Omit<Totals, 'sponsor_id'> }) {
+  const items = [
+    { label: 'Views', value: num(t.views), week: num(t.views_7d) },
+    { label: 'Clicks', value: num(t.clicks), week: num(t.clicks_7d) },
+    { label: 'Click rate', value: ctr(t.clicks, t.views), week: ctr(t.clicks_7d, t.views_7d) },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {items.map(i => (
+        <div key={i.label} className="rounded-lg bg-slate-950 border border-slate-800 px-2 py-2">
+          <div className="text-[10px] uppercase tracking-wider text-slate-500">{i.label}</div>
+          <div className="text-lg font-mono font-bold text-white">{i.value}</div>
+          <div className="text-[10px] text-slate-500">7 days: {i.week}</div>
+        </div>
+      ))}
     </div>
   );
 }

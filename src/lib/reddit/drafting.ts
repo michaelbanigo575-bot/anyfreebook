@@ -402,6 +402,3 @@ export function buildDraft(
   });
   return { draft, policy, draftable: true };
 }
-
-/** The floor a draft has to clear to be worth an operator's time. */
-export const READY_RATIO = MIN_VALUE_RATIO;

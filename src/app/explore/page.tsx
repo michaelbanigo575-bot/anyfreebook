@@ -3,6 +3,7 @@ import { ExploreCategories } from '@/components/ExploreCategories';
 import { getAllCategories, getAllBooks } from '@/lib/data';
 import { CATALOGUE } from '@/lib/catalogueStats';
 import { SponsorStrip } from '@/components/Sponsors';
+import { ExploreTabs } from '@/components/ExploreTabs';
 
 export const metadata: Metadata = {
   title: `Explore All Categories — ${CATALOGUE.categories} Categories`,
@@ -20,6 +21,7 @@ export default function ExplorePage() {
 
   return (
     <div className="content-wrapper py-5">
+      <ExploreTabs current="categories" />
       <div className="mb-5">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           Browse by profession

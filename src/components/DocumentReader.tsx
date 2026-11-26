@@ -281,9 +281,10 @@ function PdfStage({ url, title, height, onFail }: { url: string; title?: string;
     let cancelled = false;
     (async () => {
       try {
-        const pdfjs = await import('pdfjs-dist');
+        // The legacy build carries fallbacks (Promise.try and friends) that many phones still need
+        const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
         // Served from /public — bundling the worker trips Terser on import.meta
-        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.legacy.min.mjs';
         const doc = await pdfjs.getDocument({ url: proxied(url) }).promise;
         if (cancelled) {
           // Unmounted while loading — destroy immediately or the worker and its

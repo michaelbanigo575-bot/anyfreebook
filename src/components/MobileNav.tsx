@@ -68,9 +68,9 @@ export function MobileMenuSheet({ section, open, onClose, isDark, onToggleTheme 
     ]
     : [
       { label: 'Audiobooks', href: '/audiobooks', emoji: '🎧' },
-      { label: 'Trending', href: '/trending', emoji: '🔥' },
+      { label: 'Explore', href: '/explore', emoji: '📚' },
       { label: 'Free Guides', href: '/guides', emoji: '📘' },
-      { label: 'All categories', href: '/explore', emoji: '📚' },
+      { label: 'Search', href: '/search', emoji: '🔎' },
     ];
   return (
     <Sheet open={open} onClose={onClose} title="Menu">

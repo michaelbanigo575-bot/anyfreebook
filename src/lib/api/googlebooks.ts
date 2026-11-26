@@ -119,18 +119,3 @@ export async function searchGoogleBooks(query: string, startIndex = 0, maxResult
     total: data.totalItems,
   };
 }
-
-export async function getGoogleBooksBySubject(subject: string, startIndex = 0, maxResults = 20): Promise<{ books: Book[]; total: number }> {
-  const url = `https://www.googleapis.com/books/v1/volumes?q=subject:${encodeURIComponent(subject)}&filter=free-ebooks&maxResults=${maxResults}&startIndex=${startIndex}&orderBy=relevance${apiKeyParam()}`;
-  const data = await fetchUpstreamJson<GoogleBooksResponse>(
-    url,
-    { next: { revalidate: 3600 } },
-    { source: 'Google Books', emptyOnStatus: [404] }
-  );
-  if (!data) return { books: [], total: 0 };
-
-  return {
-    books: (data.items || []).map(googleToBook),
-    total: data.totalItems,
-  };
-}

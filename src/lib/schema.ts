@@ -154,26 +154,3 @@ export function breadcrumbSchema(crumbs: { name: string; path: string }[]) {
     })),
   };
 }
-
-export function collectionSchema(title: string, books: Book[]) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: title,
-    numberOfItems: books.length,
-    itemListElement: books.map((book, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      item: {
-        '@type': 'Book',
-        name: book.title,
-        author: { '@type': 'Person', name: book.author },
-        url: `https://anyfreebook.com/book/${book.slug}`,
-        image: book.coverUrl,
-        // No Offer here on purpose: collections mix public-domain works with
-        // in-copyright textbooks, so a blanket price:0 would be a false claim.
-        // Per-book availability is expressed by each book's own page schema.
-      },
-    })),
-  };
-}

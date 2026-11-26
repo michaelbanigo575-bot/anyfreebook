@@ -35,35 +35,6 @@ export const DEFAULT_WIKISOURCE_LANGUAGES: WikisourceLanguage[] = [
   { code: 'fr', label: 'French' },
 ];
 
-/** Wikisource editions that exist and carry public-domain texts. */
-export const WIKISOURCE_LANGUAGES: WikisourceLanguage[] = [
-  ...DEFAULT_WIKISOURCE_LANGUAGES,
-  { code: 'de', label: 'German' },
-  { code: 'es', label: 'Spanish' },
-  { code: 'pt', label: 'Portuguese' },
-  { code: 'it', label: 'Italian' },
-  { code: 'ru', label: 'Russian' },
-  { code: 'el', label: 'Greek' },
-  { code: 'pl', label: 'Polish' },
-  { code: 'nl', label: 'Dutch' },
-  { code: 'sv', label: 'Swedish' },
-  { code: 'vi', label: 'Vietnamese' },
-  { code: 'id', label: 'Indonesian' },
-  { code: 'th', label: 'Thai' },
-  { code: 'hi', label: 'Hindi' },
-  { code: 'fa', label: 'Persian' },
-  { code: 'ur', label: 'Urdu' },
-  { code: 'tr', label: 'Turkish' },
-  { code: 'uk', label: 'Ukrainian' },
-  { code: 'cs', label: 'Czech' },
-  { code: 'fi', label: 'Finnish' },
-  { code: 'da', label: 'Danish' },
-  { code: 'hu', label: 'Hungarian' },
-  { code: 'ro', label: 'Romanian' },
-  { code: 'bg', label: 'Bulgarian' },
-  { code: 'ko', label: 'Korean' },
-];
-
 interface WikisourceSearchResponse {
   query?: {
     searchinfo?: { totalhits?: number };

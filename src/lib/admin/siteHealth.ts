@@ -108,7 +108,7 @@ export interface DbHealth {
   staleClassrooms: number;
   translationCacheRows: number;
   clientErrors24h: number;
-  recentErrors: { message: string; url: string | null; created_at: string }[];
+  recentErrors: { message: string; url: string | null; created_at: string; stack?: string | null; user_agent?: string | null }[];
   hint?: string;
 }
 
@@ -122,7 +122,7 @@ export async function getDbHealth(): Promise<DbHealth> {
       sb.from('classrooms').select('id', { count: 'exact', head: true }).eq('status', 'live').lt('started_at', sixHoursAgo),
       sb.from('translation_cache').select('lang', { count: 'exact', head: true }),
       sb.from('client_errors').select('id', { count: 'exact', head: true }).gte('created_at', dayAgo),
-      sb.from('client_errors').select('message, url, created_at').order('created_at', { ascending: false }).limit(5),
+      sb.from('client_errors').select('message, url, created_at, stack, user_agent').order('created_at', { ascending: false }).limit(5),
     ]);
 
     return {

@@ -14,7 +14,6 @@ import { withCors, preflight } from './cors';
  */
 
 export const API_VERSION = 'v1';
-export const API_BASE = 'https://anyfreebook.com/api/v1';
 
 export interface GuardResult {
   key: ApiKeyInfo | null;

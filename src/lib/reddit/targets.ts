@@ -316,11 +316,3 @@ export const REDDIT_TARGETS: RedditTarget[] = [
     active: true,
   },
 ];
-
-/** The product a subreddit is watched for. */
-export function targetFor(subreddit: string, product?: RedditTarget['product']): RedditTarget | undefined {
-  const lower = subreddit.toLowerCase().replace(/^\/?r\//, '');
-  return REDDIT_TARGETS.find(
-    (t) => t.subreddit.toLowerCase() === lower && (!product || t.product === product)
-  );
-}

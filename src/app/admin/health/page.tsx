@@ -88,6 +88,12 @@ export default async function HealthPage() {
                   <div key={i} className="px-5 py-3">
                     <div className="text-sm text-rose-300 truncate">{e.message}</div>
                     <div className="text-[11px] text-slate-500 truncate">{e.url || '—'} · {relTime(e.created_at)}</div>
+                    {(e.stack || e.user_agent) && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-[11px] text-slate-400">Details</summary>
+                        <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all text-[10px] text-slate-400">{`${e.user_agent || ''}\n${e.stack || ''}`}</pre>
+                      </details>
+                    )}
                   </div>
                 ))}
               </div>

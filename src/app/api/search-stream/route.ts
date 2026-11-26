@@ -13,6 +13,18 @@ import { searchOpenTextbooks } from '@/lib/api/opentextbooks';
 import { searchBooks as searchLocal, type Book } from '@/lib/data';
 import { rateLimitEdge, clientIp } from '@/lib/rateLimit';
 
+/** In a search of everything, a source gets this long. Searching one source on its own gets longer. */
+const SOURCE_DEADLINE_MS = 5500;
+const SINGLE_SOURCE_DEADLINE_MS = 10_000;
+
+function within<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error('source too slow')), ms); }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 interface SourceJob {
   id: string;
   label: string;
@@ -79,7 +91,7 @@ export async function GET(request: NextRequest) {
       await Promise.all(
         jobs.map(async job => {
           try {
-            const result = await job.run();
+            const result = await within(job.run(), requestedSource === 'all' ? SOURCE_DEADLINE_MS : SINGLE_SOURCE_DEADLINE_MS);
             const books = dedupe(result.books);
             enqueue({ type: 'source', id: job.id, label: job.label, books, total: result.total });
             // Wikisource is a fan-out of separate wikis, one per language. An

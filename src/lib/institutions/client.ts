@@ -68,12 +68,6 @@ export async function createInstitution(input: {
   return { error: null, slug };
 }
 
-export async function updateInstitution(id: string, patch: Partial<Pick<Institution, 'name' | 'description' | 'logo_url' | 'website' | 'country' | 'type'>>): Promise<{ error: string | null }> {
-  const sb = createClient();
-  const { error } = await sb.from('institutions').update(patch).eq('id', id);
-  return { error: error?.message ?? null };
-}
-
 export async function listMyInstitutions(): Promise<(InstitutionMember & { institution: Institution })[]> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -161,21 +155,6 @@ export async function leaveInstitution(institutionId: string): Promise<{ error: 
   return { error: error?.message ?? null };
 }
 
-/** The signed-in user's membership of one institution, or null if they are not a member. */
-export async function getMyMembership(institutionId: string): Promise<InstitutionMember | null> {
-  const sb = createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return null;
-
-  const { data } = await sb
-    .from('institution_members')
-    .select('*')
-    .eq('institution_id', institutionId)
-    .eq('profile_id', user.id)
-    .maybeSingle();
-  return (data as unknown as InstitutionMember) || null;
-}
-
 export async function createInvite(institutionId: string, role: 'admin' | 'teacher' | 'student'): Promise<{ error: string | null; token?: string }> {
   const sb = createClient();
   const { data: { user } } = await sb.auth.getUser();
@@ -235,12 +214,6 @@ export async function createStudyPlanTemplate(institutionId: string, input: { ti
   }).select('id').single();
   if (error) return { error: error.message };
   return { error: null, id: data?.id };
-}
-
-export async function listStudyPlanTemplates(institutionId: string): Promise<StudyPlanTemplate[]> {
-  const sb = createClient();
-  const { data } = await sb.from('study_plan_templates').select('*').eq('institution_id', institutionId).order('created_at', { ascending: false });
-  return (data as StudyPlanTemplate[]) || [];
 }
 
 /** Pushes a template's goal/category onto each selected student's own study_plans row (one-time copy, not a live sync). Requires the caller to be institution staff — enforced server-side. */

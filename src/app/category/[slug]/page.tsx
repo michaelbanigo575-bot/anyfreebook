@@ -24,7 +24,7 @@ type LiveCategory = {
 };
 
 /** The longest a category page waits for any one source; a late one is simply left out. */
-const SOURCE_BUDGET_MS = 4500;
+const SOURCE_BUDGET_MS = 3500;
 
 function withBudget<T>(request: Promise<T>): Promise<T> {
   return Promise.race([request, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('source too slow')), SOURCE_BUDGET_MS))]);

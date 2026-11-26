@@ -78,22 +78,3 @@ export function AdUnit({ size, slot, className = '' }: AdUnitProps) {
     </div>
   );
 }
-
-export function SponsoredBooks() {
-  return (
-    <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
-      <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-3">Sponsored</p>
-      <div className="space-y-3">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="flex gap-3 p-2 rounded-lg hover:bg-[var(--surface-hover)] transition-colors cursor-pointer">
-            <div className="w-10 h-14 rounded bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] opacity-60 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="h-3 w-3/4 rounded bg-[var(--border)] mb-1.5" />
-              <div className="h-2.5 w-1/2 rounded bg-[var(--border-subtle)]" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

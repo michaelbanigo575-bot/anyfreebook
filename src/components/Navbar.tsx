@@ -41,9 +41,9 @@ export function Navbar() {
   // Desktop shows the section's main links; everything else lives under "More"
   const primaryLinks = section === 'community'
     ? [{ label: 'Feed', href: '/feed' }, { label: 'Classes', href: '/classrooms' }, { label: 'Institutions', href: '/institutions' }, { label: 'Publish & Earn', href: '/creators' }]
-    : [{ label: 'Explore', href: '/explore' }, { label: 'Trending', href: '/trending' }, { label: 'Audiobooks', href: '/audiobooks' }];
+    : [{ label: 'Explore', href: '/explore' }, { label: 'Audiobooks', href: '/audiobooks' }, { label: 'Free Guides', href: '/guides' }];
   const moreLinks = [
-    ...(section === 'community' ? [{ label: 'Find authors', href: '/creators/discover' }] : [{ label: 'New books', href: '/new' }, { label: 'Free Guides', href: '/guides' }]),
+    ...(section === 'community' ? [{ label: 'Find authors', href: '/creators/discover' }] : []),
     { label: 'My library', href: '/library' },
     { label: 'Study Plan', href: '/study-plan' },
     { label: 'Rewards', href: '/rewards' },

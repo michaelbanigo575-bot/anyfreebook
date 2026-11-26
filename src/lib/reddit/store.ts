@@ -162,19 +162,6 @@ export async function savePosts(posts: RedditPost[]): Promise<{ inserted: number
   return { inserted, skipped };
 }
 
-/** Threads worth drafting: new, high-intent, still recent. */
-export async function listCandidatePosts(limit = 25): Promise<RedditPost[]> {
-  const sb = createServiceClient();
-  const { data } = await sb
-    .from('reddit_posts')
-    .select('*')
-    .in('status', ['new', 'drafted'])
-    .gte('intent_score', 30)
-    .order('intent_score', { ascending: false })
-    .limit(limit);
-  return (data || []).map((row: Row) => rowToPost(row));
-}
-
 function rowToPost(row: Record<string, unknown>): RedditPost {
   return {
     id: row.id as string,

@@ -16,7 +16,3 @@ export function storageGet(key: string, kind: Kind = 'local'): string | null {
 export function storageSet(key: string, value: string, kind: Kind = 'local'): void {
   try { store(kind)?.setItem(key, value); } catch { /* not remembered */ }
 }
-
-export function storageRemove(key: string, kind: Kind = 'local'): void {
-  try { store(kind)?.removeItem(key); } catch { /* ignore */ }
-}

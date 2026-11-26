@@ -180,20 +180,3 @@ export async function getGutenbergPopular(page = 1): Promise<{ books: Book[]; to
     return searchGutenbergViaArchive('*', page);
   }
 }
-
-export async function getGutenbergByTopic(topic: string, page = 1): Promise<{ books: Book[]; total: number }> {
-  const url = `https://gutendex.com/books/?topic=${encodeURIComponent(topic)}&page=${page}`;
-  // gutendex answers a topic with no books with HTTP 200 and an empty result
-  // list, so an error status means the upstream did not answer and is thrown.
-  const data = await fetchUpstreamJson<GutenbergResponse>(
-    url,
-    { next: { revalidate: 3600 }, headers: GUTENDEX_HEADERS },
-    { source: 'Project Gutenberg' }
-  );
-  if (!data) return { books: [], total: 0 };
-
-  return {
-    books: data.results.map(gutenbergToBook),
-    total: data.count,
-  };
-}

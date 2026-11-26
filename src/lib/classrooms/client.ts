@@ -155,20 +155,6 @@ export async function saveRecordingUrl(id: string, url: string): Promise<{ error
   return { error: error?.message ?? null };
 }
 
-export async function deleteClassroom(id: string): Promise<{ error: string | null }> {
-  const sb = createClient();
-  const { error } = await sb.from('classrooms').delete().eq('id', id);
-  return { error: error?.message ?? null };
-}
-
-export async function listMyClassrooms(): Promise<Classroom[]> {
-  const sb = createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return [];
-  const { data } = await sb.from('classrooms').select('*').eq('host_id', user.id).order('scheduled_at', { ascending: false });
-  return (data as Classroom[]) || [];
-}
-
 /** Attendance: register this browser once per classroom; returns current count. */
 export async function joinAttendance(classroomId: string, sessionKey: string, displayName: string | null): Promise<number> {
   const sb = createClient();

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { BookGrid } from '@/components/BookGrid';
 import { getTrendingBooks } from '@/lib/data';
+import { ExploreTabs } from '@/components/ExploreTabs';
 
 export const metadata: Metadata = {
   title: 'Trending Free Books — Most Popular This Week',
@@ -17,6 +18,7 @@ export default function TrendingPage() {
 
   return (
     <div className="content-wrapper py-5">
+      <ExploreTabs current="trending" />
       <div className="mb-5">
         <h1 className="text-3xl md:text-4xl font-display font-bold text-[var(--text)]">
           🔥 Trending this week

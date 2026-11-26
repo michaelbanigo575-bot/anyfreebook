@@ -51,17 +51,3 @@ export async function createFeedPost(input: {
   if (error) return { error: error.message };
   return { error: null, id: data?.id };
 }
-
-export async function deleteFeedPost(id: string): Promise<{ error: string | null }> {
-  const sb = createClient();
-  const { error } = await sb.from('feed_posts').delete().eq('id', id);
-  return { error: error?.message ?? null };
-}
-
-export async function listMyFeedPosts(): Promise<FeedPost[]> {
-  const sb = createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) return [];
-  const { data } = await sb.from('feed_posts').select('*').eq('author_id', user.id).order('created_at', { ascending: false });
-  return (data as FeedPost[]) || [];
-}

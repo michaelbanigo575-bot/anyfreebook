@@ -9,6 +9,7 @@ import { placeholderGradient } from '@/lib/covers';
 import { getLiveClassForAuthor } from '@/lib/classrooms/server';
 import { tierForReads } from '@/lib/creators/types';
 import { FollowButton } from '@/components/FollowButton';
+import { MessageButton } from '@/components/chat/MessageButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,6 +78,7 @@ export default async function AuthorPage({ params, searchParams }: { params: { h
           </dl>
           <div className="flex flex-wrap items-center gap-2 mt-4">
             <FollowButton authorId={author.id} initialFollowers={author.follower_count || 0} />
+            <MessageButton authorId={author.id} />
             <ShareButton path={`/author/${author.creator_handle}`} title={`${name} on ANYFREEBOOK`} className="inline-flex items-center gap-2 min-h-[40px] px-5 rounded-full border border-[var(--primary)] text-[var(--primary)] text-sm font-semibold">
               <Icon name="share" size={17} />Share
             </ShareButton>

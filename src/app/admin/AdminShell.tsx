@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { CHAT_ENABLED } from '@/lib/chat/types';
 
 interface NavGroup {
   label: string;
@@ -25,6 +26,7 @@ const NAV: NavGroup[] = [
       { href: '/admin/users', label: 'Users', icon: <IconUsers /> },
       { href: '/admin/referrals', label: 'Referrals', icon: <IconGift /> },
       { href: '/admin/sponsors', label: 'Sponsors and ads', icon: <IconLink /> },
+      ...(CHAT_ENABLED ? [{ href: '/admin/chat-reports', label: 'Chat reports', icon: <IconUsers /> }] : []),
     ],
   },
   {

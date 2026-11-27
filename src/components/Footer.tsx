@@ -43,6 +43,8 @@ const linkGroups = [
         { label: 'Contact', href: '/contact' },
         { label: 'Privacy Policy', href: '/privacy' },
         { label: 'Terms of Service', href: '/terms' },
+        { label: 'Community Rules', href: '/community-rules' },
+        { label: 'Copyright', href: '/copyright' },
       ],
     },
     {

@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from './AuthProvider';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import type { Section } from '@/lib/sections';
+import { CHAT_ENABLED } from '@/lib/chat/types';
+import { Badge, totalUnread, unreadLabel, useChatUnread } from '@/components/chat/Unread';
 
 /** Bottom sheet: backdrop, Escape / swipe-down to close, locks page scroll while open. */
 function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
@@ -106,6 +108,7 @@ const TabIcon = ({ d }: { d: string }) => (
 
 /** Phone bottom bar. Discover: Home, Explore, Search, Library. Community: Feed, Classes, Create, Library. Then Me. */
 export function MobileBottomNav({ section }: { section: Section }) {
+  const chat = useChatUnread();
   const pathname = usePathname();
   const { user, profile, signOut } = useAuth();
   const [meOpen, setMeOpen] = useState(false);
@@ -156,10 +159,12 @@ export function MobileBottomNav({ section }: { section: Section }) {
           })}
           {user ? (
             <button onClick={() => setMeOpen(true)} aria-haspopup="dialog" className={tabClass(meOpen)}>
-              <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-xs font-bold flex items-center justify-center">
+              <span className="relative w-6 h-6 rounded-full bg-gradient-to-br from-[var(--gradient-start)] to-[var(--gradient-end)] text-white text-xs font-bold flex items-center justify-center">
                 {name[0].toUpperCase()}
+                {CHAT_ENABLED && <Badge count={totalUnread(chat)} className="absolute -top-2 left-3.5" />}
               </span>
               <span>Me</span>
+              {CHAT_ENABLED && totalUnread(chat) > 0 && <span className="sr-only">, {unreadLabel(chat)}</span>}
             </button>
           ) : (
             <Link href="/login" className={tabClass(isActive('/login'))}>
@@ -173,6 +178,7 @@ export function MobileBottomNav({ section }: { section: Section }) {
       <Sheet open={meOpen && !!user} onClose={close} title={name}>
         {user?.email && name !== user.email && <p className="text-xs text-[var(--text-muted)] -mt-1 mb-2 text-center truncate">{user.email}</p>}
         <Row href="/profile" onClick={close}>My profile</Row>
+        {CHAT_ENABLED && <Row href="/messages" onClick={close}><span aria-label={unreadLabel(chat)} className="flex items-center gap-2">Messages<Badge count={totalUnread(chat)} /></span></Row>}
         <Row href={profile?.is_creator ? '/creators/dashboard' : '/creators'} onClick={close}>
           {profile?.is_creator ? 'Creator dashboard' : 'Become a creator'}
         </Row>

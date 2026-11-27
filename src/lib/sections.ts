@@ -3,7 +3,7 @@ export type Section = 'discover' | 'community';
 
 const PREFIXES: Record<Section, string[]> = {
   discover: ['/explore', '/category', '/book', '/search', '/audiobooks', '/trending', '/new', '/collections', '/collection', '/guides', '/blog', '/sources', '/universities', '/waec-jamb', '/free-textbook-alternatives'],
-  community: ['/feed', '/read', '/author', '/creators', '/classrooms', '/class', '/institutions'],
+  community: ['/messages', '/feed', '/read', '/author', '/creators', '/classrooms', '/class', '/institutions'],
 };
 
 /** The section a page belongs to, or null for shared pages (library, profile, settings, help). */

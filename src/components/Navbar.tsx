@@ -12,6 +12,9 @@ import { useTheme } from './ThemeProvider';
 import { MoreMenu, AccountMenu } from './NavMenus';
 import { MobileMenuSheet, MobileBottomNav } from './MobileNav';
 import { SectionSwitch, useSection } from './SectionSwitch';
+import { CHAT_ENABLED } from '@/lib/chat/types';
+import { ChatUnreadProvider } from '@/components/chat/Unread';
+import { HeaderMessages } from '@/components/chat/HeaderMessages';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -44,13 +47,14 @@ export function Navbar() {
     : [{ label: 'Explore', href: '/explore' }, { label: 'Audiobooks', href: '/audiobooks' }, { label: 'Free Guides', href: '/guides' }];
   const moreLinks = [
     ...(section === 'community' ? [{ label: 'Find authors', href: '/creators/discover' }] : []),
+    ...(CHAT_ENABLED ? [{ label: 'Messages', href: '/messages' }] : []),
     { label: 'My library', href: '/library' },
     { label: 'Study Plan', href: '/study-plan' },
     { label: 'Rewards', href: '/rewards' },
   ];
 
   return (
-    <>
+    <ChatUnreadProvider>
       <header
         className={`ocean-header 
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
@@ -121,6 +125,7 @@ export function Navbar() {
                   </svg>
                 )}
               </button>
+              <HeaderMessages />
               <NotificationsBell />
               {user ? (
                 <AccountMenu />
@@ -161,6 +166,6 @@ export function Navbar() {
       {/* Spacer for fixed navbar */}
       {/* header row (56/64px) plus the section switch row (52px) */}
       <div className="h-[108px] md:h-[116px]" />
-    </>
+    </ChatUnreadProvider>
   );
 }

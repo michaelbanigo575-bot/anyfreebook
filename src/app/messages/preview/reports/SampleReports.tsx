@@ -3,6 +3,8 @@
 import { useMemo } from 'react';
 import { ReportQueue, type ReportSource } from '@/components/chat/ReportQueue';
 import { TrialAccess, type TrialSource } from '@/components/chat/TrialAccess';
+import { WelcomeMessage, type WelcomeSource } from '@/components/chat/WelcomeMessage';
+import { DEFAULT_WELCOME } from '@/lib/chat/welcome';
 import { URGENT, openQueue, shapeReports, type ReportRow, type ReportedGroup, type Suspension } from '@/lib/chat/reports';
 
 /** Made-up reports held in memory, run through the same shaping and ordering as the real ones. */
@@ -65,7 +67,17 @@ function sampleTrial(): TrialSource {
   };
 }
 
+function sampleWelcome(): WelcomeSource {
+  let state = { enabled: false, body: DEFAULT_WELCOME, senderName: null as string | null, senderIsMe: false, waiting: 2 };
+  return {
+    load: async () => ({ ...state }),
+    save: async (body, enabled) => { state = { ...state, body: body.trim(), enabled, senderName: 'You', senderIsMe: true }; },
+    sendExisting: async () => { const n = state.waiting; state = { ...state, waiting: 0 }; return n; },
+  };
+}
+
 export function SampleReports() {
+  const welcome = useMemo(sampleWelcome, []);
   const source = useMemo(sampleSource, []);
   const trial = useMemo(sampleTrial, []);
   return (
@@ -73,6 +85,7 @@ export function SampleReports() {
       <div className="max-w-3xl mx-auto">
         <p className="mb-3 text-xs font-semibold text-amber-300">Admin preview with made-up reports. Nothing is saved.</p>
         <TrialAccess source={trial} />
+        <WelcomeMessage source={welcome} />
         <ReportQueue source={source} />
       </div>
     </div>

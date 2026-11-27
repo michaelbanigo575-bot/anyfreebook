@@ -2,6 +2,7 @@
 
 import { ReportQueue, type ReportSource } from '@/components/chat/ReportQueue';
 import { TrialAccess, type TrialSource } from '@/components/chat/TrialAccess';
+import { WelcomeMessage, type WelcomeSource } from '@/components/chat/WelcomeMessage';
 
 async function send(url: string, init?: RequestInit) {
   const res = await fetch(url, { cache: 'no-store', ...init }).catch(() => null);
@@ -26,10 +27,19 @@ const trial: TrialSource = {
   setInviteOnly: inviteOnly => change({ action: 'mode', inviteOnly }),
 };
 
+const greet = (body: object) => send('/api/admin/chat-welcome', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+const welcome: WelcomeSource = {
+  load: () => send('/api/admin/chat-welcome'),
+  save: async (body, enabled) => { await greet({ action: 'save', body, enabled }); },
+  sendExisting: async () => Number((await greet({ action: 'send-existing' })).sent || 0),
+};
+
 export function ChatReportsClient() {
   return (
     <>
       <TrialAccess source={trial} />
+      <WelcomeMessage source={welcome} />
       <ReportQueue source={live} />
     </>
   );

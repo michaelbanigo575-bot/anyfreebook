@@ -31,7 +31,7 @@ const greet = (body: object) => send('/api/admin/chat-welcome', { method: 'POST'
 
 const welcome: WelcomeSource = {
   load: () => send('/api/admin/chat-welcome'),
-  save: async (body, enabled) => { await greet({ action: 'save', body, enabled }); },
+  save: async (body, enabled, senderEmail) => { await greet({ action: 'save', body, enabled, senderEmail }); },
   sendExisting: async () => Number((await greet({ action: 'send-existing' })).sent || 0),
 };
 

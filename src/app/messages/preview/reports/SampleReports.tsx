@@ -68,10 +68,10 @@ function sampleTrial(): TrialSource {
 }
 
 function sampleWelcome(): WelcomeSource {
-  let state = { enabled: false, body: DEFAULT_WELCOME, senderName: null as string | null, senderIsMe: false, waiting: 2 };
+  let state = { enabled: false, body: DEFAULT_WELCOME, senderName: null as string | null, senderEmail: null as string | null, senderIsOfficial: false, waiting: 2 };
   return {
     load: async () => ({ ...state }),
-    save: async (body, enabled) => { state = { ...state, body: body.trim(), enabled, senderName: 'You', senderIsMe: true }; },
+    save: async (body, enabled, email) => { state = { ...state, body: body.trim(), enabled, senderName: 'ANYFREEBOOK', senderEmail: email.trim().toLowerCase() || state.senderEmail, senderIsOfficial: true }; },
     sendExisting: async () => { const n = state.waiting; state = { ...state, waiting: 0 }; return n; },
   };
 }

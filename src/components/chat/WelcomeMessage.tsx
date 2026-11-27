@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { WELCOME_LIMIT, type WelcomeState } from '@/lib/chat/welcome';
+import { OFFICIAL_DOMAIN, OFFICIAL_NAME, WELCOME_LIMIT, isOfficialEmail, type WelcomeState } from '@/lib/chat/welcome';
 
 export interface WelcomeSource {
   load(): Promise<WelcomeState>;
-  save(body: string, enabled: boolean): Promise<void>;
+  save(body: string, enabled: boolean, senderEmail: string): Promise<void>;
   /** Returns how many were sent. */
   sendExisting(): Promise<number>;
 }
@@ -16,13 +16,14 @@ const solid = 'min-h-[40px] rounded-lg px-4 text-xs font-semibold bg-indigo-600 
 export function WelcomeMessage({ source }: { source: WelcomeSource }) {
   const [state, setState] = useState<WelcomeState | null>(null);
   const [body, setBody] = useState('');
+  const [from, setFrom] = useState('');
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    try { const next = await source.load(); setState(next); setBody(next.body); }
+    try { const next = await source.load(); setState(next); setBody(next.body); setFrom(next.senderIsOfficial ? next.senderEmail || '' : ''); }
     catch (e) { setError((e as Error).message || 'Could not load the welcome message.'); }
   }, [source]);
   useEffect(() => { load(); }, [load]);
@@ -34,7 +35,9 @@ export function WelcomeMessage({ source }: { source: WelcomeSource }) {
     setBusy(false);
     setConfirm(false);
   };
-  const changed = !!state && body !== state.body;
+  const official = !!state?.senderIsOfficial;
+  const changed = !!state && (body !== state.body || from.trim().toLowerCase() !== (official ? state.senderEmail || '' : ''));
+  const ready = !!body.trim() && isOfficialEmail(from);
 
   return (
     <details className="max-w-3xl mb-4 rounded-2xl border border-slate-800 bg-slate-900/40 px-4">
@@ -47,20 +50,24 @@ export function WelcomeMessage({ source }: { source: WelcomeSource }) {
         {state && (
           <>
             <p className="text-xs text-slate-400">
-              Sent as a direct message when someone turns chat on. Saving sends it from <strong className="text-slate-200">your own account</strong>, and replies come to your Messages.
-              {state.senderName && !state.senderIsMe && <span className="text-amber-300"> It is currently sent from {state.senderName}. Saving will change that to you.</span>}
+              Sent as a direct message from <strong className="text-slate-200">{OFFICIAL_NAME}</strong> when someone turns chat on. To read replies, sign in as the team account.
             </p>
+            {state.enabled && !official && <p role="alert" className="text-sm text-amber-300">It is currently sent from {state.senderName}, a personal account. Choose the team account and save, or switch it off.</p>}
+            <label className="block text-xs text-slate-400">Team account email (ends in {OFFICIAL_DOMAIN})
+              <input type="email" value={from} onChange={e => setFrom(e.target.value)} maxLength={254} placeholder={`hello${OFFICIAL_DOMAIN}`} className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white" />
+            </label>
+            <p className="text-[11px] text-slate-500">Saving names that account {OFFICIAL_NAME}. It must already exist and have messages turned on.</p>
             <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={WELCOME_LIMIT} rows={14} aria-label="Welcome message" className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white" />
             <p className="text-[11px] text-slate-500">{body.length} of {WELCOME_LIMIT} characters. Each person gets it once. Changing the words doesn’t send it again.</p>
             <div className="flex flex-wrap gap-2">
               {state.enabled ? (
                 <>
-                  <button type="button" disabled={busy || !body.trim() || (!changed && state.senderIsMe)} onClick={() => act(async () => { await source.save(body, true); return 'Saved'; })} className={solid}>Save changes</button>
-                  <button type="button" disabled={busy} onClick={() => act(async () => { await source.save(body, false); return 'Welcome message switched off'; })} className={button}>Switch off</button>
+                  <button type="button" disabled={busy || !ready || !changed} onClick={() => act(async () => { await source.save(body, true, from); return 'Saved'; })} className={solid}>Save changes</button>
+                  <button type="button" disabled={busy} onClick={() => act(async () => { await source.save(body, false, from); return 'Welcome message switched off'; })} className={button}>Switch off</button>
                 </>
-              ) : <button type="button" disabled={busy || !body.trim()} onClick={() => act(async () => { await source.save(body, true); return 'Welcome message switched on'; })} className={solid}>Save and switch on</button>}
+              ) : <button type="button" disabled={busy || !ready} onClick={() => act(async () => { await source.save(body, true, from); return 'Welcome message switched on'; })} className={solid}>Save and switch on</button>}
             </div>
-            {state.enabled && state.waiting > 0 && !changed && (!confirm
+            {state.enabled && official && state.waiting > 0 && !changed && (!confirm
               ? <button type="button" disabled={busy} onClick={() => setConfirm(true)} className={button}>Send to {state.waiting} existing {state.waiting === 1 ? 'member' : 'members'}</button>
               : (
                 <div className="rounded-xl border border-slate-700 bg-slate-950 p-3">

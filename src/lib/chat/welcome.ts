@@ -1,6 +1,10 @@
 import { MESSAGE_LIMIT } from './types';
 
 export const WELCOME_LIMIT = MESSAGE_LIMIT;
+/** The welcome always comes from the team, never from a person's own account. */
+export const OFFICIAL_NAME = 'ANYFREEBOOK';
+export const OFFICIAL_DOMAIN = '@anyfreebook.com';
+export const isOfficialEmail = (email: string) => /^[a-z0-9._+-]+@anyfreebook\.com$/.test(email.trim().toLowerCase());
 
 /** The starting wording. The admin can change it before switching the welcome on. */
 export const DEFAULT_WELCOME = `📚 Welcome to ANYFREEBOOK: a place to read, learn and study together.
@@ -39,8 +43,9 @@ export interface WelcomeState {
   body: string;
   /** The account it is sent from, if one is set. */
   senderName: string | null;
-  /** True when that account is the admin looking at the page. */
-  senderIsMe: boolean;
+  senderEmail: string | null;
+  /** True when that account is a team account. */
+  senderIsOfficial: boolean;
   /** Members with chat on who have not had it yet. */
   waiting: number;
 }
